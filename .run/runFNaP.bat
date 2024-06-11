@@ -1,0 +1,1 @@
+java -cp /target/Four-Nights-at-Pepito.jar main.Main
