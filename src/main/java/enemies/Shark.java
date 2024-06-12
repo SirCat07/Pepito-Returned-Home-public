@@ -37,6 +37,8 @@ public class Shark extends Enemy {
         g.sound.play("waterLoop", 0.1, true);
 
         g.getNight().getPepito().scare();
+        g.getNight().getAstarta().leaveEarly();
+        g.getNight().getMaki().scare();
     }
 
     public void spawn() {

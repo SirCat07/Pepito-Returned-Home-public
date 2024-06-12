@@ -35,6 +35,10 @@ public class LemonadeCat extends Enemy {
 
         lemonadePos = new Point[4];
         lemonadeZoom = new float[4];
+
+        g.getNight().getPepito().scare();
+        g.getNight().getAstarta().leaveEarly();
+        g.getNight().getMaki().scare();
     }
 
     public void throwLemonade(Point pos, boolean mirror) {

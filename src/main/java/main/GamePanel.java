@@ -81,7 +81,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GameState state = GameState.UNLOADED;
 
-    String version = "2.0.0final-test";
+    String version = "2.0.0";
     short versionTextLength = 0;
 
     Color currentLeftPan = new Color(0, 0, 0);
@@ -2713,7 +2713,7 @@ public class GamePanel extends JPanel implements Runnable {
 
                         if (CustomNight.selectedElement == modifier) {
                             graphics2D.setColor(CustomNight.isCustom() ? white100 : white60);
-                            graphics2D.fillRoundRect(675 + 200 * x, 248 + 60 * y, 190, 50, 10, 10);
+                            graphics2D.fillRoundRect(675 + 200 * x, 248 + 60 * y, 190, 50, 5, 5);
                         }
                     }
                 }
@@ -4347,7 +4347,7 @@ public class GamePanel extends JPanel implements Runnable {
             }
             if(state == GameState.GAME) {
                 if(night.getMSI().isActive()) {
-                    realTint = Math.min(255, realTint + night.getMSI().getAdditionalTint());
+                    realTint = Math.min(255, realTint + Math.min(140, night.getMSI().getAdditionalTint()));
                 }
             }
             graphics2D.setColor(new Color(0, 0, 0, realTint));

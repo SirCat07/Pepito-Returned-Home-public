@@ -48,6 +48,10 @@ public class ElAstarta extends Enemy {
         g.getNight().setEvent(GameEvent.EL_ASTARTA);
         g.music.play("threat", 0.08F);
 
+        g.getNight().getPepito().scare();
+        g.getNight().getAstarta().leaveEarly();
+        g.getNight().getMaki().scare();
+
         g.getNight().addEventPercent(0.2F);
 
         actualTimer = new RepeatingPepitimer(() -> {

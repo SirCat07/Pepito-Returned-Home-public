@@ -17,6 +17,9 @@ public class Wires extends Enemy {
 
     public void spawn() {
         health = (short) (4 + AI / 2);
+        if(g.getNight().isTimerModifier()) {
+            health = (short) Math.round(health / 2F - 0.1F);
+        }
         state = (byte) (Math.random() * 3);
         acceleration = 0.1F * modifier;
         active = true;

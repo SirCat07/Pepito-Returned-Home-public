@@ -215,6 +215,7 @@ public class Level {
         updateClockString();
 
         System.out.println("shirtfartings arise...");
+
         shirtfart = new RepeatingPepitimer(() -> {
             if(g.state != GameState.GAME)
                 return;
@@ -243,10 +244,6 @@ public class Level {
                     return;
 
                 g.sound.playRate("shirtfart", volume, rate);
-
-                System.out.println("- shirtfart appears -");
-                System.out.println("volume: " + volume);
-                System.out.println("rate: " + rate);
             }
         }, 5000, 12000);
 

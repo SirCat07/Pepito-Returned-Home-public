@@ -156,7 +156,7 @@ public class CustomNight {
                     enemies.get(1).setAI(5);
                     enemies.get(2).setAI(1);
                     enemies.get(3).setAI(3);
-                    enemies.get(4).setAI(5);
+                    enemies.get(4).setAI(4);
                     enemies.get(5).setAI(5);
                     enemies.get(6).setAI(4);
                     enemies.get(8).setAI(1);
@@ -176,13 +176,13 @@ public class CustomNight {
                     enemies.get(1).setAI(6);
                     enemies.get(2).setAI(7);
                     enemies.get(3).setAI(3);
-                    enemies.get(4).setAI(5);
+                    enemies.get(4).setAI(4);
                     enemies.get(5).setAI(6);
                     enemies.get(6).setAI(5);
                     enemies.get(7).setAI(4);
                     enemies.get(9).setAI(8);
                     enemies.get(11).setAI(1);
-                    enemies.get(12).setAI(6);
+                    enemies.get(12).setAI(3);
                     enemies.get(13).setAI(4);
                     enemies.get(14).setAI(1);
 
@@ -193,7 +193,7 @@ public class CustomNight {
                     enemies.get(0).setAI(7);
                     enemies.get(1).setAI(7);
                     enemies.get(3).setAI(6);
-                    enemies.get(4).setAI(5);
+                    enemies.get(4).setAI(4);
                     enemies.get(5).setAI(6);
                     enemies.get(6).setAI(8);
                     enemies.get(7).setAI(2);
@@ -212,7 +212,7 @@ public class CustomNight {
                     enemies.get(1).setAI(7);
                     enemies.get(2).setAI(7);
                     enemies.get(3).setAI(7);
-                    enemies.get(4).setAI(7);
+                    enemies.get(4).setAI(5);
                     enemies.get(5).setAI(6);
                     enemies.get(6).setAI(7);
                     enemies.get(7).setAI(6);

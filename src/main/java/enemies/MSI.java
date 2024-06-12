@@ -149,7 +149,7 @@ public class MSI extends Enemy {
                             g.adBlocked = true;
                         }
                     } else {
-                        additionalTint += (byte) (60 + (Math.max(0, leftRight[0]) * 5) - AI * 5);
+                        additionalTint += (short) (60 + (Math.max(0, Math.min(leftRight[0], 5)) * 5) - AI * 5);
                         shake = (byte) (10 + Math.abs(leftRight[0]) * 2);
                         new Pepitimer(() -> {
                             shake = 0;

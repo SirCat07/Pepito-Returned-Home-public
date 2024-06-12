@@ -21,6 +21,10 @@ public class A120 extends Enemy {
         g.sound.play("a120SoundLeft", 0.4, -0.8);
         x = 2860;
 
+        g.getNight().getPepito().scare();
+        g.getNight().getAstarta().leaveEarly();
+        g.getNight().getMaki().scare();
+
         new Pepitimer(() -> {
             g.getNight().setEvent(GameEvent.A120);
 
