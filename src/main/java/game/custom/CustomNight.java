@@ -39,7 +39,7 @@ public class CustomNight {
         if(loadedPreview == null) {
             loadedPreview = new PepitoImage(path);
         } else {
-            if(loadedPreview.getPath().equals(path)) {
+            if(!loadedPreview.getPath().equals(path)) {
                 loadedPreview.setPath(path);
                 loadedPreview.reload();
             }

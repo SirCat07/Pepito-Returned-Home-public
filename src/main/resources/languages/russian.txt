@@ -193,7 +193,7 @@ survivorDesc:Достигни 8 Ночи в Эндлессе
 is_it_possibleName:Это вообще возможно?
 is_it_possibleDesc:Достигни 14 Ночи в Эндлессе
 one_of_manyName:Одна из многих
-one_of_manyDesc:Умререть первый раз
+one_of_manyDesc:Умереть первый раз
 skullcrackerName:Череполом
 skullcrackerDesc:Умереть 10 раз
 darwin_awardName:Премия Дарвина

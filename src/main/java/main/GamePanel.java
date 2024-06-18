@@ -82,7 +82,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GameState state = GameState.UNLOADED;
 
-    String version = "2.0.1";
+    String version = "2.0.15";
     short versionTextLength = 0;
 
     Color currentLeftPan = new Color(0, 0, 0);
