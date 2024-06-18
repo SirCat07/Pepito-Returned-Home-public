@@ -1,9 +1,11 @@
 package game.bingo;
 
+import main.GamePanel;
 import utils.Statistics;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class BingoHandler {
     static List<BingoCard> cards = new ArrayList<>();
@@ -23,7 +25,7 @@ public class BingoHandler {
                     } else {
                         if (everyTask == task) {
                             everyTask.complete();
-                            card.complete(task.getDifficulty(), task.getName());
+                            card.complete(task.getDifficulty(), GamePanel.getString(task.toString().toLowerCase(Locale.ROOT) + "B"));
                             howManyCompleted++;
                             Statistics.PEPINGO_TASKS.increment();
                         }

@@ -3,6 +3,8 @@ package game.achievements;
 import main.GamePanel;
 import utils.AchievementNotification;
 
+import java.util.Locale;
+
 public class AchievementHandler {
     public static void obtain(GamePanel g, Achievements achievement) {
         if(achievement.isObtained())
@@ -13,7 +15,11 @@ public class AchievementHandler {
         updateAchievementPercentage(g);
 
         g.redrawAchievements();
-        new AchievementNotification(achievement);
+
+        String fullName = g.getString(achievement.toString().toLowerCase(Locale.ROOT) + "Name");
+        String fullDesc = g.getString(achievement.toString().toLowerCase(Locale.ROOT) + "Desc");
+
+        new AchievementNotification(fullName, fullDesc, achievement.getIcon());
     }
 
     public static void updateAchievementPercentage(GamePanel g) {

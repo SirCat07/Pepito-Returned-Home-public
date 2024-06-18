@@ -22,4 +22,8 @@ public class CustomNightModifier extends CustomNightPrevieweable {
     public boolean isActive() {
         return active;
     }
+
+    public void set(boolean b) {
+        active = b;
+    }
 }

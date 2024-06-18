@@ -8,6 +8,7 @@ public class Item {
     private final BufferedImage icon;
     private String name = "mc chicken";
     private String description = "yummy";
+    private String keybind = "";
     private short amount = -1;
     private short defaultAmount = -1;
     private boolean enabled = false;
@@ -16,13 +17,14 @@ public class Item {
     private final List<ItemTag> tags = new ArrayList<>();
     private final List<Item> conflicts = new ArrayList<>();
 
-    public Item(BufferedImage icon, String name, String description, int amount, String id) {
+    public Item(BufferedImage icon, String name, String description, int amount, String id, String keybind) {
         this.icon = icon;
         this.name = name;
         this.description = description;
         this.amount = (short) amount;
         this.defaultAmount = (short) amount;
         this.id = id;
+        this.keybind = keybind;
     }
 
     public BufferedImage getIcon() {
@@ -35,6 +37,11 @@ public class Item {
     public void deselect() {
         selected = false;
     }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
     public boolean isSelected() {
         return selected;
     }
@@ -55,6 +62,10 @@ public class Item {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getKeybind() {
+        return keybind;
     }
 
     public Item addTags(List<ItemTag> tags) {
@@ -133,5 +144,10 @@ public class Item {
     }
     public void setShakeIntensity(byte shakeIntensity) {
         this.shakeIntensity = shakeIntensity;
+    }
+
+    public void assignText(String name, String desc) {
+        this.name = name;
+        this.description = desc;
     }
 }

@@ -68,9 +68,13 @@ public class A90 extends Enemy {
 
         if(night.getPepito().seconds == 0) {
             if(night.getPepito().isNotPepito) {
-                night.getPepito().notPepitoRunsLeft++;
+                if(night.getPepito().notPepitoRunsLeft != 0) {
+                    night.getPepito().notPepitoRunsLeft++;
+                }
             } else {
-                night.getPepito().pepitoStepsLeft++;
+                if(night.getPepito().pepitoStepsLeft != 0) {
+                    night.getPepito().pepitoStepsLeft++;
+                }
             }
         }
 

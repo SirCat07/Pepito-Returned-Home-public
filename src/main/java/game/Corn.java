@@ -9,7 +9,7 @@ public class Corn extends Item {
     BufferedImage cornStage1;
 
     public Corn(BufferedImage icon, String name, String description, int amount, String id, BufferedImage img) {
-        super(icon, name, description, amount, id);
+        super(icon, name, description, amount, id, "");
         this.img = img;
         cornStage1 = img;
     }

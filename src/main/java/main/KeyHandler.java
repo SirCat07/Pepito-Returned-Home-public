@@ -589,6 +589,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 }
                             }
                             case KeyEvent.VK_B -> holdingB = true;
+                            case KeyEvent.VK_TAB -> holdingTab = true;
                         }
 
                         if(g.planks.isEnabled() && holdingB) {
@@ -683,9 +684,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     short[] array = g.getNight().generatorXes;
                                     if(array[0] == -1 && array[1] == -1 && array[2] == -1) {
                                         g.getNight().generatorStage++;
-                                        g.getNight().generatorXes[0] = (short) (30 + Math.random() * 580);
-                                        g.getNight().generatorXes[1] = (short) (30 + Math.random() * 580);
-                                        g.getNight().generatorXes[2] = (short) (30 + Math.random() * 580);
+                                        g.getNight().generatorXes[0] = (short) (30 + Math.random() * 560);
+                                        g.getNight().generatorXes[1] = (short) (30 + Math.random() * 560);
+                                        g.getNight().generatorXes[2] = (short) (30 + Math.random() * 560);
 
                                         g.generatorSound.play("generatorNextStage", 0.1);
 
@@ -709,9 +710,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     g.getNight().generatorStage--;
                                 }
                             }
-                            g.getNight().generatorXes[0] = (short) (30 + Math.random() * 580);
-                            g.getNight().generatorXes[1] = (short) (30 + Math.random() * 580);
-                            g.getNight().generatorXes[2] = (short) (30 + Math.random() * 580);
+                            g.getNight().generatorXes[0] = (short) (30 + Math.random() * 560);
+                            g.getNight().generatorXes[1] = (short) (30 + Math.random() * 560);
+                            g.getNight().generatorXes[2] = (short) (30 + Math.random() * 560);
 
                             g.generatorSound.play("generatorFail", 0.1);
                         }
@@ -930,6 +931,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     g.volume = Math.min(1, Math.max(0, g.volume - 0.05F));
                 } else {
                     g.volume = Math.min(1, Math.max(0, g.volume + 0.05F));
+                    if(g.getNight() != null) {
+                        g.getNight().setSoundless(false);
+                    }
                 }
 
                 for(MediaPlayer player : g.music.clips) {
@@ -1138,6 +1142,8 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
     }
 
     boolean holdingB = false;
+    boolean holdingTab = false;
+
 
     SoundTest soundTest;
 
@@ -1150,11 +1156,13 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
     boolean confirmNightReset = false;
     boolean hoveringFpsCap = false;
     boolean hoveringJumpscareShake = false;
+    boolean hoveringLanguage = false;
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if(e.getKeyCode() == KeyEvent.VK_B) {
-            holdingB = false;
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_B -> holdingB = false;
+            case KeyEvent.VK_TAB -> holdingTab = false;
         }
         if(g.state == GameState.PLATFORMER) {
             switch (e.getKeyCode()) {
@@ -1716,6 +1724,18 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         }
 
                         g.sound.play("select", 0.1);
+                    } else if(hoveringLanguage) {
+                        switch (g.language) {
+                            case "english" -> g.language = "russian";
+                            case "russian" -> g.language = "english";
+                        }
+
+                        g.loadLanguage(g.language);
+                        g.initializeFontMetrics();
+                        g.initializeItemNames();
+                        g.reloadMenuButtons();
+                        
+                        g.sound.play("select", 0.1);
                     } else if (g.closeButton.contains(pointerPosition)) {
                         g.backToMainMenu();
                     }
@@ -1851,13 +1871,23 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 }, 9800);
                                 new Pepitimer(() -> {
                                     if(CustomNight.limboId == newId) {
-                                        g.music.play("torture", 0.05, true);
+                                        g.music.play("tension", 0.05, true);
                                     }
                                 }, 19400);
                             }
                         }
                         if(CustomNight.customSelected) {
                             g.sound.play("buttonPress", 0.08);
+                            
+                            if(CustomNight.custom) {
+                                for (CustomNightEnemy enemy : CustomNight.getEnemies()) {
+                                    CustomNight.customEnemyAIs.put(enemy, enemy.getAI());
+                                }
+                                for (CustomNightModifier modifier : CustomNight.getModifiers()) {
+                                    CustomNight.customModifiers.put(modifier, modifier.isActive());
+                                }
+                            }
+                            
                             CustomNight.custom = !CustomNight.custom;
                             CustomNight.setEntityAIs();
 
@@ -2066,6 +2096,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 }
                 hoveringFpsCap = new Rectangle(490, 1025 + g.settingsScrollY, 360, 80).contains(rescaledPoint);
                 hoveringJumpscareShake = new Rectangle(230, 1200 + g.settingsScrollY, 500, 80).contains(rescaledPoint);
+                hoveringLanguage = new Rectangle(560, 1290 + g.settingsScrollY, 500, 80).contains(rescaledPoint);
             }
             case MILLY -> {
                 int i = 0;
@@ -2311,9 +2342,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             }
 
             case SETTINGS -> {
-                if(g.rows >= 4) {
-                    g.settingsScrollY = Math.max(-720, Math.min(0, g.settingsScrollY - e.getWheelRotation() * 30));
-                }
+                g.settingsScrollY = Math.max(-900, Math.min(0, g.settingsScrollY - e.getWheelRotation() * 30));
             }
         }
     }
@@ -2327,10 +2356,14 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
         if(g.selectedOption == 0) {
             g.startPlayMenu();
         } else {
-            switch (g.menuButtons.get(g.selectedOption)) {
-                case ">> settings" -> g.startSettings();
-                case ">> bingo" -> g.startBingo();
-                case ">> achievements" -> g.startAchievements();
+            String selectedOption = g.menuButtons.get(g.selectedOption);
+
+            if(selectedOption.equals(">> " + g.getString("settings"))) {
+                g.startSettings();
+            } else if(selectedOption.equals(">> " + g.getString("bingo"))) {
+                g.startBingo();
+            } else if(selectedOption.equals(">> " + g.getString("achievementsSmall"))) {
+                g.startAchievements();
             }
         }
     }
@@ -2365,7 +2398,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
     private void cancelLimbo() {
         if(CustomNight.limboId > 0) {
             g.music.stop();
-            g.music.play("torture", 0.05, true);
+            g.music.play("tension", 0.05, true);
             if(CustomNight.limboTimer[0] != null) {
                 CustomNight.limboTimer[0].cancel(false);
                 CustomNight.limboTimer[0] = null;
@@ -2380,13 +2413,13 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             g.everyFixedUpdate.remove("deathScreenY");
             g.music.play("orca", 0.06, true);
 
-            if (g.killedBy.contains("died from radiation") && !g.afterDeathText.contains("After the first nuclear strike")) {
+            if (g.killedBy.contains(GamePanel.getString("kbRadiation")) && !g.afterDeathText.contains(GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 30))) {
                 new Pepitimer(() -> {
-                    if(g.afterDeathText.contains("After the first nuclear strike"))
+                    if(g.afterDeathText.contains(GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 30)))
                         return;
 
-                    g.afterDeathText = "After the first nuclear strike, you must IMMEDIATELY travel to the Indonesian island of Sumatra, where Lake Toba is located. On this Lake Toba there is the island of Samosir. On the island of Samosir there is a Lutheran church \"GEREJA HKBP BOLON PANGURURAN\". Opposite this church there is a hill where my tent will be located!!! - Larry Zhou";
-                    g.afterDeathCurText = "After the first nucl";
+                    g.afterDeathText = GamePanel.getString("afterTheFirstNuclearStrike");
+                    g.afterDeathCurText = GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 20);
                 }, 4500);
             }
         } else {
@@ -2398,13 +2431,13 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     g.everyFixedUpdate.remove("deathScreenY");
                     g.music.play("orca", 0.06, true);
 
-                    if (g.killedBy.contains("died from radiation") && !g.afterDeathText.contains("After the first nuclear strike")) {
+                    if (g.killedBy.contains(GamePanel.getString("kbRadiation")) && !g.afterDeathText.contains(GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 30))) {
                         new Pepitimer(() -> {
-                            if(g.afterDeathText.contains("After the first nuclear strike"))
+                            if(g.afterDeathText.contains(GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 30)))
                                 return;
 
-                            g.afterDeathText = "After the first nuclear strike, you must IMMEDIATELY travel to the Indonesian island of Sumatra, where Lake Toba is located. On this Lake Toba there is the island of Samosir. On the island of Samosir there is a Lutheran church \"GEREJA HKBP BOLON PANGURURAN\". Opposite this church there is a hill where my tent will be located!!! - Larry Zhou";
-                            g.afterDeathCurText = "After the first nucl";
+                            g.afterDeathText = GamePanel.getString("afterTheFirstNuclearStrike");
+                            g.afterDeathCurText = GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 20);
                         }, 4500);
                     }
                 }

@@ -39,4 +39,9 @@ public class PepitoImage {
         this.path = path;
     }
     // should always be used with a reload
+
+
+    public String getPath() {
+        return path;
+    }
 }

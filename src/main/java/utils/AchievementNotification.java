@@ -1,7 +1,5 @@
 package utils;
 
-import game.achievements.Achievements;
-
 import java.awt.image.BufferedImage;
 
 public class AchievementNotification {
@@ -11,14 +9,6 @@ public class AchievementNotification {
     String description;
     BufferedImage icon;
 
-    public AchievementNotification(Achievements achievement) {
-        this.name = achievement.getName();
-        this.description = achievement.getDescription();
-        this.icon = achievement.getIcon();
-
-        StaticLists.achievementNotifs.add(this);
-        holdLimit = 240 * StaticLists.achievementNotifs.size();
-    }
     public AchievementNotification(String name, String description, BufferedImage icon) {
         this.name = name;
         this.description = description;

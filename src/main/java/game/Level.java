@@ -191,12 +191,12 @@ public class Level {
         if(type == GameType.CUSTOM) {
             for (CustomNightModifier modifier : CustomNight.getModifiers()) {
                 switch (modifier.getName()) {
-                    case "Power Outage" -> powerModifier = modifier.isActive();
-                    case "Blizzard" -> blizzardModifier = modifier.isActive();
-                    case "Timers" -> timerModifier = modifier.isActive();
-                    case "Fog" -> fogModifier = modifier.isActive();
-                    case "Radiation" -> radiationModifier = modifier.isActive();
-                    case "Rain" -> rainModifier = modifier.isActive();
+                    case "powerOutageCn" -> powerModifier = modifier.isActive();
+                    case "blizzardCn" -> blizzardModifier = modifier.isActive();
+                    case "timersCn" -> timerModifier = modifier.isActive();
+                    case "fogCn" -> fogModifier = modifier.isActive();
+                    case "radiationCn" -> radiationModifier = modifier.isActive();
+                    case "rainCn" -> rainModifier = modifier.isActive();
                 }
             }
             if(isPerfectStorm()) {
@@ -206,6 +206,13 @@ public class Level {
         if(radiationModifier) {
             gruggyCarts.add(new GruggyCart());
             gruggyCarts.add(new GruggyCart());
+
+            if(GamePanel.isAprilFools) {
+                gruggyCarts.add(new GruggyCart());
+                gruggyCarts.add(new GruggyCart());
+                gruggyCarts.add(new GruggyCart());
+                gruggyCarts.add(new GruggyCart());
+            }
         }
 
         sortAILevels(g.getCorn());
@@ -283,9 +290,15 @@ public class Level {
                 return;
             afk--;
 
+            if(energy < 150) {
+                if (Math.random() < 0.015) {
+                    flicker = 100;
+                    g.sound.play("flicker", 0.05);
+                }
+            }
             if(powerModifier && energy > 0) {
                 if (power) {
-                    if(Math.random() < 0.02) {
+                    if(Math.random() < 0.02 && !elAstarta.isActive()) {
                         g.powerDown();
                     }
                 } else {
@@ -488,6 +501,10 @@ public class Level {
                 maxEnergy = energy;
             }
 
+            if(flicker > 0) {
+                flicker -= 4;
+            }
+
             eventPercent = Math.max(0, eventPercent - 0.003F);
 
             float energyToll = 0;
@@ -597,6 +614,12 @@ public class Level {
 
     HouseLocation location = HouseLocation.OFFICE;
 
+    int flicker = 0;
+
+    public int getFlicker() {
+        return flicker;
+    }
+
     float temperature = 0;
 
     public void resetTimers() {
@@ -622,7 +645,7 @@ public class Level {
             for(CustomNightEnemy enemy : CustomNight.getEnemies()) {
                 int enemyAI = enemy.getAI();
                 if(isPerfectStorm()) {
-                    enemyAI = 8;
+                    enemyAI = 7;
                 }
 
                 switch (enemy.getId()) {
@@ -731,11 +754,11 @@ public class Level {
     private void spawnManuals(byte night, GameType type) {
         if(type == GameType.ENDLESS_NIGHT && g.showManual) {
             switch (night) {
-                case 2 -> g.manualBetterSpawn("Close doors where you see eyes. MSI tells you where to move your camera.");
-                case 3 -> g.manualBetterSpawn("Shark indicators appear. Move your camera.");
-                case 4 -> g.manualBetterSpawn("Answer Boykisser's question (be honest)");
-                case 5 -> g.manualBetterSpawn("Check your camera for Maki; Throw lemons at Lemonade Cat.");
-                case 6 -> g.manualBetterSpawn("Right-Click Zazu to close his door.");
+                case 2 -> g.manualBetterSpawn(GamePanel.getString("manualMSIAstarta"));
+                case 3 -> g.manualBetterSpawn(GamePanel.getString("manualShark"));
+                case 4 -> g.manualBetterSpawn(GamePanel.getString("manualBoykisser"));
+                case 5 -> g.manualBetterSpawn(GamePanel.getString("manualMakiLemonade"));
+                case 6 -> g.manualBetterSpawn(GamePanel.getString("manualZazu"));
                 case 7 -> g.manualBetterSpawn("");
                 case 8 -> g.manualBetterSpawn("LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT. LEFT. RIGHT");
             }
@@ -801,6 +824,14 @@ public class Level {
     public boolean isItemless() {
         return itemless;
     }
+    
+    boolean soundless = false;
+    public void setSoundless(boolean soundless) {
+        this.soundless = soundless;
+    }
+    public boolean isSoundless() {
+        return soundless;
+    }
 
     short usedItemAmount = 0;
     public void setUsedItemAmount(short usedItemAmount) {
@@ -833,7 +864,7 @@ public class Level {
         glitcher.setAILevel(5);
         a90.setAILevel(7);
         astarta.setAILevel(5);
-        msi.setAILevel(3);
+        msi.setAILevel(4);
         shark.setAILevel(8);
         boykisser.setAILevel(8);
         colaCat.setAILevel(0);
@@ -847,10 +878,10 @@ public class Level {
         maxEnergy += 500;
 
         g.announceNight((byte) 60, GameType.SHADOW);
-        g.nightAnnounceText = "HALFWAY POINT";
+        g.nightAnnounceText = GamePanel.getString("halfwayPointCaps");
         if(g.shadowCheckpointUsed != 2) {
-            g.announceChallenger((byte) 60, 8000);
-            g.announceChallenger((byte) 61, 13000);
+            new Pepitimer(() -> g.announceChallenger((byte) 60, 0), 8000);
+            new Pepitimer(() -> g.announceChallenger((byte) 61, 0), 13000);
         }
 
         AchievementHandler.obtain(g, Achievements.HALFWAY);
@@ -927,9 +958,11 @@ public class Level {
 
     public void depower() {
         power = false;
+        g.console.power = false;
     }
     public void power() {
         power = true;
+        g.console.power = true;
     }
     public AstartaBoss getAstartaBoss() {
         return astartaBoss;
@@ -974,9 +1007,9 @@ public class Level {
 
     public void startGeneratorMinigame() {
         generatorStage = 0;
-        generatorXes[0] = (short) (30 + Math.random() * 580);
-        generatorXes[1] = (short) (30 + Math.random() * 580);
-        generatorXes[2] = (short) (30 + Math.random() * 580);
+        generatorXes[0] = (short) (30 + Math.random() * 560);
+        generatorXes[1] = (short) (30 + Math.random() * 560);
+        generatorXes[2] = (short) (30 + Math.random() * 560);
         inGeneratorMinigame = true;
 
         g.generatorSound.play("connectToGenerator", 0.1, true);

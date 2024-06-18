@@ -14,7 +14,7 @@ public class JFXThread {
 		String[] miscCodes = new String[]{"nightStart", "vineboom", "boop", "select", "selectFail", "riftSelect", "knock",
 				"doorSlam", "powerdown", "lightsOn", "dayStart", "sellsYourBalls", "sogBallpitAppear", "challenger", "balloonPop", "explode", "untitled",
 				"playMenuChange", "drinkStarlight", "reflectStarlight", "startSimulation", "checkpointSelect", "thunder1", "thunder2", "thunder3",
-				"timerStart", "timerLoop", "stopSimulation"};
+				"timerStart", "timerLoop", "stopSimulation", "flicker"};
 		for (String s : miscCodes) {
 			soundSet.put(s, new Media(getClass().getResource("/sound/misc/" + s + ".mp3").toExternalForm()));
 		}

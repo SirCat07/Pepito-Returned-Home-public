@@ -82,7 +82,7 @@ public class MSI extends Enemy {
                 active = true;
                 firstAction = true;
 
-                if(g.getNight().getEvent() != GameEvent.ASTARTA) {
+                if(g.getNight().getEvent() != GameEvent.ASTARTA && !g.getNight().getType().isEndless()) {
                     byte hell = (byte) (Math.random() * 153);
                     if (hell == 1) {
                         isHell = true;

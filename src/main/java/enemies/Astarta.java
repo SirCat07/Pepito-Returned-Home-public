@@ -45,8 +45,6 @@ public class Astarta extends Enemy {
         if(g.getNight().getDoors().get((int) door).isClosed()) {
             arrivalSeconds = (short) ((Math.random() * 5 + 6) / modifier);
 
-            BingoHandler.completeTask(BingoTask.SURVIVE_ASTARTA);
-
             if(g.getNight().isBlizzardModifier()) {
                 if(g.getNight().getBlizzardTime() > 0) {
                     arrivalSeconds = 4;
@@ -92,6 +90,8 @@ public class Astarta extends Enemy {
                             }
                         }
                         leaveSeconds = 4;
+
+                        BingoHandler.completeTask(BingoTask.SURVIVE_ASTARTA);
                     } else {
                         g.jumpscare("astarta");
                     }

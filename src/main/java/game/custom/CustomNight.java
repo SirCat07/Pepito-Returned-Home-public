@@ -7,6 +7,7 @@ import utils.RepeatingPepitimer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 public class CustomNight {
@@ -38,8 +39,10 @@ public class CustomNight {
         if(loadedPreview == null) {
             loadedPreview = new PepitoImage(path);
         } else {
-            loadedPreview.setPath(path);
-            loadedPreview.reload();
+            if(loadedPreview.getPath().equals(path)) {
+                loadedPreview.setPath(path);
+                loadedPreview.reload();
+            }
         }
     }
 
@@ -91,11 +94,13 @@ public class CustomNight {
             }
         }, 0, 300);
     }
+    
+    public static HashMap<CustomNightEnemy, Integer> customEnemyAIs = new HashMap<>();
+    public static HashMap<CustomNightModifier, Boolean> customModifiers = new HashMap<>();
 
 
     public static void nextChallenge() {
         selectedChallenge++;
-
 
         if(selectedChallenge > getMaxChallenge()) {
             selectedChallenge = 0;
@@ -128,12 +133,21 @@ public class CustomNight {
     }
 
     public static void setEntityAIs() {
-        for(CustomNightEnemy enemy : enemies) {
-            enemy.setAI(0);
+        for (CustomNightEnemy enemy : enemies) {
+            if(customEnemyAIs.isEmpty()) {
+                enemy.setAI(0);
+            } else {
+                enemy.setAI(customEnemyAIs.get(enemy));
+            }
         }
-        for(CustomNightModifier modifier : modifiers) {
-            modifier.off();
+        for (CustomNightModifier modifier : modifiers) {
+            if(customModifiers.isEmpty()) {
+                modifier.off();
+            } else {
+                modifier.set(customModifiers.get(modifier));
+            }
         }
+        
 
         if(!CustomNight.isCustom()) {
             switch (selectedChallenge) {
@@ -260,14 +274,40 @@ public class CustomNight {
         if(CustomNight.isCustom())
             return "Custom Night";
 
-        return switch (selectedChallenge) {
-            case 0 -> "El Astarta";
-            case 1 -> "Blizzard";
-            case 2 -> "Time is Ticking";
-            case 3 -> "The Fog is Coming";
-            case 4 -> "Gruggenheimed";
-            default -> "MSI is watching";
-        };
+        String result = "MSI is watching";
+        switch (selectedChallenge) {
+            case 0 -> result = "El Astarta";
+            case 1 -> result = "Blizzard";
+            case 2 -> result = "Time is Ticking";
+            case 3 -> result = "The Fog is Coming";
+            case 4 -> {
+                if(GamePanel.isAprilFools)
+                    return "URAANIUM FEVER";
+
+                return "Gruggenheimed";
+            }
+        }
+        return result;
+    }
+
+    public static String getSelectedChallengeLocalizeID() {
+        if(CustomNight.isCustom())
+            return "customNight";
+
+        String result = "msiIsWatchingL";
+        switch (selectedChallenge) {
+            case 0 -> result = "elAstartaL";
+            case 1 -> result = "blizzardL";
+            case 2 -> result = "timeIsTickingL";
+            case 3 -> result = "fogIsComingL";
+            case 4 -> {
+                if(GamePanel.isAprilFools)
+                    return "uraniumFeverL";
+
+                return "gruggenheimedL";
+            }
+        }
+        return result;
     }
 
     public static boolean isStartSelected() {

@@ -1,0 +1,385 @@
+startingSimulation:starting simulation...
+fartingSimulation:farting simulation...
+wouldYouLikeToEnter:Would you like to enter
+theVoid?:The Void?
+Yes:Yes
+No:No
+s:s
+randomEvent:RANDOM EVENT:
+uncannyDelivery:UNCANNY DELIVERY
+dvdEvent:DVD EVENT
+blackHoles:BLACK HOLES
+pressToSkip:[press to skip]
+equipped:EQUIPPED
+selectedItems:Selected Items: 
+itemsWarning1:Warning: the items will
+itemsWarning2:get consumed on start
+itemsNotConsumed1:Items will NOT get
+itemsNotConsumed2:consumed on start!
+statistics:Statistics
+achievements:Achievements
+start:start
+back:back
+custom:custom
+on:on
+off:off
+Enemies:Enemies
+SHUFFLE:SHUFFLE
+NEXT:NEXT
+PREV:PREV
+customNight:Custom Night
+challenge:Challenge
+volume:volume
+fixedRatio:fixed ratio
+headphones:headphones
+resetNight:reset night
+showDisclaimer:show disclaimer
+showManual:show manual
+saveScreenshots:save screenshots
+rtx:RTX super cool bloom
+fpsCounter:fps counter
+fpsCap:fps cap:
+jumpscareShake:jumpscares shake:
+UNLIMITED:UNLIMITED
+windowAndScreen:window + screen
+screen:screen
+noShake:no shake
+languageSelect:language:
+language:English
+keybindSettingsGuide:Shift+Z - Screenshot | Escape - Pause | -+ - Quick volume change
+price:Price
+pressAnyKey:[press any key]
+time:Time: 
+m:m
+startBingo:start bingo
+stopBingo:stop bingo
+restartBingo:restart bingo
+timeSpent:Time spent: 
+24minutes:You have 24 minutes!
+sillyGame:Silly little game where
+completeAll:you need to complete all
+tasksTimeLimit:tasks with a time limit!
+firstNightWarning:Warning: your night will be set to the FIRST night
+left:left
+right:right
+loading:loading...
+halfwayPoint:Halfway Point
+halfwayPointCaps:HALFWAY POINT
+astartaTime:ASTARTA TIME
+click:[click]
+door:Door
+transporting:transporting...
+battery:Battery:
+generatorFuel:Generator Fuel:
+maxwellTheCat:Maxwell the Cat
+button:button
+transportInto:Transport into
+shadownight:Shadownight
+floodedAgain:uh oh! looks like the office got flooded again!
+bewareOfSharks:beware of sharks!
+moveThe:move the
+fishAway:fish away!
+lemonadeCatAppears:uh oh! the lemonade cat appears!
+giveHimLemons:right click to give him some lemons!
+tries:Tries:
+somethingChangedInCamera:Something changed in your camera...
+hide:hide
+show:show
+close:close
+surviveUntil4AM:Goal: Survive until 4 AM
+shadowAstarta:Shadow Astarta
+keybinds:Keybinds
+unlockedAchievement:unlocked achievement
+hiddenAchievement:This achievement is hidden...
+play:play
+bingo:bingo
+achievementsSmall:achievements
+settings:settings
+usage:Usage:
+completedPepingo:You completed the Pepingo!
+paused:paused
+die:die
+outOf:out of
+luck:luck
+gotAdblocker:You got the adblocker!
+foundAdblocker:You found an adblocker! Secure it until 4 AM to get it.
+keptMaxwell:YOU KEPT YOUR MAXWELL!!!
+score:Score
+best:Best
+ggWonned:gg you wonned
+6amClock:6 am :clock:
+pressAnyKeyButAwesome:press any key!!!!
+beat4Nights:You beat the entire 4 nights!!!
+beatPreparations:You beat Pépito's Party Preparations!
+beatNight666:You beat Night 666 - Pépito's Party!!!
+rewardMaxwell:reward: x1 party maxwell
+points:points
+night:night
+one:one
+two:two
+three:three
+four:four
+five:five
+six:six
+seven:seven
+SHADOWNIGHT:SHADOWNIGHT
+pepitoPartyPreparations:Pépito's Party Preparations
+night666:night 666
+customNightSmall:custom night
+challengeSmall:challenge
+day:day
+newChallenger:A NEW CHALLENGER HAS APPEARED!
+peace:PEACE!
+newChallengers:NEW CHALLENGERS APPEAR!
+//://
+unlockedPepingo:+ unlocked Pepingo!
+maxwellGenerated:Your Maxwell generated %d% dabloons!
+cornGrew:Your Corn fully grew!
+millyParty:Milly is hosting a party at the shop!
+//://
+sodaName:SODAA
+sodaDesc:very tasty refreshing%n[S]: gives +40% energy
+flashlightName:flashlight
+flashlightDesc:too dark cant see%n[RMB]: flashes a light%nscares Astarta%ncooldown: 28s
+fanName:fan
+fanDesc:is it that hot%n[F]: lowers NotPepito%nchance;%nclears flood faster
+metalPipeName:METAL PIPE
+metalPipeDesc:METAL PIPE%n[M]: scares Pépito%ncooldown: 22s
+sensorName:SENSOR
+sensorDesc:can detect movement.%nside effects may%ninclude: MSI
+adblockerName:adblocker
+adblockerDesc:game on easy mode!%n- removes uncanny%n- removes glitcher
+maxwellName:maxwell
+maxwellDesc:this is a maxwell%nendless: generates%ndabloons
+freezeName:ice potion
+freezeDesc:makes enemies slower%n[I]: freeze everything%nfor 30s
+planksName:planks
+planksDesc:blockades doors%nlasts 12 knocks%n[B+1]: door 1 %n[B+2] door 2
+miniSodaName:MINNESOTA
+miniSodaDesc:mini soda%n[D]: gives +10% energy
+soupName:canned soup
+soupDesc:WARNING: DANGEROUS%nSPECIES INSIDE%n[U]: summon SOUP%nto nullify everything
+bMaxwellName:party maxwell
+bMaxwellDesc:this is a maxwell%n:activates an ending:
+birthdayHatName:birthday hat
+birthdayHatDesc:gives you a try%nat Pepito's Pre-Party%n1 item rifts into 10
+bingoCardName:bingo card
+bingoCardDesc:unlocks pepingo forever%nuse in a game once
+starlightName:bottle of starlight
+starlightDesc:[L]: use bottle%ncontains starlight%n%nnot stolen from%nroblox doors%ni swear
+sticketName:shadowticket
+sticketDesc:sends you into%nshadownight
+subscriptionName:subscription
+subscriptionDesc:ever wanted a%nwormhole through time%ninside a ballpit?%nThis is your answer!%nSubscribe now!
+cornName:corn
+cornDesc:corn!%ngrows 3 nights%ndecreases enemy%nAI by 1%nwhen grown
+//://
+beginnerName:Beginner
+beginnerDesc:Beat Night 1
+advancerName:Advancer
+advancerDesc:Beat Night 2
+conquerorName:Conqueror
+conquerorDesc:Beat Night 3
+all_nighterName:All-nighter with Pépito
+all_nighterDesc:Beat Night 4
+millyName:Ding
+millyDesc:Buy an item from Milly's Shop
+shopping_spreeName:Shopping Spree
+shopping_spreeDesc:Buy every item in Milly's Shop
+dabloonsName:Dabloons
+dabloonsDesc:Get 1000 Dabloons in endless
+survivorName:Survivor
+survivorDesc:Reach Endless Night 8
+is_it_possibleName:Is it even possible?
+is_it_possibleDesc:Reach Endless Night 14
+one_of_manyName:One of Many
+one_of_manyDesc:Die for the first time
+skullcrackerName:Skullcracker
+skullcrackerDesc:Die 10 times
+darwin_awardName:Darwin Award
+darwin_awardDesc:Die 100 times
+kamikazeName:Kamikaze
+kamikazeDesc:Die 1000 times
+whole_lotta_pointsName:Whole Lotta Points
+whole_lotta_pointsDesc:Get 100000 total custom night points
+brokeName:Broke
+brokeDesc:Complete Night 4 with no items
+prepartyName:Pépito Pre-Partygoer
+prepartyDesc:Beat Pépito's Pre-Party
+partyName:Pépito Partygoer
+partyDesc:Beat Pépito's Party (the real one)
+frogName:nyoom
+frogDesc:type FROG and see what happens
+bingusName:Bingus
+bingusDesc:Complete a Pepingo
+riftName:Swinging right to you
+riftDesc:Rift out an item
+halfwayName:Shadowlurker
+halfwayDesc:thginwodahS fo tnioP yawflaH eht hcaeR
+shadownightName:Was it all a dream?
+shadownightDesc:thginwodahS taeB
+el_astartaName:El Astarta
+el_astartaDesc:Beat Challenge 1: El Astarta
+blizzardName:Blizzard
+blizzardDesc:Beat Challenge 2: Blizzard
+time_is_tickingName:Time is Ticking
+time_is_tickingDesc:Beat Challenge 3: Time is Ticking
+the_fog_is_comingName:The Fog is Coming
+the_fog_is_comingDesc:Beat Challenge 4: The Fog is Coming
+gruggenheimedName:Gruggenheimed
+gruggenheimedDesc:Beat Challenge 5: Gruggenheimed
+perfect_stormName:Perfect Storm
+perfect_stormDesc:Beat a night with Blizzard, Fog and Rain
+//://
+msiIsWatchingL:MSI is watching
+elAstartaL:El Astarta
+blizzardL:Blizzard
+timeIsTickingL:Time is Ticking
+fogIsComingL:The Fog is Coming
+gruggenheimedL:Gruggenheimed
+uraniumFeverL:URAANIUM FEVER
+//://
+h:h
+winsSt:Won games
+deathsSt:Died
+playtimeSt:Playtime
+endlessSt:Endless record
+pepingoSt:Pepingo cards filled
+pepingo_tasksSt:Pepingo tasks completed
+items_boughtSt:Items bought from Milly
+items_riftedSt:Items rifted
+points_totalSt:Total points gotten
+points_maxSt:Highest points night
+died_to_pepitoSt:Killed by Pépito
+died_to_notpepitoSt:Killed by NotPepito
+died_to_uncannySt:Killed by Uncanny Cat
+died_to_msiSt:Killed by MSI
+died_to_astartaSt:Killed by Astarta
+died_to_sharkSt:Killed by Shark
+died_to_colacatSt:Killed by Cola Cat
+died_to_makiSt:Killed by Maki
+died_to_lemonade_catSt:Killed by Lemonade Cat
+died_to_scary_catSt:Killed by Scary Cat
+died_to_el_astartaSt:Killed by El Astarta
+died_to_radiationSt:Killed by Radiation
+died_to_shadow_pepitoSt:Killed by Shadow Pépito
+died_to_shadow_astartaSt:Killed by Shadow Astarta
+died_to_dreadSt:Killed by dread
+//://
+pmChallenge:Challenge
+pmNormal:Normal
+pmEndless:Endless
+pmPlay:play
+pmNight:night
+pmBest:best
+//://
+pepitoCn:Pépito
+notPepitoCn:NotPepito
+glitcherCn:Glitcher
+uncannyCatCn:Uncanny Cat
+msiCn:MSI
+astartaCn:Astarta
+sharkCn:Shark
+boykisserCn:Boykisser
+colaCatCn:Cola Cat
+mirrorCatCn:Zazu
+makiCn:Maki
+lemonadeCatCn:Lemonade Cat
+wiresCn:Wires
+scaryCatCn:Scary Cat
+jumpscareCatCn:Jumpscare Cat
+elAstartaCn:El Astarta
+powerOutageCn:Power Outage
+blizzardCn:Blizzard
+timersCn:Timers
+fogCn:Fog
+radiationCn:Radiation
+rainCn:Rain
+//://
+manualMSIAstarta:Close doors where you see eyes. MSI tells you where to move your camera.
+manualShark:Shark indicators appear. Move your camera.
+manualBoykisser:Answer Boykisser's question (be honest)
+manualMakiLemonade:Check your camera for Maki; Throw lemons at Lemonade Cat.
+manualZazu:Right-Click Zazu to close his door.
+//://
+metal_pipe_useB:use metal pipe
+metal_pipe_use_6_timesB:use metal pipe 6 times
+boop_pepitoB:boop Pépito's nose
+survive_astartaB:survive Astarta
+survive_pepitoB:survive Pépito
+survive_makiB:survive Maki
+survive_a90B:survive a90
+survive_boykisserB:survive boykisser
+encounter_ratB:encounter Rat
+survive_cola_catB:survive cola cat
+beat_night_1B:beat night 1
+survive_msiB:survive MSI
+survive_floodB:survive flood
+use_soda_at_1_energyB:use soda at 1% energy
+flash_msiB:flash MSI
+four_usage_barsB:have 4 usage bars
+a90_forgiveB:get a90's forgival
+see_notpepito_camB:find NotPepito on camera
+beat_with_less_itemsB:beat night 1+ with <3 items
+find_adblockerB:find an ad blocker
+beat_night_2B:beat night 2
+beat_night_3B:beat night 3
+beat_without_soundB:beat the game with 0 volume
+beat_without_powerB:beat the game with no power
+survive_a90_with_msiB:survive a90 with MSI
+beat_with_less_less_itemsB:beat night 1+ with <2 item
+beat_with_less_less_less_itemsB:beat night 1+ with no items
+//://
+kbPepito:killed by pépito
+kbNotPepito:killed by NotPepito
+kbUncanny:killed by uncanny cat
+kbMSI:killed by MSI
+kbAstarta:killed by astarta
+kbCola:killed by cola cat
+kbMaki:killed by maki
+kbShark:killed by shark
+kbBoykisser:his name is silly cat....    
+kbLemon:killed by lemonade cat
+kbScary:killed by scary cat
+kbDread:killed by dread
+kbShadowAstarta:killed by Shadow Astarta
+kbShadowPepito:killed by Shadow Pépito
+kbElAstarta:killed by El Astarta
+kbRadiation:died from radiation
+kbGameDesign:killed by intentional game design
+//://
+pepitoDT1:Pépito... Main enemy of the game. You'll hear his footsteps from left or right, close the respective door. Sound is directional.
+pepitoDT2:Pépito again? Use the Metal Pipe to scare him away immediately. Enable headphones in settings if you're struggling with the direction.
+pepitoDT3:Pépito. Footsteps. Close door. Figure it out, I believe in you.
+notPepitoDT1:NotPepito... He's kinda like Pépito. Just faster. Way faster. React immediately. Lights will flicker.
+notPepitoDT2:NotPepito again.. gonna be a tough one. Lights flicker and you hear his footsteps. Just need to react faster.
+notPepitoDT3:Eventually you'll get used to it.
+uncannyDT1:Uncanny Cat... when you see him appear stop moving or pressing keys IMMEDIATELY. He will give you two strikes until you die.
+uncannyDT2:Uncanny Cat again.. do. not. MOVE.                                    You can use the adblocker to suppress him for one night. Adblockers appear in the camera.
+uncannyDT3:Chill, stop moving so much already.
+msiDT1:MSI... Scary one. Move left or right at his command. Left, then right, then left, then right, then left...
+msiDT2:MSI again, huh. If you're really struggling use the flashlight on him, but that will summon Glitcher. Move LEFT and RIGHT.
+msiDT3:LEFT, RIGHT, LEFT, RIGHT, LEFT, RIGHT, LEFT, RIGHT. You'll learn it eventually.
+astartaDT1:Astarta... Her eyes will appear in the door frames. After some time they will flicker, and then she will attack. Close the door.
+astartaDT2:Astarta again. Close the doors earlier if you want to, or just use the Flashlight in the door frame to scare her away.
+astartaDT3:Astarta. You'll meet this one a lot.
+colaDT1:ColaCat... Your soda will start corrupting and become red after some time, and if you don't drink it you will die.
+colaDT2:ColaCat again. In Classic he appears only when Soda is  used with Metal Pipe or Flashlight. Mini Soda does not get affected by ColaCat.
+colaDT3:Soda go red -> Drink Soda.
+makiDT1:Maki... Maki's footsteps are not directional. You will need to look in the camera to see what direction she will go to.
+makiDT2:Maki again? Maki will indicate her direction with a red exclamation mark too. Your last resort will be using the Metal Pipe.
+makiDT3:How.
+sharkDT1:Shark... The Flood is an entire 1 minute sequence. You can make the Flood go 2x faster using the Fan. Green squares will appear, make the fish avoid them at all cost.
+sharkDT2:Shark again? You can make the Flood go 2x faster using the Fan. Green squares will appear, make the fish avoid them at all cost.
+sharkDT3:Avoid green squares.
+lemonDT1:Lemonade Cat... Right-Click to throw lemons at him. Lemons take a bit to reach him, so go a bit ahead.
+lemonDT2:Lemonade Cat again. Aim BETTER. THROW THOSE LEMONS. DONT RUN OUT.
+lemonDT3:Aim better PLEASE.
+scaryCatDT1:Scary Cat... he will try to go in the center of your view. Move and don't let him reach you. After some time he will disappear.
+scaryCatDT2:Scary Cat is very forgiving, i don't know how you are dying. But move your camera away from him.
+scaryCatDT3:Move your camera.
+elAstartaDT1:El Astarta... Sequence that lasts 40 seconds. El Astarta's eyes will appear in door frames and strike very fast. New doors will appear. Survive.
+elAstartaDT2:El Astarta again... Close doors with eyes. Do not get confused. Survive.
+elAstartaDT3:Survive.
+radiationDT:Avoid your cursor from entering green circles, they indicate radiation. If you reach too much radiation you WILL die.
+afterTheFirstNuclearStrike:After the first nuclear strike, you must IMMEDIATELY travel to the Indonesian island of Sumatra, where Lake Toba is located. On this Lake Toba there is the island of Samosir. On the island of Samosir there is a Lutheran church "GEREJA HKBP BOLON PANGURURAN". Opposite this church there is a hill where my tent will be located!!! - Larry Zhou

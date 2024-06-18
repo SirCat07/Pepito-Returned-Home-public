@@ -54,6 +54,7 @@ public class GamePanel extends JPanel implements Runnable {
     public boolean showManual = true; // shows manual, ignores geiger counter
     boolean saveScreenshots = true; // save screenshots in a folder
     boolean disclaimer = true; // disclaimer at the start of the game
+    boolean saveItems = false; // save items
 
     int settingsScrollY = 0;
 
@@ -81,7 +82,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GameState state = GameState.UNLOADED;
 
-    String version = "2.0.0";
+    String version = "2.0.1";
     short versionTextLength = 0;
 
     Color currentLeftPan = new Color(0, 0, 0);
@@ -138,6 +139,7 @@ public class GamePanel extends JPanel implements Runnable {
     List<Item> fullItemList = new ArrayList<>();
     List<Item> itemList = new ArrayList<>();
     List<Item> usedItems = new ArrayList<>();
+    HashMap<Item, Boolean> isItemUsed = new HashMap<>();
 
     boolean startButtonSelected = false;
 
@@ -149,6 +151,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 
     JFrame window;
+    
     public GamePanel(Main jfxAudioPlayer, JFrame window) {
         this.audioPlayer = jfxAudioPlayer;
         this.window = window;
@@ -546,8 +549,10 @@ public class GamePanel extends JPanel implements Runnable {
                     }
                 });
             } else if(state == GameState.GAME) {
-                if(night.getPepito().getFlicker() > 0) {
-                    goalFlicker = (short) (Math.random() * night.getPepito().getFlicker());
+                int totalFlicker = night.getPepito().getFlicker() + night.getFlicker();
+
+                if(totalFlicker > 0) {
+                    goalFlicker = (short) (Math.random() * totalFlicker);
                 } else {
                     goalFlicker = 0;
                     currentFlicker = 0;
@@ -756,6 +761,8 @@ public class GamePanel extends JPanel implements Runnable {
     PepitoImage[] scaryCatImage = new PepitoImage[] {new PepitoImage("/game/entities/scaryCat/scaryCat.png"), new PepitoImage("/game/entities/scaryCat/scaryCatShadow.png")};
     PepitoImage[] scaryCatWarn = new PepitoImage[] {new PepitoImage("/game/entities/scaryCat/warn.png"), new PepitoImage("/game/entities/scaryCat/shadowWarn.png")};
     PepitoImage[] scaryCatMove = new PepitoImage[] {new PepitoImage("/game/entities/scaryCat/move.png"), new PepitoImage("/game/entities/scaryCat/shadowMove.png")};
+    PepitoImage blackScaryCat = new PepitoImage("/game/entities/scaryCat/blackScaryCat.png");
+    
     BufferedImage astartaEyes;
 
     PepitoImage creditsdotpng = new PepitoImage("/menu/creditsdotpng.png");
@@ -852,6 +859,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 
 
+    static HashMap<String, String> languageText = new HashMap<>();
 
     static BufferedImage balloonImg;
     public static List<Balloon> balloons = new ArrayList<>();
@@ -866,7 +874,7 @@ public class GamePanel extends JPanel implements Runnable {
     boolean isPepitoBirthday;
     short birthdayAnimation = 0;
 
-    boolean isAprilFools;
+    public static boolean isAprilFools;
     Platformer platformer;
 
     byte recordEndlessNight = 0;
@@ -895,6 +903,7 @@ public class GamePanel extends JPanel implements Runnable {
             dataBuilder.append("fpsCounter:").append((fpsCounters[0]) ? "1" : "0").append("\n");
             dataBuilder.append("fpsCap:").append(fpsCap).append("\n");
             dataBuilder.append("shake:").append(shake).append("\n");
+            dataBuilder.append("language:").append(language).append("\n");
 
             writeFile(dataPath, Base64.getEncoder().encodeToString(dataBuilder.toString().getBytes()));
         } catch (Exception ignored) { }
@@ -953,7 +962,7 @@ public class GamePanel extends JPanel implements Runnable {
 
         DiscordRPC.discordUpdatePresence(rich);
 
-        String os_name = System.getProperty( "os.name").toLowerCase();
+        String os_name = System.getProperty("os.name").toLowerCase();
 
         if (os_name.toLowerCase(Locale.ROOT).contains("win")) {
             gameDirectory = Path.of(System.getenv("APPDATA") + "\\four night pepito");
@@ -964,9 +973,9 @@ public class GamePanel extends JPanel implements Runnable {
         Calendar calendar = Calendar.getInstance();
 
         isPepitoBirthday = calendar.get(Calendar.MONTH) == Calendar.SEPTEMBER && calendar.get(Calendar.DAY_OF_MONTH) == 4;
-        isAprilFools = calendar.get(Calendar.MONTH) == Calendar.APRIL && calendar.get(Calendar.DAY_OF_MONTH) <= 7;
-//        isAprilFools = true;
+        isAprilFools = calendar.get(Calendar.MONTH) == Calendar.APRIL && calendar.get(Calendar.DAY_OF_MONTH) == 1;
 
+        loadLanguage("english");
         initializeFontMetrics();
 
         randomX = (short) Math.round(Math.random() * 256 - 512);
@@ -1047,7 +1056,7 @@ public class GamePanel extends JPanel implements Runnable {
         jumpscares[2] = new PepitoImage("/game/jumpscares/notPepito.png");
         jumpscares[3] = new PepitoImage("/game/jumpscares/astarta2.png");
 //        jumpscares[4] = new PepitoImage("/game/jumpscares/MSI.png");
-        jumpscares[5] = new PepitoImage("/game/jumpscares/colaCat.png");
+        jumpscares[5] = new PepitoImage("/game/jumpscares/colaJumpscare.png");
         jumpscares[6] = new PepitoImage("/game/jumpscares/maki.png");
         jumpscares[7] = new PepitoImage("/game/jumpscares/sharkJumpscare.png");
         jumpscares[8] = new PepitoImage("/game/jumpscares/sharkJumpscare2.png");
@@ -1104,28 +1113,29 @@ public class GamePanel extends JPanel implements Runnable {
         sastartaTank[1] = completelyBlack(sastartaTank[0]);
         astartaMinecartWhite = completelyWhite(loadImg("/game/entities/astartaBoss/minecart.png"));
 
-        soda = new Item(resize(rotate(sodaImg, 45, true), 100, 100, Image.SCALE_SMOOTH), "SODAA", "very tasty refreshing\n[S]: gives +40% energy", -1, "soda");
-        flashlight = new Item(resize(flashlightImg, 100, 80, Image.SCALE_SMOOTH), "flashlight", "too dark cant see\n[RMB]: flashes a light\nscares Astarta\ncooldown: 28s", -1, "flashlight");
-        fan = new Item(resize(rotate(fanImg[0], 0, true), 100, 100, Image.SCALE_SMOOTH), "fan", "is it that hot\n[F]: lowers NotPepito\nchance;\nclears flood faster", -1, "fan");
-        metalPipe = new Item(itemOffset(resize(metalPipeImg, 100, 20, Image.SCALE_SMOOTH), 0, 70), "METAL PIPE", "METAL PIPE\n[M]: scares Pépito\ncooldown: 22s", -1, "metalPipe");
-        sensor = new Item(resize(sensorIcon, 110, 110, Image.SCALE_SMOOTH), "SENSOR", "can detect movement.\nside effects may\ninclude: MSI", -1, "sensor");
-        adblocker = new Item(resize(adblockerImage, 100, 100, Image.SCALE_FAST), "adblocker", "game on easy mode!\n- removes uncanny\n- removes glitcher", 1, "adblocker").addTags(List.of(ItemTag.RIFT));
-        maxwell = new Item(resize(maxwellIcon, 110, 100, Image.SCALE_SMOOTH), "maxwell", "this is a maxwell\nendless: generates\ndabloons", 0, "maxwell").addTags(List.of(ItemTag.RIFT));
-        freezePotion = new Item(resize(freezeImg, 100, 100, Image.SCALE_SMOOTH), "ice potion", "makes enemies slower\n[I]: freeze everything\nfor 30s", 0, "freeze").addTags(List.of(ItemTag.RIFT));
-        planks = new Item(resize(planksImg, 120, 90, Image.SCALE_SMOOTH), "planks", "blockades doors\nlasts 12 knocks\n[B+1]: door 1 \n[B+2] door 2", 0, "planks").addTags(List.of(ItemTag.RIFT));
-        miniSoda = new Item(resize(rotate(miniSodaImg, 45, true), 100, 100, Image.SCALE_SMOOTH), "MINNESOTA", "mini soda\n[D]: gives +10% energy", 0, "miniSoda").addTags(List.of(ItemTag.RIFT));
-        soup = new Item(resize(soupItemImg, 80, 100, Image.SCALE_SMOOTH), "canned soup", "WARNING: DANGEROUS\nSPECIES INSIDE\n[U]: summon SOUP\nto nullify everything", 0, "soup").addTags(List.of(ItemTag.RIFT));
-        birthdayMaxwell = new Item(resize(birthdayMaxwellIcon, 110, 100, Image.SCALE_SMOOTH), "party maxwell", "this is a maxwell\n:activates an ending:", 0, "birthdayMaxwell").addTags(List.of(ItemTag.RIFT));
-        birthdayHat = new Item(resize(birthdayHatImg, 100, 100, Image.SCALE_SMOOTH), "birthday hat", "gives you a try\nat Pepito's Pre-Party\n1 item rifts into 10", 0, "birthdayHat").addTags(List.of(ItemTag.RIFT));
-        bingoCardItem = new Item(bingoCardIcon, "bingo card", "unlocks pepingo forever\nuse in a game once", 0, "bingoCard").addTags(List.of(ItemTag.RIFT));
-        starlightBottle = new Item(resize(starlightBottleImg, 110, 110, Image.SCALE_SMOOTH), "bottle of starlight", "[L]: use bottle\ncontains starlight\n\nnot stolen from\nroblox doors\ni swear", 0, "starlightBottle");
-        shadowTicket = new Item(resize(shadowTicketIcon, 120, 90, Image.SCALE_SMOOTH), "shadowticket", "sends you into\nshadownight", 0, "shadowTicket");
+        soda = new Item(resize(rotate(sodaImg, 45, true), 100, 100, Image.SCALE_SMOOTH), getString("sodaName"), getString("sodaDesc"), -1, "soda", "S");
+        flashlight = new Item(resize(flashlightImg, 100, 80, Image.SCALE_SMOOTH), getString("flashlightName"), getString("flashlightDesc"), -1, "flashlight", "Right-Click");
+        fan = new Item(resize(rotate(fanImg[0], 0, true), 100, 100, Image.SCALE_SMOOTH), getString("fanName"), getString("fanDesc"), -1, "fan", "F");
+        metalPipe = new Item(itemOffset(resize(metalPipeImg, 100, 20, Image.SCALE_SMOOTH), 0, 70), getString("metalPipeName"), getString("metalPipeDesc"), -1, "metalPipe", "M");
+        sensor = new Item(resize(sensorIcon, 110, 110, Image.SCALE_SMOOTH), getString("sensorName"), getString("sensorDesc"), -1, "sensor", "");
+        adblocker = new Item(resize(adblockerImage, 100, 100, Image.SCALE_FAST), getString("adblockerName"), getString("adblockerDesc"), 1, "adblocker", "").addTags(List.of(ItemTag.RIFT));
+        maxwell = new Item(resize(maxwellIcon, 110, 100, Image.SCALE_SMOOTH), getString("maxwellName"), getString("maxwellDesc"), 0, "maxwell", "").addTags(List.of(ItemTag.RIFT));
+        freezePotion = new Item(resize(freezeImg, 100, 100, Image.SCALE_SMOOTH), getString("freezeName"), getString("freezeDesc"), 0, "freeze", "I").addTags(List.of(ItemTag.RIFT));
+        planks = new Item(resize(planksImg, 120, 90, Image.SCALE_SMOOTH), getString("planksName"), getString("planksDesc"), 0, "planks", "B + door number").addTags(List.of(ItemTag.RIFT));
+        miniSoda = new Item(resize(rotate(miniSodaImg, 45, true), 100, 100, Image.SCALE_SMOOTH), getString("miniSodaName"), getString("miniSodaDesc"), 0, "miniSoda", "D").addTags(List.of(ItemTag.RIFT));
+        soup = new Item(resize(soupItemImg, 80, 100, Image.SCALE_SMOOTH), getString("soupName"), getString("soupDesc"), 0, "soup", "U").addTags(List.of(ItemTag.RIFT));
+        birthdayMaxwell = new Item(resize(birthdayMaxwellIcon, 110, 100, Image.SCALE_SMOOTH), getString("bMaxwellName"), getString("bMaxwellDesc"), 0, "birthdayMaxwell", "").addTags(List.of(ItemTag.RIFT));
+        birthdayHat = new Item(resize(birthdayHatImg, 100, 100, Image.SCALE_SMOOTH), getString("birthdayHatName"), getString("birthdayHatDesc"), 0, "birthdayHat", "").addTags(List.of(ItemTag.RIFT));
+        bingoCardItem = new Item(bingoCardIcon, getString("bingoCardName"), getString("bingoCardDesc"), 0, "bingoCard", "").addTags(List.of(ItemTag.RIFT));
+        starlightBottle = new Item(resize(starlightBottleImg, 110, 110, Image.SCALE_SMOOTH), getString("starlightName"), getString("starlightDesc"), 0, "starlightBottle", "L");
+        shadowTicket = new Item(resize(shadowTicketIcon, 120, 90, Image.SCALE_SMOOTH), getString("sticketName"), getString("sticketDesc"), 0, "shadowTicket", "");
 
-        soggyBallpit = new Item(resize(soggyImage, 100, 100, Image.SCALE_SMOOTH), "subscription", "ever wanted a\nwormhole through time\ninside a ballpit?\nThis is your answer!\nSubscribe now!", 0, "ballpit");
-        corn[0] = new Corn(cornImage, "corn", "corn!\ngrows 3 nights\ndecreases enemy\nAI by 1\nwhen grown", 0, "corn", loadImg("/game/items/cornStage1.png"));
-        corn[1] = new Corn(cornImage, "corn", "corn!\ngrows 3 nights\ndecreases enemy\nAI by 1\nwhen grown", 0, "corn2", loadImg("/game/items/cornStage1.png"));
-        sunglasses = new Item(itemOffset(sunglassesIcon, 0, 60), "sunglasses", "protection from a120\n[G]: wear sunglasses", 0, "sunglasses");
-        speedrunTimer = new Item(itemOffset(resize(speedrunTimerIcon, 100, 90, Image.SCALE_SMOOTH), 0, 10), "speedrun timer", "definitely uhh\ncounts down until\nsomething!", 0, "speedrunTimer");
+        soggyBallpit = new Item(resize(soggyImage, 100, 100, Image.SCALE_SMOOTH), getString("subscriptionName"), getString("subscriptionDesc"), 0, "ballpit", "");
+        corn[0] = new Corn(cornImage, getString("cornName"), getString("cornDesc"), 0, "corn", loadImg("/game/items/cornStage1.png"));
+        corn[1] = new Corn(cornImage, getString("cornName"), getString("cornDesc"), 0, "corn2", loadImg("/game/items/cornStage1.png"));
+
+        sunglasses = new Item(itemOffset(sunglassesIcon, 0, 60), "sunglasses", "protection from a120\n[G]: wear sunglasses", 0, "sunglasses", "G");
+        speedrunTimer = new Item(itemOffset(resize(speedrunTimerIcon, 100, 90, Image.SCALE_SMOOTH), 0, 10), "speedrun timer", "definitely uhh\ncounts down until\nsomething!", 0, "speedrunTimer", "");
 
         birthdayMaxwell.addConflicts(List.of(maxwell, adblocker, shadowTicket)); // gamemode
         birthdayHat.addConflicts(List.of(adblocker, adblocker, shadowTicket)); // gamemode
@@ -1177,6 +1187,7 @@ public class GamePanel extends JPanel implements Runnable {
                         thousandFPS = Math.max(1, 1000 / fpsCap);
 
                         shake = Byte.parseByte(Arrays.stream(array).filter(string -> string.startsWith("shake:")).findFirst().orElse("0").replaceAll("shake:",""));
+                        language = Arrays.stream(array).filter(string -> string.startsWith("language:")).findFirst().orElse("english").replaceAll("language:","");
                     } catch (Exception ignored) {
                         System.out.println("LOADING DATA FAILED LOADING DATA FAILED");
                     }
@@ -1184,6 +1195,11 @@ public class GamePanel extends JPanel implements Runnable {
             } else {
                 Files.createFile(dataPath);
             }
+
+            loadLanguage(language);
+            initializeFontMetrics();
+            initializeItemNames();
+            reloadMenuButtons();
 
 
             Path itemsPath = Path.of(gameDirectory + "\\items.txt");
@@ -1304,29 +1320,29 @@ public class GamePanel extends JPanel implements Runnable {
             System.out.println("program exploded");
         }));
 
-        CustomNight.addNewEnemy(new CustomNightEnemy("Pépito", "pepito", 0));
-        CustomNight.addNewEnemy(new CustomNightEnemy("NotPepito", "notPepito", 1));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Glitcher", "glitcher", 2));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Uncanny Cat", "uncanny", 3));
-        CustomNight.addNewEnemy(new CustomNightEnemy("MSI", "msi", 4));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Astarta", "astarta", 5));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Shark", "shark", 6));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Boykisser", "boykisser", 7));
-        CustomNight.addNewEnemy(new CustomNightEnemy("ColaCat", "colaCat", 8));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Zazu", "zazu", 9));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Maki", "maki", 10));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Lemonade Cat", "lemonadeCat", 11));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Wires", "wires", 12));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Scary Cat", "scaryCat", 13));
-        CustomNight.addNewEnemy(new CustomNightEnemy("Jumpscare Cat", "jumpscareCat", 14));
-        CustomNight.addNewEnemy(new CustomNightEnemy("El Astarta", "elAstarta", 15));
+        CustomNight.addNewEnemy(new CustomNightEnemy("pepitoCn", "pepito", 0));
+        CustomNight.addNewEnemy(new CustomNightEnemy("notPepitoCn", "notPepito", 1));
+        CustomNight.addNewEnemy(new CustomNightEnemy("glitcherCn", "glitcher", 2));
+        CustomNight.addNewEnemy(new CustomNightEnemy("uncannyCatCn", "uncanny", 3));
+        CustomNight.addNewEnemy(new CustomNightEnemy("msiCn", "msi", 4));
+        CustomNight.addNewEnemy(new CustomNightEnemy("astartaCn", "astarta", 5));
+        CustomNight.addNewEnemy(new CustomNightEnemy("sharkCn", "shark", 6));
+        CustomNight.addNewEnemy(new CustomNightEnemy("boykisserCn", "boykisser", 7));
+        CustomNight.addNewEnemy(new CustomNightEnemy("colaCatCn", "colaCat", 8));
+        CustomNight.addNewEnemy(new CustomNightEnemy("mirrorCatCn", "zazu", 9));
+        CustomNight.addNewEnemy(new CustomNightEnemy("makiCn", "maki", 10));
+        CustomNight.addNewEnemy(new CustomNightEnemy("lemonadeCatCn", "lemonadeCat", 11));
+        CustomNight.addNewEnemy(new CustomNightEnemy("wiresCn", "wires", 12));
+        CustomNight.addNewEnemy(new CustomNightEnemy("scaryCatCn", "scaryCat", 13));
+        CustomNight.addNewEnemy(new CustomNightEnemy("jumpscareCatCn", "jumpscareCat", 14));
+        CustomNight.addNewEnemy(new CustomNightEnemy("elAstartaCn", "elAstarta", 15));
 
-        CustomNight.addNewModifier(new CustomNightModifier("Power Outage", "placeholder"));
-        CustomNight.addNewModifier(new CustomNightModifier("Blizzard", "placeholder"));
-        CustomNight.addNewModifier(new CustomNightModifier("Timers", "placeholder"));
-        CustomNight.addNewModifier(new CustomNightModifier("Fog", "placeholder"));
-        CustomNight.addNewModifier(new CustomNightModifier("Radiation", "placeholder"));
-        CustomNight.addNewModifier(new CustomNightModifier("Rain", "placeholder"));
+        CustomNight.addNewModifier(new CustomNightModifier("powerOutageCn", "placeholder"));
+        CustomNight.addNewModifier(new CustomNightModifier("blizzardCn", "placeholder"));
+        CustomNight.addNewModifier(new CustomNightModifier("timersCn", "placeholder"));
+        CustomNight.addNewModifier(new CustomNightModifier("fogCn", "placeholder"));
+        CustomNight.addNewModifier(new CustomNightModifier("radiationCn", "placeholder"));
+        CustomNight.addNewModifier(new CustomNightModifier("rainCn", "placeholder"));
 
         onResizeEvent();
         recalculateButtons(GameState.MENU);
@@ -1706,7 +1722,7 @@ public class GamePanel extends JPanel implements Runnable {
                                 astartaJumpscareCounter++;
                             }
                             if(!drawCat) {
-                                if(shake == 0 && !jumpscare.equals(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)) && !killedBy.equals("killed by Shadow Pépito")) {
+                                if(shake == 0 && !jumpscare.equals(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)) && !killedBy.equals(getString("kbShadowPepito"))) {
                                     window.move((int) (window.getX() - (Math.random() * 8 - 4) * widthModifier), (int) (window.getY() - (Math.random() * 8 - 4) * heightModifier));
                                 }
                             }
@@ -1988,19 +2004,19 @@ public class GamePanel extends JPanel implements Runnable {
                     graphics.fillRect(x, y, 2, 2);
                 }
             }
-            graphics.setColor(black80);
+            graphics.setColor(new Color(0, 0, 0, 100));
             graphics.fillRoundRect(160, 250, 770, 80, 40, 40);
             graphics.setColor(Color.GREEN);
             graphics.setFont(yuGothicPlain80);
-            String starting = "starting simulation...";
+            String starting = getString("startingSimulation");
             if(Math.random() < 0.001) {
-                starting = "farting simulation...";
+                starting = getString("fartingSimulation");
             }
             graphics.drawString(starting, 540 - halfTextLength(graphics, starting), 320);
             graphics.dispose();
 
             sound.play("startSimulation", 0.1);
-            music.stop();
+            music.stop();   
 
             float[] sway = new float[] {0.02F};
 
@@ -2246,14 +2262,18 @@ public class GamePanel extends JPanel implements Runnable {
 
                                                     textGraphics.setFont(comicSans60);
                                                     textGraphics.setColor(white);
-                                                    textGraphics.drawString("Would you like to enter", 350 - halfTextLength(textGraphics, "Would you like to enter"), 140 + 40 * ab.getEndingTextAlpha() + sin);
-                                                    textGraphics.drawString("The Void?", 350 - halfTextLength(textGraphics, "The Void?"), 200 + 40 * ab.getEndingTextAlpha() + sin);
+                                                    textGraphics.drawString(getString("wouldYouLikeToEnter"), 350 - halfTextLength(textGraphics, getString("wouldYouLikeToEnter")), 140 + 40 * ab.getEndingTextAlpha() + sin);
+                                                    textGraphics.drawString(getString("theVoid?"), 350 - halfTextLength(textGraphics, getString("theVoid?")), 200 + 40 * ab.getEndingTextAlpha() + sin);
 
                                                     textGraphics.setFont(comicSans80);
                                                     textGraphics.setColor(ab.getEndingChoice() ? white : gray);
-                                                    textGraphics.drawString("1. " + (ab.getEndingChoice() ? "Yes" : "No"), 320 - textLength(textGraphics, "1. " + (ab.getEndingChoice() ? "Yes" : "No")), 630 - 40 * ab.getEndingTextAlpha() + cos);
+
+                                                    String yes = getString("Yes");
+                                                    String no = getString("No");
+
+                                                    textGraphics.drawString("1. " + (ab.getEndingChoice() ? yes : no), 320 - textLength(textGraphics, "1. " + (ab.getEndingChoice() ? yes : no)), 630 - 40 * ab.getEndingTextAlpha() + cos);
                                                     textGraphics.setColor(ab.getEndingChoice() ? gray : white);
-                                                    textGraphics.drawString("2. " + (ab.getEndingChoice() ? "No" : "Yes"), 380, 630 - 40 * ab.getEndingTextAlpha() + cos);
+                                                    textGraphics.drawString("2. " + (ab.getEndingChoice() ? no : yes), 380, 630 - 40 * ab.getEndingTextAlpha() + cos);
 
                                                     textGraphics.dispose();
                                                     graphics2D.drawImage(mirror(text, 1), fixedOffsetX - 400 + 390, 0, null);
@@ -2350,7 +2370,7 @@ public class GamePanel extends JPanel implements Runnable {
                                             timerGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                                             timerGraphics.setFont(comicSans50);
-                                            String countdown = (Math.round(Math.max(0, mister.getCountdown()) * 100F) / 100F) + "s";
+                                            String countdown = (Math.round(Math.max(0, mister.getCountdown()) * 100F) / 100F) + getString("s");
                                             if (mister.getCountdown() < mister.getStartCountdown() / 3) {
                                                 timerGraphics.setColor(Color.RED);
                                             } else if (mister.getCountdown() < mister.getStartCountdown() / 3 * 2) {
@@ -2385,12 +2405,12 @@ public class GamePanel extends JPanel implements Runnable {
                                         textGraphics.setColor(Color.WHITE);
                                         textGraphics.setFont(comicSans50);
 
-                                        String str = "RANDOM EVENT: ";
+                                        String str = getString("randomEvent");
                                         if(ab.getRouletteY() >= 9660) {
                                             switch (ab.roulette1[57]) {
-                                                case 0 -> str += "UNCANNY DELIVERY";
-                                                case 1 -> str += "DVD EVENT";
-                                                case 2 -> str += "BLACK HOLES";
+                                                case 0 -> str += getString("uncannyDelivery");
+                                                case 1 -> str += getString("dvdEvent");
+                                                case 2 -> str += getString("blackHoles");
                                             }
                                         } else {
                                             str += "???";
@@ -2410,7 +2430,9 @@ public class GamePanel extends JPanel implements Runnable {
                                         if(shadowCheckpointUsed != 0 && y < 400) {
                                             graphics2D.setFont(comicSans40);
                                             graphics2D.setColor(Color.GRAY);
-                                            graphics2D.drawString("[press to skip]", fixedOffsetX - 200 + 540 - halfTextLength(graphics2D, "[press to skip]"), 620);
+
+                                            String pressToSkip = getString("pressToSkip");
+                                            graphics2D.drawString(pressToSkip, fixedOffsetX - 200 + 540 - halfTextLength(graphics2D, pressToSkip), 620);
                                         }
                                     } else {
                                         graphics2D.drawImage(sastartaTank[0], fixedOffsetX - 400 + 380, 0, null);
@@ -2483,7 +2505,7 @@ public class GamePanel extends JPanel implements Runnable {
                                         if (item.isSelected()) {
                                             if (selectedItemX == x && selectedItemY == y) {
                                                 graphics2D.setFont(yuGothicBold25);
-                                                graphics2D.drawString("EQUIPPED", equippedX, 245 + item.getDescription().split("\n").length * 30 - 30);
+                                                graphics2D.drawString(getString("equipped"), equippedX, 245 + item.getDescription().split("\n").length * 30 - 30);
                                             }
                                             if (itemList.get(x + (y * columns)).getItemLimitAdd() > 0) {
                                                 limitAdd = " (+" + itemList.get(x + (y * columns)).getItemLimitAdd() + ")";
@@ -2540,17 +2562,17 @@ public class GamePanel extends JPanel implements Runnable {
 
                     graphics2D.setColor(Color.WHITE);
                     graphics2D.setFont(yuGothicPlain30);
-                    graphics2D.drawString("Selected Items: " + checkItemsAmount() + "/" + itemLimit + limitAdd, 735, 425);
+                    graphics2D.drawString(getString("selectedItems") + checkItemsAmount() + "/" + itemLimit + limitAdd, 735, 425);
 
                     graphics2D.setFont(yuGothicBoldItalic25);
                     if (!(type == GameType.CUSTOM && CustomNight.isCustom())) {
                         graphics2D.setColor(warningRed);
-                        graphics2D.drawString("Warning: the items will", 735, 460);
-                        graphics2D.drawString("get consumed on start", 735, 490);
+                        graphics2D.drawString(getString("itemsWarning1"), 735, 460);
+                        graphics2D.drawString(getString("itemsWarning2"), 735, 490);
                     } else {
                         graphics2D.setColor(Color.GREEN);
-                        graphics2D.drawString("Items will NOT get", 735, 460);
-                        graphics2D.drawString("consumed on start!", 735, 490);
+                        graphics2D.drawString(getString("itemsNotConsumed1"), 735, 460);
+                        graphics2D.drawString(getString("itemsNotConsumed2"), 735, 490);
                     }
                 }
             }
@@ -2570,7 +2592,7 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.setColor(Color.WHITE);
 
                 if(achievementState || shiftingAchievements) {
-                    graphics2D.drawString("Statistics", 1750 - achievementsScrollX, 85);
+                    graphics2D.drawString(getString("statistics"), 1750 - achievementsScrollX, 85);
                     graphics2D.fillRect(1740 - achievementsScrollX, 105, 400, 5);
                     graphics2D.drawImage(mirror(achievementMenuArrow, 1), 1080 - achievementsScrollX, 0, null);
 
@@ -2586,17 +2608,24 @@ public class GamePanel extends JPanel implements Runnable {
 
                     int i = 0;
                     for(Statistics statistic : Statistics.values()) {
-                        graphics2D.setColor(i % 2 == 0 ? Color.WHITE : new Color(190, 190, 190));
+                        int y = 150 + i * 40 - statisticsScrollY;
+                        
+                        if(y < 690 && y > -50) {
+                            graphics2D.setColor(i % 2 == 0 ? Color.WHITE : new Color(190, 190, 190));
 
-                        String value = "" + statistic.getValue();
+                            String value = "" + statistic.getValue();
 
-                        if(statistic == Statistics.PLAYTIME) {
-                            int seconds = statistic.getValue() % 60;
-                            int minutes = (statistic.getValue() / 60) % 60;
-                            int hours = statistic.getValue() / 3600;
-                            value = hours + "h " + minutes + "m " + seconds + "s";
+                            if (statistic == Statistics.PLAYTIME) {
+                                int seconds = statistic.getValue() % 60;
+                                int minutes = (statistic.getValue() / 60) % 60;
+                                int hours = statistic.getValue() / 3600;
+                                value = hours + getString("h") + " " + minutes + getString("m") + " " + seconds + getString("s");
+                            }
+
+                            String string = getString(statistic.toString().toLowerCase(Locale.ROOT) + "St");
+
+                            graphics2D.drawString(string + ": " + value, 1250 - achievementsScrollX, y);
                         }
-                        graphics2D.drawString(statistic.getName() + ": " + value, 1250 - achievementsScrollX, 150 + i * 40 - statisticsScrollY);
                         i++;
                     }
 
@@ -2613,7 +2642,7 @@ public class GamePanel extends JPanel implements Runnable {
                     int x = 20 - achievementsScrollX; // optimization purposes i think
                     graphics2D.fillRect(x, 105, 920, 5);
                     x += 30; // result: 50 - achievementScrollX
-                    graphics2D.drawString("Achievements (" + achievementPercentage + "%)", x, 85);
+                    graphics2D.drawString(getString("achievements") + " (" + achievementPercentage + "%)", x, 85);
                     x += 890; // result: 940 - achievementScrollX
                     graphics2D.drawImage(achievementMenuArrow, x, 0, null);
 
@@ -2708,8 +2737,9 @@ public class GamePanel extends JPanel implements Runnable {
                         }
 
                         graphics2D.setColor(Color.WHITE);
-                        graphics2D.setFont(new Font("Comic Sans MS", Font.PLAIN, 52 - modifier.getName().length() * 2));
-                        graphics2D.drawString(modifier.getName(), 765 + 200 * x - halfTextLength(graphics2D, modifier.getName()), 288 + 60 * y);
+                        String name = getString(modifier.getName());
+                        graphics2D.setFont(new Font("Comic Sans MS", Font.PLAIN, 52 - name.length() * 2));
+                        graphics2D.drawString(name, 765 + 200 * x - halfTextLength(graphics2D, name), 288 + 60 * y);
 
                         if (CustomNight.selectedElement == modifier) {
                             graphics2D.setColor(CustomNight.isCustom() ? white100 : white60);
@@ -2721,9 +2751,9 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.setFont(yuGothicPlain60);
 
                 graphics2D.setColor(CustomNight.startSelected ? Color.WHITE : white160);
-                graphics2D.drawString(">> start", 830, 520);
+                graphics2D.drawString(">> " + getString("start"), 830, 520);
                 graphics2D.setColor(CustomNight.backSelected ? Color.WHITE : white160);
-                graphics2D.drawString(">> back", 830, 605);
+                graphics2D.drawString(">> " + getString("back"), 830, 605);
 
                 graphics2D.setColor(Color.WHITE);
                 graphics2D.setStroke(new BasicStroke(3));
@@ -2736,7 +2766,7 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.drawRect(5, 580, 365, 55);
                 graphics2D.setColor(Color.WHITE);
                 graphics2D.setFont(yuGothicPlain50);
-                String custom = "custom: " + (CustomNight.isCustom() ? "on" : "off");
+                String custom = getString("custom") + ": " + (CustomNight.isCustom() ? getString("on") : getString("off"));
                 graphics2D.drawString(custom, 180 - halfTextLength(graphics2D, custom), 625);
 
                 if(CustomNight.customSelected) {
@@ -2753,22 +2783,24 @@ public class GamePanel extends JPanel implements Runnable {
 
                 graphics2D.setColor(Color.WHITE);
                 graphics2D.setFont(comicSans30);
-                graphics2D.drawString("Enemies", 270, 35);
+                graphics2D.drawString(getString("Enemies"), 270, 35);
 
                 graphics2D.setFont(comicSans50);
                 if(CustomNight.isCustom()) {
-                    graphics2D.drawString("SHUFFLE", 15, 550);
+                    graphics2D.drawString(getString("SHUFFLE"), 15, 550);
                 } else {
-                    graphics2D.drawString("PREV", 15, 550);
-                    graphics2D.drawString("NEXT", 795 - textLength(graphics2D, "NEXT"), 550);
+                    graphics2D.drawString(getString("PREV"), 15, 550);
+                    graphics2D.drawString(getString("NEXT"), 795 - textLength(graphics2D, getString("NEXT")), 550);
                 }
 
                 if(!CustomNight.isCustom()) {
-                    graphics2D.setFont(new Font("Comic Sans MS", Font.PLAIN, 80 - CustomNight.getSelectedChallengeName().length() * 2));
-                    graphics2D.drawString(CustomNight.getSelectedChallengeName(), 405 - halfTextLength(graphics2D, CustomNight.getSelectedChallengeName()), 550);
+                    String str = getString(CustomNight.getSelectedChallengeLocalizeID());
+
+                    graphics2D.setFont(new Font("Comic Sans MS", Font.PLAIN, 80 - str.length() * 2));
+                    graphics2D.drawString(str, 405 - halfTextLength(graphics2D, str), 550);
                 }
                 graphics2D.setFont(comicSans40);
-                String challengeText = CustomNight.isCustom() ? "Custom Night" : ("Challenge " + (CustomNight.getSelectedChallenge() + 1));
+                String challengeText = CustomNight.isCustom() ? getString("customNight") : (getString("challenge") + " " + (CustomNight.getSelectedChallenge() + 1));
                 graphics2D.drawString(challengeText, 405 - halfTextLength(graphics2D, challengeText), 475);
 
                 graphics2D.setColor(Color.GRAY);
@@ -2797,7 +2829,7 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.setColor(Color.WHITE);
 
                 if (CustomNight.selectedElement != null) {
-                    graphics2D.drawString(CustomNight.selectedElement.getName(), 665, 215);
+                    graphics2D.drawString(getString(CustomNight.selectedElement.getName()), 665, 215);
                     graphics2D.setFont(comicSans25);
                 }
 
@@ -2811,33 +2843,37 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.setColor(Color.WHITE);
 
                 graphics2D.setFont(yuGothicPlain60);
-                graphics2D.drawString(">> volume", 140, 150 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("volume"), 140, 150 + settingsScrollY);
 
-                graphics2D.drawString(">> fixed ratio", 140, 370 + settingsScrollY);
-                graphics2D.drawString(">> headphones", 140, 450 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("fixedRatio"), 140, 370 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("headphones"), 140, 450 + settingsScrollY);
 
-                graphics2D.drawString("reset night", 160, 560 + settingsScrollY);
+                graphics2D.drawString(getString("resetNight"), 160, 560 + settingsScrollY);
 
-                graphics2D.drawString(">> show disclaimer", 140, 690 + settingsScrollY);
-                graphics2D.drawString(">> show manual", 140, 770 + settingsScrollY);
-                graphics2D.drawString(">> save screenshots", 140, 850 + settingsScrollY);
-                graphics2D.drawString(">> RTX super cool bloom", 140, 930 + settingsScrollY);
-                graphics2D.drawString(">> fps counter", 140, 1010 + settingsScrollY);
-                graphics2D.drawString(">> fps cap: ", 140, 1090 + settingsScrollY);
-                graphics2D.drawString(">> jumpscares shake: ", 140, 1170 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("showDisclaimer"), 140, 690 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("showManual"), 140, 770 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("saveScreenshots"), 140, 850 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("rtx"), 140, 930 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("fpsCounter"), 140, 1010 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("fpsCap"), 140, 1090 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("jumpscareShake"), 140, 1170 + settingsScrollY);
+                graphics2D.drawString(">> " + getString("languageSelect"), 140, 1350 + settingsScrollY);
 
                 String fpsCap = this.fpsCap + "";
                 if(this.fpsCap <= 0) {
-                    fpsCap = "UNLIMITED";
+                    fpsCap = getString("UNLIMITED");
                 }
                 graphics2D.drawString(fpsCap, 500, 1090 + settingsScrollY);
 
-                String shake = "window + screen";
+                String shake = getString("windowAndScreen");
                 switch (this.shake) {
-                    case 1 -> shake = "screen";
-                    case 2 -> shake = "no shake";
+                    case 1 -> shake = getString("screen");
+                    case 2 -> shake = getString("noShake");
                 }
                 graphics2D.drawString(shake, 240, 1260 + settingsScrollY);
+
+                String language = getString("language");
+                graphics2D.drawString(language, 570, 1350 + settingsScrollY);
 
                 graphics2D.setStroke(new BasicStroke(5));
                 // fixed ratio
@@ -2860,7 +2896,8 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.drawRect(490, 1025 + settingsScrollY, 20 + textLength(graphics2D, fpsCap), 80);
                 // jumpscare shake
                 graphics2D.drawRect(230, 1200 + settingsScrollY, 20 + textLength(graphics2D, shake), 80);
-
+                // language
+                graphics2D.drawRect(560, 1290 + settingsScrollY, 20 + textLength(graphics2D, language), 80);
 
                 if(blackBorders) {
                     graphics2D.fillRect(558, 318 + settingsScrollY, 44, 44);
@@ -2896,6 +2933,9 @@ public class GamePanel extends JPanel implements Runnable {
                 if(keyHandler.hoveringJumpscareShake) {
                     graphics2D.fillRect(230, 1200 + settingsScrollY, 20 + textLength(graphics2D, shake), 80);
                 }
+                if(keyHandler.hoveringLanguage) {
+                    graphics2D.fillRect(560, 1290 + settingsScrollY, 20 + textLength(graphics2D, language), 80);
+                }
 
                 graphics2D.setColor(Color.WHITE);
                 graphics2D.fillRect(1070, (int) (-settingsScrollY / 720F * 540F), 10, 100);
@@ -2909,7 +2949,7 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.fillOval((short) (volume * 800) + 115, 220 + settingsScrollY, 50, 50);
 
                 graphics2D.setFont(comicSansBold25);
-                graphics2D.drawString("Shift+Z - Screenshot | Escape - Pause | -+ - Quick volume change", 10, 630);
+                graphics2D.drawString(getString("keybindSettingsGuide"), 10, 630);
 
             }
             case PLAY -> {
@@ -2976,14 +3016,14 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.setFont(yuGothicPlain60);
 
                 if(millyBackButtonSelected) {
-                    graphics2D.drawString(">> back", 20, 620);
+                    graphics2D.drawString(">> " + getString("back"), 20, 620);
                 } else {
                     BufferedImage icon = millyShopItems[selectedMillyItem].getIcon();
                     Point coords = millyCoordinates.get((int) selectedMillyItem);
 
                     graphics2D.setColor(white120);
                     graphics2D.fillRoundRect(coords.x - 5, coords.y - icon.getHeight() - 5, icon.getWidth() + 10, icon.getHeight() + 8, 20, 20);
-                    graphics2D.drawString(">> back", 20, 620);
+                    graphics2D.drawString(">> " + getString("back"), 20, 620);
 
                     graphics2D.setColor(white200);
 
@@ -3002,7 +3042,7 @@ public class GamePanel extends JPanel implements Runnable {
                     }
 
                     graphics2D.setColor(Color.WHITE);
-                    graphics2D.drawString("Price:", 20, 550);
+                    graphics2D.drawString(getString("price") + ":", 20, 550);
                     graphics2D.setFont(comicSans30);
 
                     String priceStr = millyShopItems[selectedMillyItem].getPrice() + "";
@@ -3026,7 +3066,7 @@ public class GamePanel extends JPanel implements Runnable {
                     if (pressAnyKey) {
                         graphics2D.setColor(Color.WHITE);
                         graphics2D.setFont(comicSans60);
-                        graphics2D.drawString("[press any key]", 540 - halfTextLength(graphics2D, "[press any key]"), 600);
+                        graphics2D.drawString(getString("pressAnyKey"), 540 - halfTextLength(graphics2D, getString("pressAnyKey")), 600);
                     }
                 }
             }
@@ -3052,11 +3092,10 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.drawImage(bingoCardImg, 910, 10, 160, 180, null);
                 graphics2D.setFont(yuGothicPlain30);
                 graphics2D.setColor(Color.WHITE);
-                short x = 910;
-                x -= (short) (String.valueOf(bingoCard.getMinutes()).length() * 10);
-                x -= (short) (String.valueOf(bingoCard.getSeconds()).length() * 10);
 
-                graphics2D.drawString("Time: " + bingoCard.getMinutes() + "m " + bingoCard.getSeconds() + "s", x, 220);
+                String string = getString("time") + bingoCard.getMinutes() + getString("m") + " " + bingoCard.getSeconds() + getString("s");
+                
+                graphics2D.drawString(string, 1070 - textLength(graphics2D, string), 220);
                 graphics2D.setComposite(AlphaComposite.SrcOver.derive(1F));
             }
         }
@@ -3232,7 +3271,7 @@ public class GamePanel extends JPanel implements Runnable {
                             graphics2D.setColor(Color.WHITE);
                         }
                     }
-                    graphics2D.drawString(">> start", 730, 590);
+                    graphics2D.drawString(">> " + getString("start"), 730, 590);
 
                     if (rows >= 4) {
                         graphics2D.setColor(Color.DARK_GRAY);
@@ -3246,36 +3285,37 @@ public class GamePanel extends JPanel implements Runnable {
             case BINGO -> {
                 drawCloseButton(graphics2D);
 
-                String startBingo = ">> start bingo";
+                String startBingo = ">> " + getString("startBingo");
 
                 graphics2D.setColor(white200);
                 graphics2D.setFont(comicSans60);
 
                 if(bingoCard.isGenerated()) {
-                    startBingo = ">> stop bingo";
+                    startBingo = ">> " + getString("stopBingo");
                 }
 
                 if(bingoCard.isCompleted()) {
                     graphics2D.drawString("You completed the Pepingo!", bingoTextLength, 300);
-                    startBingo = ">> restart bingo";
+                    startBingo = ">> " + getString("restartBingo");
                 } else if(bingoCard.isFailed()) {
                     graphics2D.drawString("You failed the Pepingo!", bingoTextLength + 20, 300);
-                    startBingo = ">> restart bingo";
+                    startBingo = ">> " + getString("restartBingo");
                 }
 
                 graphics2D.setFont(yuGothicPlain60);
                 graphics2D.drawString(startBingo, 30, 600);
                 graphics2D.setFont(yuGothicPlain50);
-                graphics2D.drawString("Time spent: " + bingoCard.getMinutes() + "m " + bingoCard.getSeconds() + "s", 30, 460);
+                graphics2D.drawString(getString("timeSpent"), 30, 410);
+                graphics2D.drawString(bingoCard.getMinutes() + getString("m") + " " + bingoCard.getSeconds() + getString("s"), 30, 460);
 
                 graphics2D.setColor(white120);
                 graphics2D.setFont(yuGothicBoldItalic40);
-                graphics2D.drawString("You have 24 minutes!", 30, 510);
+                graphics2D.drawString(getString("24minutes"), 30, 510);
 
                 graphics2D.setFont(yuGothicPlain30);
-                graphics2D.drawString("Silly little game where", 30, 140);
-                graphics2D.drawString("you need to complete all", 30, 180);
-                graphics2D.drawString("tasks with a time limit!", 30, 220);
+                graphics2D.drawString(getString("sillyGame"), 30, 140);
+                graphics2D.drawString(getString("completeAll"), 30, 180);
+                graphics2D.drawString(getString("tasksTimeLimit"), 30, 220);
             }
             case PLAY -> {
                 drawCloseButton(graphics2D);
@@ -3306,7 +3346,7 @@ public class GamePanel extends JPanel implements Runnable {
                 if(keyHandler.confirmNightReset) {
                     graphics2D.setColor(warningRed);
                     graphics2D.setFont(yuGothicBoldItalic40);
-                    graphics2D.drawString("Warning: your night will be set to the FIRST night", 60, 600);
+                    graphics2D.drawString(getString("firstNightWarning"), 60, 600);
                 }
             }
             case GAME -> {
@@ -3359,14 +3399,14 @@ public class GamePanel extends JPanel implements Runnable {
                                 graphics2D.setFont(yuGothicPlain120);
 
                                 if (night.getMSI().left) {
-                                    graphics2D.drawString("left", 540 - halfTextLength(graphics2D, "left"), 330);
+                                    graphics2D.drawString(getString("left"), 540 - halfTextLength(graphics2D, getString("left")), 330);
                                 } else {
-                                    graphics2D.drawString("right", 540 - halfTextLength(graphics2D, "right"), 330);
+                                    graphics2D.drawString(getString("right"), 540 - halfTextLength(graphics2D, getString("right")), 330);
                                 }
                             } else if (night.getMSI().arriving) {
                                 graphics2D.setColor(Color.WHITE);
                                 graphics2D.setFont(yuGothicPlain120);
-                                graphics2D.drawString("loading...", 540 - halfTextLength(graphics2D, "loading..."), 330);
+                                graphics2D.drawString(getString("loading"), 540 - halfTextLength(graphics2D, getString("loading")), 330);
                             }
                         }
                         if(night.getWires().isActive()) {
@@ -3458,14 +3498,14 @@ public class GamePanel extends JPanel implements Runnable {
                                 graphics2D.drawImage(checkpointHalfway[1].request(), firstCheckpointX - 156 + (int) (3 * checkpointVector.x), 163 + (int) (3 * checkpointVector.y), null);
                                 graphics2D.drawImage(checkpointHalfway[0].request(), firstCheckpointX - 156, 163, null);
 
-                                graphics2D.drawString("Halfway Point", firstCheckpointX - halfTextLength(graphics2D, "Halfway Point"), 520);
-                                graphics2D.drawString("[click]", firstCheckpointX - halfTextLength(graphics2D, "[click]"), 560);
+                                graphics2D.drawString(getString("halfwayPoint"), firstCheckpointX - halfTextLength(graphics2D, getString("halfwayPoint")), 520);
+                                graphics2D.drawString(getString("click"), firstCheckpointX - halfTextLength(graphics2D, getString("click")), 560);
 
                                 if(reachedAstartaBoss) {
                                     graphics2D.drawImage(checkpointAstartaBoss[0].request(), 604, 163, null);
 
-                                    graphics2D.drawString("ASTARTA TIME", 760 - halfTextLength(graphics2D, "ASTARTA TIME"), 520);
-                                    graphics2D.drawString("[click]", 760 - halfTextLength(graphics2D, "[click]"), 560);
+                                    graphics2D.drawString(getString("astartaTime"), 760 - halfTextLength(graphics2D, getString("astartaTime")), 520);
+                                    graphics2D.drawString(getString("click"), 760 - halfTextLength(graphics2D, getString("click")), 560);
                                 }
 
                                 if(shadowCheckpointSelected != 0 || shadowCheckpointUsed != 0) {
@@ -3617,7 +3657,7 @@ public class GamePanel extends JPanel implements Runnable {
                                 Door door = night.getDoors().get(number);
 
                                 if(night.getTimers().containsKey(door)) {
-                                    graphics2D.drawString("Door " + number + " - " + (Math.round(Math.max(0, night.getTimers().get(door)) * 100F) / 100F), 25, Math.min(10, timerY) + order * 40 + 100);
+                                    graphics2D.drawString(getString("door") + " " + (number + 1) + " - " + (Math.round(Math.max(0, night.getTimers().get(door)) * 100F) / 100F), 25, Math.min(10, timerY) + order * 40 + 100);
                                     order++;
                                 }
                             }
@@ -3662,7 +3702,7 @@ public class GamePanel extends JPanel implements Runnable {
 
                                 graphics2D.setColor(Color.WHITE);
                                 graphics2D.setFont(yuGothicPlain120);
-                                graphics2D.drawString("transporting...", 540 - halfTextLength(graphics2D, "transporting..."), 330);
+                                graphics2D.drawString(getString("transporting"), 540 - halfTextLength(graphics2D, getString("transporting")), 330);
                             }
                             if (night.getAstarta().arrivalSeconds < 4 && night.getAstarta().arrivalSeconds > 0) {
                                 graphics2D.drawImage(astartaCam[0], 83, 422, null);
@@ -3713,13 +3753,13 @@ public class GamePanel extends JPanel implements Runnable {
                             graphics2D.drawImage(usageImage, 0, 0, null);
 
                             graphics2D.setColor(white160);
-                            graphics2D.drawString("Battery:", 40, 600);
+                            graphics2D.drawString(getString("battery"), 40, 600);
                             graphics2D.drawString((short) (night.getEnergy() * 0.2) + "%", energyX, 600);
                         } else if(night.isPowerModifier()) {
                             if(night.getGeneratorEnergy() > 0) {
                                 graphics2D.setColor(white160);
-                                graphics2D.drawString("Generator Fuel:", 40, 600);
-                                graphics2D.drawString((short) (night.getGeneratorEnergy() * 0.2) + "%", (short) (50 + textLength(graphics2D, "Generator Fuel:")), 600);
+                                graphics2D.drawString(getString("generatorFuel"), 40, 600);
+                                graphics2D.drawString((short) (night.getGeneratorEnergy() * 0.2) + "%", (short) (50 + textLength(graphics2D, getString("generatorFuel"))), 600);
                             }
                         }
                         if (type.isEndless()) {
@@ -3749,8 +3789,8 @@ public class GamePanel extends JPanel implements Runnable {
 
                             graphics2D.setStroke(new BasicStroke());
                             graphics2D.setFont(sansSerifPlain40);
-                            graphics2D.drawString("Maxwell the Cat", 700, 90);
-                            graphics2D.drawString("button", 700, 140);
+                            graphics2D.drawString(getString("maxwellTheCat"), 700, 90);
+                            graphics2D.drawString(getString("button"), 700, 140);
                         }
                         if (portalActive) {
                             if (portalTransporting) {
@@ -3766,24 +3806,24 @@ public class GamePanel extends JPanel implements Runnable {
 
                             graphics2D.setStroke(new BasicStroke());
                             graphics2D.setFont(sansSerifPlain40);
-                            graphics2D.drawString("Transport into", 700, 90);
-                            graphics2D.drawString("Shadownight", 700, 140);
+                            graphics2D.drawString(getString("transportInto"), 700, 90);
+                            graphics2D.drawString(getString("shadownight"), 700, 140);
                         }
                     } else { // if not in cam
                         if (night.getEvent() == GameEvent.FLOOD) {
                             graphics2D.setColor(white200);
                             graphics2D.setFont(comicSansBoldItalic40);
                             int add = (int) (Math.round(Math.random()));
-                            graphics2D.drawString("uh oh! looks like the office got flooded again!", floodTextLength1, 130 + add);
-                            graphics2D.drawString("beware of sharks!", floodTextLength2, 170 + add);
+                            graphics2D.drawString(getString("floodedAgain"), floodTextLength1, 130 + add);
+                            graphics2D.drawString(getString("bewareOfSharks"), floodTextLength2, 170 + add);
 
                             if (night.getShark().isActive()) {
                                 graphics2D.setColor(Color.GREEN);
                                 graphics2D.setStroke(new BasicStroke(6));
                                 graphics2D.drawRect(fixedOffsetX + night.getShark().getX() - 400, 480, 234, 154);
                                 graphics2D.setFont(comicSansBoldItalic40);
-                                graphics2D.drawString("move the", fixedOffsetX + night.getShark().getX() - 390, 520);
-                                graphics2D.drawString("fish away!", fixedOffsetX + night.getShark().getX() - 390, 620);
+                                graphics2D.drawString(getString("moveThe"), fixedOffsetX + night.getShark().getX() - 390, 520);
+                                graphics2D.drawString(getString("fishAway"), fixedOffsetX + night.getShark().getX() - 390, 620);
                                 graphics2D.setFont(comicSans80);
                                 graphics2D.drawString("" + night.getShark().getLeftBeforeBite(), fixedOffsetX + night.getShark().getX() - 300, 590);
                                 graphics2D.setStroke(new BasicStroke());
@@ -3821,17 +3861,17 @@ public class GamePanel extends JPanel implements Runnable {
                             graphics2D.setColor(white200);
                             graphics2D.setFont(comicSansBoldItalic40);
                             int add = (int) (Math.round(Math.random()));
-                            graphics2D.drawString("uh oh! the lemonade cat appears!", 220, 130 + add);
-                            graphics2D.drawString("right click to give him some lemons!", 195, 170 + add);
+                            graphics2D.drawString(getString("lemonadeCatAppears"), 220, 130 + add);
+                            graphics2D.drawString(getString("giveHimLemons"), 195, 170 + add);
 
-                            graphics2D.drawString("Tries: " + (3 - night.getLemonadeCat().getCurrentTry()), 30, 600);
+                            graphics2D.drawString(getString("tries") + (3 - night.getLemonadeCat().getCurrentTry()), 30, 600);
                         }
                         if(type == GameType.DAY) {
                             if(endless.getNight() == 3) {
                                 graphics2D.setColor(white200);
                                 graphics2D.setFont(comicSansBoldItalic40);
                                 int add = (int) (Math.round(Math.random()));
-                                graphics2D.drawString("Something changed in your camera...", 540 - halfTextLength(graphics2D, "Something changed in your camera..."), 170 + add);
+                                graphics2D.drawString(getString("somethingChangedInCamera"), 540 - halfTextLength(graphics2D, getString("somethingChangedInCamera")), 170 + add);
                             }
                         }
 
@@ -3881,8 +3921,8 @@ public class GamePanel extends JPanel implements Runnable {
                             }
 
                             graphics2D.setColor(Color.WHITE);
-                            graphics2D.drawString(manualY < 535 ? "hide" : "show", 620 + 215, manualY + 73);
-                            graphics2D.drawString("close", 620 + 315, manualY + 73);
+                            graphics2D.drawString(manualY < 535 ? getString("hide") : getString("show"), 620 + 215, manualY + 73);
+                            graphics2D.drawString(getString("close"), 620 + 315, manualY + 73);
                         }
                     }
 
@@ -3903,7 +3943,7 @@ public class GamePanel extends JPanel implements Runnable {
                                 graphics2D.setFont(comicSans60);
                                 int add = (int) (Math.round(Math.random()));
 
-                                graphics2D.drawString("Goal: Survive until 4 AM", goalTextLength1, 240 + add);
+                                graphics2D.drawString(getString("surviveUntil4AM"), goalTextLength1, 240 + add);
                             }
                         } else {
                             night.setEvent(GameEvent.MAXWELL);
@@ -3931,7 +3971,7 @@ public class GamePanel extends JPanel implements Runnable {
 
                             graphics2D.setFont(comicSans40);
                             graphics2D.setColor(Color.BLACK);
-                            graphics2D.drawString("Shadow Astarta", 395, 45);
+                            graphics2D.drawString(getString("shadowAstarta"), 395, 45);
                         }
 
                         graphics2D.setColor(new Color(140, 40, 255));
@@ -3958,6 +3998,28 @@ public class GamePanel extends JPanel implements Runnable {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+
+                if(keyHandler.holdingTab) {
+                    graphics2D.setColor(black80);
+                    graphics2D.fillRect(0, 0, 1080, 640);
+
+                    graphics2D.setColor(Color.WHITE);
+                    graphics2D.setFont(comicSans60);
+                    graphics2D.drawString(getString("keybinds"), 540 - halfTextLength(graphics2D, getString("keybinds")), 70);
+
+                    graphics2D.setColor(white200);
+                    graphics2D.setFont(comicSans40);
+
+                    short order = 0;
+                    for(Item item : usedItems) {
+                        if(item.getKeybind().isEmpty())
+                            continue;
+
+                        String str = "[" + item.getKeybind() + "] - " + item.getName();
+                        graphics2D.drawString(str, 540 - halfTextLength(graphics2D, str), 140 + order);
+                        order += 45;
+                    }
                 }
             }
             case RIFT -> {
@@ -4019,52 +4081,6 @@ public class GamePanel extends JPanel implements Runnable {
             graphics2D.setColor(new Color(255, 255, 255, Math.round(notification.progress)));
             graphics2D.drawString(notification.string, 200, 500 - Math.round(notification.progress));
         }
-
-        int totalMinus = 0;
-        for(byte i = 0; i < StaticLists.achievementNotifs.size(); i++) {
-            AchievementNotification notification = StaticLists.achievementNotifs.get(i);
-
-            totalMinus += (int) (Math.sin(notification.getCounter() * 0.05F) * 100);
-            int posY = 640 - totalMinus;
-
-            graphics2D.setColor(new Color(40, 40, 60));
-            graphics2D.fillRoundRect(760, posY, 320, 100, 5, 5);
-            graphics2D.setColor(new Color(60, 60, 80));
-            graphics2D.fillRoundRect(760, posY, 320, 94, 5, 5);
-
-            graphics2D.drawImage(notification.getIcon(), 760 + 5, posY + 5, 90, 90, null);
-
-            graphics2D.setColor(Color.WHITE);
-            graphics2D.setFont(comicSans30);
-
-            graphics2D.drawString("unlocked achievement", 770, posY - 10);
-
-            int nameLines = 0;
-
-            int lastStringY = 0;
-            for(String string : cropText(notification.getName(), 220, graphics2D)) {
-                nameLines++;
-                if(nameLines > 2)
-                    break;
-
-                graphics2D.drawString(string, 760 + 100, posY + 25 + lastStringY);
-                lastStringY += 25;
-            }
-
-            graphics2D.setColor(white200);
-            graphics2D.setFont(comicSans20);
-
-            int descLines = 0;
-
-            for(String string : cropText(notification.getDescription(), 220, graphics2D)) {
-                descLines++;
-                if(descLines > 3)
-                    break;
-
-                graphics2D.drawString(string, 760 + 100, posY + 25 + lastStringY);
-                lastStringY += 20;
-            }
-        }
     }
 
     Color red100 = new Color(255, 0, 0, 100);
@@ -4115,17 +4131,21 @@ public class GamePanel extends JPanel implements Runnable {
             graphics2D.setColor(Color.WHITE);
             graphics2D.setFont(comicSans50);
 
-            for(String name : cropText(achievement.getName(), 750, graphics2D)) {
+            String fullName = getString(achievement.toString().toLowerCase(Locale.ROOT) + "Name");
+
+            for(String name : cropText(fullName, 750, graphics2D)) {
                 graphics2D.drawString(name, 155, 65 + i * 155 + lastY - achievementsScrollY);
                 lastY += 40;
             }
 
             graphics2D.setColor(white200);
             graphics2D.setFont(comicSans30);
-            String[] description = cropText(achievement.getDescription(), 750, graphics2D);
+
+            String fullDescription = getString(achievement.toString().toLowerCase(Locale.ROOT) + "Desc");
+            String[] description = cropText(fullDescription, 750, graphics2D);
 
             if(achievement.isHidden() && !achievement.isObtained()) {
-                description = new String[] {"This achievement is hidden..."};
+                description = new String[] {getString("hiddenAchievement")};
             }
 
             lastY -= 5;
@@ -4144,6 +4164,54 @@ public class GamePanel extends JPanel implements Runnable {
         graphics2DNew.drawImage(achievementDisplayARGB, 0, 0, null);
 
         graphics2DNew.dispose();
+    }
+
+    public void drawAchievementNotifications(Graphics2D graphics2D) {
+        int totalMinus = 0;
+        for(byte i = 0; i < StaticLists.achievementNotifs.size(); i++) {
+            AchievementNotification notification = StaticLists.achievementNotifs.get(i);
+
+            totalMinus += (int) (Math.sin(notification.getCounter() * 0.05F) * 100);
+            int posY = 640 - totalMinus;
+
+            graphics2D.setColor(new Color(40, 40, 60));
+            graphics2D.fillRoundRect(760, posY, 320, 100, 5, 5);
+            graphics2D.setColor(new Color(60, 60, 80));
+            graphics2D.fillRoundRect(760, posY, 320, 94, 5, 5);
+
+            graphics2D.drawImage(notification.getIcon(), 760 + 5, posY + 5, 90, 90, null);
+
+            graphics2D.setColor(Color.WHITE);
+            graphics2D.setFont(comicSans30);
+
+            graphics2D.drawString(getString("unlockedAchievement"), 770, posY - 10);
+
+            int nameLines = 0;
+
+            int lastStringY = 0;
+            for(String string : cropText(notification.getName(), 220, graphics2D)) {
+                nameLines++;
+                if(nameLines > 2)
+                    break;
+
+                graphics2D.drawString(string, 760 + 100, posY + 25 + lastStringY);
+                lastStringY += 25;
+            }
+
+            graphics2D.setColor(white200);
+            graphics2D.setFont(comicSans20);
+
+            int descLines = 0;
+
+            for(String string : cropText(notification.getDescription(), 220, graphics2D)) {
+                descLines++;
+                if(descLines > 3)
+                    break;
+
+                graphics2D.drawString(string, 760 + 100, posY + 25 + lastStringY);
+                lastStringY += 20;
+            }
+        }
     }
 
     public String[] cropText(String str, int limit, Graphics2D graphics2D) {
@@ -4182,12 +4250,12 @@ public class GamePanel extends JPanel implements Runnable {
     void reloadMenuButtons() {
         List<String> newMenuButtons = new ArrayList<>();
 
-        newMenuButtons.add(">> play");
+        newMenuButtons.add(">> " + getString("play"));
         if(unlockedBingo) {
-            newMenuButtons.add(">> bingo");
+            newMenuButtons.add(">> " + getString("bingo"));
         }
-        newMenuButtons.add(">> achievements");
-        newMenuButtons.add(">> settings");
+        newMenuButtons.add(">> " + getString("achievementsSmall"));
+        newMenuButtons.add(">> " + getString("settings"));
 
         menuButtons = newMenuButtons;
 
@@ -4212,6 +4280,11 @@ public class GamePanel extends JPanel implements Runnable {
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
 
+        graphics2D.setColor(white160);
+        graphics2D.setFont(sansSerifPlain40);
+        graphics2D.drawString(getString("usage"), 40, 560);
+        int start = 40 + textLength(graphics2D, getString("usage"));
+
         if (usage > 0) {
             byte i = 0;
             while (i < usage) {
@@ -4223,14 +4296,10 @@ public class GamePanel extends JPanel implements Runnable {
                     graphics2D.setColor(Color.YELLOW.darker());
                 }
 
-                graphics2D.fillRect(190 + i * 30, 528, 20, 35);
+                graphics2D.fillRect(start + 25 + i * 30, 528, 20, 35);
                 i++;
             }
         }
-
-        graphics2D.setColor(white160);
-        graphics2D.setFont(sansSerifPlain40);
-        graphics2D.drawString("Usage:", 40, 560);
 
         graphics2D.dispose();
     }
@@ -4251,31 +4320,70 @@ public class GamePanel extends JPanel implements Runnable {
     short goalTextLength1;
     short bingoTextLength;
 
-    private void initializeFontMetrics() {
+    void initializeFontMetrics() {
+        String yuGothic = "Yu Gothic";
+
+        if(language.equals("russian")) {
+            yuGothic = "Segoe UI Light";
+        }
+
+        yuGothicPlain30 = new Font(yuGothic, Font.PLAIN, 30);
+        yuGothicPlain50 = new Font(yuGothic, Font.PLAIN, 50);
+        yuGothicPlain60 = new Font(yuGothic, Font.PLAIN, 60);
+        yuGothicPlain80 = new Font(yuGothic, Font.PLAIN, 80);
+        yuGothicPlain120 = new Font(yuGothic, Font.PLAIN, 120);
+
+        yuGothicBold25 = new Font(yuGothic, Font.BOLD, 25);
+
+        yuGothicBoldItalic25 = new Font(yuGothic, Font.BOLD | Font.ITALIC, 25);
+        yuGothicBoldItalic40 = new Font(yuGothic, Font.BOLD | Font.ITALIC, 40);
+
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics2D = (Graphics2D) image.getGraphics();
 
         sansSerifPlain40 = new Font(Font.SANS_SERIF, Font.PLAIN, 40);
         graphics2D.setFont(sansSerifPlain40);
-        energyX = (short) (50 + textLength(graphics2D, "Battery:"));
+        energyX = (short) (50 + textLength(graphics2D, getString("battery")));
 
         graphics2D.setFont(yuGothicBold25);
-        equippedX = (short) (890 - halfTextLength(graphics2D, "EQUIPPED"));
+        equippedX = (short) (890 - halfTextLength(graphics2D, getString("equipped")));
 
         graphics2D.setFont(comicSansBold25);
         versionTextLength = (short) (halfTextLength(graphics2D, "v" + version) * 2);
 
         graphics2D.setFont(comicSansBoldItalic40);
-        floodTextLength1 = (short) (540 - halfTextLength(graphics2D, "uh oh! looks like the office got flooded again!"));
-        floodTextLength2 = (short) (540 - halfTextLength(graphics2D, "beware of sharks!"));
+        floodTextLength1 = (short) (540 - halfTextLength(graphics2D, getString("floodedAgain")));
+        floodTextLength2 = (short) (540 - halfTextLength(graphics2D, getString("bewareOfSharks")));
 
         graphics2D.setFont(comicSans60);
-        goalTextLength1 = (short) (540 - halfTextLength(graphics2D, "Goal: Survive until 4 AM"));
+        goalTextLength1 = (short) (540 - halfTextLength(graphics2D, getString("surviveUntil4AM")));
 
         graphics2D.setFont(comicSans60);
-        bingoTextLength = (short) (540 - halfTextLength(graphics2D, "You completed the Pepingo!"));
+        bingoTextLength = (short) (540 - halfTextLength(graphics2D, getString("completedPepingo")));
 
         graphics2D.dispose();
+    }
+    void initializeItemNames() {
+        soda.assignText(getString("sodaName"), getString("sodaDesc"));
+        flashlight.assignText(getString("flashlightName"), getString("flashlightDesc"));
+        fan.assignText(getString("fanName"), getString("fanDesc"));
+        metalPipe.assignText(getString("metalPipeName"), getString("metalPipeDesc"));
+        sensor.assignText(getString("sensorName"), getString("sensorDesc"));
+        adblocker.assignText(getString("adblockerName"), getString("adblockerDesc"));
+        maxwell.assignText(getString("maxwellName"), getString("maxwellDesc"));
+        freezePotion.assignText(getString("freezeName"), getString("freezeDesc"));
+        planks.assignText(getString("planksName"), getString("planksDesc"));
+        miniSoda.assignText(getString("miniSodaName"), getString("miniSodaDesc"));
+        soup.assignText(getString("soupName"), getString("soupDesc"));
+        birthdayMaxwell.assignText(getString("bMaxwellName"), getString("bMaxwellDesc"));
+        birthdayHat.assignText(getString("birthdayHatName"), getString("birthdayHatDesc"));
+        bingoCardItem.assignText(getString("bingoCardName"), getString("bingoCardDesc"));
+        starlightBottle.assignText(getString("starlightName"), getString("starlightDesc"));
+        shadowTicket.assignText(getString("sticketName"), getString("sticketDesc"));
+        
+        soggyBallpit.assignText(getString("subscriptionName"), getString("subscriptionDesc"));
+        corn[0].assignText(getString("cornName"), getString("cornDesc"));
+        corn[1].assignText(getString("cornName"), getString("cornDesc"));
     }
 
 
@@ -4318,7 +4426,7 @@ public class GamePanel extends JPanel implements Runnable {
                 if(paused) {
                     graphics2D.drawImage(lastBeforePause, 0, 0, null);
                     graphics2D.setColor(Color.WHITE);
-                    graphics2D.drawString("paused", 130, 180);
+                    graphics2D.drawString(getString("paused"), 130, 180);
 
                     if(keyHandler.previous == GameState.GAME) {
                         if(night.getEvent().isInGame()) {
@@ -4328,7 +4436,7 @@ public class GamePanel extends JPanel implements Runnable {
                             }
                             graphics2D.setFont(yuGothicPlain60);
 
-                            graphics2D.drawString(">> die", 110, 560);
+                            graphics2D.drawString(">> " + getString("die"), 110, 560);
                         }
                     }
                 }
@@ -4355,6 +4463,8 @@ public class GamePanel extends JPanel implements Runnable {
 
             secondHalf(graphics2D);
 
+            drawAchievementNotifications(graphics2D);
+
             if (staticTransparency > 0F) {
                 // static
                 graphics2D.drawImage(currentStaticImg, 0, 0, 1080, 640, null);
@@ -4371,8 +4481,9 @@ public class GamePanel extends JPanel implements Runnable {
                 int x = Math.round(580 + 470 * volume);
                 graphics2D.fillOval(x - 25, quickVolumeY + 10, 50, 50);
                 graphics2D.setFont(yuGothicPlain50);
-                graphics2D.drawString("volume", 570, quickVolumeY + 100);
+                graphics2D.drawString(getString("volume"), 570, quickVolumeY + 100);
             }
+
 
             if (state == GameState.GAME) {
                 try {
@@ -4400,8 +4511,8 @@ public class GamePanel extends JPanel implements Runnable {
                             if (isNightApproporiate && outOfLuck && !portalActive) {
                                 graphics2D.setColor(new Color(100, 0, 180));
                                 graphics2D.setFont(comicSans60);
-                                graphics2D.drawString("out of", 830, 340);
-                                graphics2D.drawString("luck", 830, 400);
+                                graphics2D.drawString(getString("outOf"), 830, 340);
+                                graphics2D.drawString(getString("luck"), 830, 400);
                             }
                         }
 
@@ -4416,10 +4527,10 @@ public class GamePanel extends JPanel implements Runnable {
 
                             if (adblockerStatus == 3) {
                                 graphics2D.setColor(new Color(200, 50, 50, 170));
-                                graphics2D.drawString("You got the adblocker!", 10, 630);
+                                graphics2D.drawString(getString("gotAdblocker"), 10, 630);
                             } else {
                                 graphics2D.setColor(new Color(200, 50, 50, 200));
-                                graphics2D.drawString("You found an adblocker! Secure it until 4 AM to get it.", 10, 630);
+                                graphics2D.drawString(getString("foundAdblocker"), 10, 630);
                             }
                         }
                     } else if (night.getGlitcher().isGlitching) {
@@ -4501,19 +4612,19 @@ public class GamePanel extends JPanel implements Runnable {
                         int x = 0;
                         int y = 0;
 
-                        if(shake < 2 && !killedBy.equals("killed by Shadow Pépito")) {
+                        if(shake < 2 && !killedBy.equals(getString("kbShadowPepito"))) {
                             x -= (int) (Math.random() * 16 - 8);
                             y -= (int) (Math.random() * 16 - 8);
                         }
                         int width = 1080;
                         int height = 640;
 
-                        if(killedBy.equals("killed by Astarta")) {
+                        if(killedBy.equals(getString("kbAstarta"))) {
                             x -= astartaJumpscareCounter;
                             y -= (int) (astartaJumpscareCounter * 0.5);
                             width += astartaJumpscareCounter * 2;
                             height += (int) (astartaJumpscareCounter * 1.5);
-                        } else if(killedBy.equals("killed by Shadow Pépito")) {
+                        } else if(killedBy.equals(getString("kbShadowPepito"))) {
                             x -= astartaJumpscareCounter;
                             y -= (int) (astartaJumpscareCounter * 0.5);
                             width += astartaJumpscareCounter * 2;
@@ -4530,21 +4641,21 @@ public class GamePanel extends JPanel implements Runnable {
                         if (killedBy.contains("silly cat")) {
                             graphics2D.drawImage(sobEmoji.request(), 776, 476 - deathScreenY, null);
                         }
-                        if (killedBy.contains("killed by Shadow Astarta")) {
+                        if (killedBy.contains(getString("kbShadowAstarta"))) {
                             graphics2D.drawImage(astartaSticker, 378, 155 - deathScreenY, null);
                             // custom astarta deathscreen
                         }
                         if (pressAnyKey) {
                             if (type == GameType.ENDLESS_NIGHT) {
-                                graphics2D.drawString("Score: " + endless.getNight() + " | Best: " + recordEndlessNight,
-                                        540 - halfTextLength(graphics2D, "Score: " + endless.getNight() + " | Best: " + recordEndlessNight), 165 - deathScreenY);
+                                String text = getString("score") + ": " + endless.getNight() + " | " + getString("best") + ": " + recordEndlessNight;
+                                graphics2D.drawString(text, 540 - halfTextLength(graphics2D, text), 165 - deathScreenY);
                             }
 
                             graphics2D.setFont(comicSans40);
-                            graphics2D.drawString("[press any key]", 540 - halfTextLength(graphics2D, "[press any key]"), 570 - deathScreenY);
+                            graphics2D.drawString(getString("pressAnyKey"), 540 - halfTextLength(graphics2D, getString("pressAnyKey")), 570 - deathScreenY);
 
                             if (birthdayMaxwell.isEnabled()) {
-                                graphics2D.drawString("YOU KEPT YOUR MAXWELL!!!", 40, 80 - deathScreenY);
+                                graphics2D.drawString(getString("keptMaxwell"), 40, 80 - deathScreenY);
                             }
                         }
 
@@ -4561,7 +4672,7 @@ public class GamePanel extends JPanel implements Runnable {
                             if (afterDeathCurText.length() == afterDeathText.length()) {
                                 graphics2D.setColor(Color.GRAY);
                                 graphics2D.setFont(comicSans40);
-                                graphics2D.drawString("[press any key]", 540 - halfTextLength(graphics2D, "[press any key]"), 1250 - deathScreenY);
+                                graphics2D.drawString(getString("pressAnyKey"), 540 - halfTextLength(graphics2D, getString("pressAnyKey")), 1250 - deathScreenY);
                             }
                         }
                     }
@@ -4572,24 +4683,24 @@ public class GamePanel extends JPanel implements Runnable {
 
                         graphics2D.setColor(Color.WHITE);
                         graphics2D.setFont(comicSans80);
-                        graphics2D.drawString("gg you wonned", 540 - halfTextLength(graphics2D, "gg you wonned"), 300);
+                        graphics2D.drawString(getString("ggWonned"), 540 - halfTextLength(graphics2D, getString("ggWonned")), 300);
                         graphics2D.setFont(comicSans60);
-                        graphics2D.drawString("6 am :clock:", 540 - halfTextLength(graphics2D, "6 am :clock:"), 230);
+                        graphics2D.drawString(getString("6amClock"), 540 - halfTextLength(graphics2D, getString("6amClock")), 230);
                         if (pressAnyKey) {
-                            graphics2D.drawString("press any key!!!!", 540 - halfTextLength(graphics2D, "press any key!!!!"), 370);
+                            graphics2D.drawString(getString("pressAnyKeyButAwesome"), 540 - halfTextLength(graphics2D, getString("pressAnyKeyButAwesome")), 370);
                             graphics2D.drawImage(strawber.request(), 60, 390, null);
 
                             graphics2D.setFont(comicSans60);
                             graphics2D.setColor(Color.getHSBColor(currentRainbow, 1, 1));
 
                             if (allNighter) {
-                                graphics2D.drawString("You beat the entire 4 nights!!!", 20, 100);
+                                graphics2D.drawString(getString("beat4Nights"), 20, 100);
                             } else if (type == GameType.PREPARTY) {
-                                graphics2D.drawString("You beat Pépito's Party Preparations!", 20, 100);
+                                graphics2D.drawString(getString("beatPreparations"), 20, 100);
                             } else if (type == GameType.PARTY) {
-                                graphics2D.drawString("You beat Night 666 - Pépito's Party!!!", 20, 100);
+                                graphics2D.drawString(getString("beatNight666"), 20, 100);
                                 graphics2D.setFont(comicSans40);
-                                graphics2D.drawString("reward: x1 party maxwell", 50, 150);
+                                graphics2D.drawString(getString("rewardMaxwell"), 50, 150);
                             }
                             if (type == GameType.CUSTOM && CustomNight.isCustom()) {
                                 int points = 0;
@@ -4605,7 +4716,7 @@ public class GamePanel extends JPanel implements Runnable {
                                 points *= multiplier;
 
                                 graphics2D.setFont(sansSerifPlain70);
-                                graphics2D.drawString(points + " points", 420, 600);
+                                graphics2D.drawString(points + " " + getString("points"), 420, 600);
                             }
 
                             if (gg) {
@@ -4920,27 +5031,27 @@ public class GamePanel extends JPanel implements Runnable {
 
         announceCounter = 1;
 
-        String string = "night ";
+        String string = getString("night") + " ";
 
         switch (night) {
-            case 1 -> string += "one";
-            case 2 -> string += "two";
-            case 3 -> string += "three";
-            case 4 -> string += "four";
-            case 5 -> string += "five";
-            case 6 -> string += "six";
-            case 7 -> string += "seven";
+            case 1 -> string += getString("one");
+            case 2 -> string += getString("two");
+            case 3 -> string += getString("three");
+            case 4 -> string += getString("four");
+            case 5 -> string += getString("five");
+            case 6 -> string += getString("six");
+            case 7 -> string += getString("seven");
             default -> string += night;
         }
         switch (type) {
-            case SHADOW -> string = "SHADOWNIGHT";
-            case PREPARTY -> string = "Pépito's Party Preparations";
-            case PARTY -> string = "night 666";
+            case SHADOW -> string = getString("SHADOWNIGHT");
+            case PREPARTY -> string = getString("pepitoPartyPreparations");
+            case PARTY -> string = getString("night 666");
             case CUSTOM -> {
                 if(CustomNight.isCustom()) {
-                    string = "custom night";
+                    string = getString("customNightSmall");
                 } else {
-                    string = "challenge " + (CustomNight.selectedChallenge + 1);
+                    string = getString("challengeSmall") + " " + (CustomNight.selectedChallenge + 1);
                 }
             }
         }
@@ -4953,7 +5064,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void announceChallenger(byte night, int delay) {
         challengerAlpha = 0;
-        challengerString = "A NEW CHALLENGER HAS APPEARED!";
+        challengerString = getString("newChallenger");
 
         challenger = new BufferedImage(1080, 640, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics2D = (Graphics2D) challenger.getGraphics();
@@ -4972,7 +5083,7 @@ public class GamePanel extends JPanel implements Runnable {
                         graphics2D.drawImage(completelyBlack(lemonadeGato), 520, 170, 400, 470, null);
                     }
                     case 6 -> graphics2D.drawImage(completelyBlack(mirrorCatImg), 160, 120, 750, 400, null);
-                    case 7 -> challengerString = "PEACE!";
+                    case 7 -> challengerString = getString("peace");
                     case 18 -> graphics2D.drawImage(completelyBlack(msiImage[3]), 340, 40, 400, 600, null);
                     default -> {
                         graphics2D.dispose();
@@ -4984,8 +5095,12 @@ public class GamePanel extends JPanel implements Runnable {
                 return;
             }
         } else if(type == GameType.SHADOW) {
-            if(night == 60 || night == 61) {
-                challengerString = "NEW CHALLENGERS APPEAR!";
+            if(night == 60) {
+                challengerString = getString("newChallengers");
+                graphics2D.drawImage(completelyBlack(wiresImg.request()), 340, 100, 400, 440, null);
+            } else if(night == 61) {
+                challengerString = getString("newChallengers");
+                graphics2D.drawImage(completelyBlack(blackScaryCat.request()), 340, 190, 400, 260, null);
             }
         } else {
             graphics2D.dispose();
@@ -5013,16 +5128,16 @@ public class GamePanel extends JPanel implements Runnable {
         challengerAlpha = 0;
         announceCounter = 1;
 
-        String string = "day ";
+        String string = getString("day") + " ";
 
         switch (endless.getNight()) {
-            case 1 -> string += "one";
-            case 2 -> string += "two";
-            case 3 -> string += "three";
-            case 4 -> string += "four";
-            case 5 -> string += "five";
-            case 6 -> string += "six";
-            case 7 -> string += "seven";
+            case 1 -> string += getString("one");
+            case 2 -> string += getString("two");
+            case 3 -> string += getString("three");
+            case 4 -> string += getString("four");
+            case 5 -> string += getString("five");
+            case 6 -> string += getString("six");
+            case 7 -> string += getString("seven");
             default -> string += endless.getNight();
         }
 
@@ -5036,9 +5151,11 @@ public class GamePanel extends JPanel implements Runnable {
     void startPlayMenu() {
         PlayMenu.index = 1;
         PlayMenu.list = new ArrayList<>();
-        PlayMenuElement challenge = new PlayMenuElement("challenge", loadImg("/menu/play/challenge.png"), "Challenge", ">> play");
-        PlayMenuElement normal = new PlayMenuElement("normal", loadImg("/menu/play/normal.png"), "Normal", currentNight == 1 ? ">> play" : ">> play - night " + currentNight);
-        PlayMenuElement endless = new PlayMenuElement("endless", loadImg("/menu/play/endless.png"), "Endless", recordEndlessNight == 0 ? ">> play" : ">> play - best " + recordEndlessNight);
+        
+        String subtext1 = ">> " + getString("pmPlay");
+        PlayMenuElement challenge = new PlayMenuElement("challenge", loadImg("/menu/play/challenge.png"), getString("pmChallenge"), subtext1);
+        PlayMenuElement normal = new PlayMenuElement("normal", loadImg("/menu/play/normal.png"), getString("pmNormal"), currentNight == 1 ? subtext1 : subtext1 + " - " + getString("pmNight") + " " + currentNight);
+        PlayMenuElement endless = new PlayMenuElement("endless", loadImg("/menu/play/endless.png"), getString("pmEndless"), recordEndlessNight == 0 ? subtext1 : subtext1 + " - " + getString("pmBest") + " " + recordEndlessNight);
 
         PlayMenu.list = List.of(challenge, normal, endless);
 
@@ -5060,9 +5177,13 @@ public class GamePanel extends JPanel implements Runnable {
         itemLimit = 3;
         state = GameState.ITEMS;
         sound.play("select", 0.1);
-
+        
         for(Item item : fullItemList) {
             item.deselect();
+            
+            if(saveItems && isItemUsed.containsKey(item) && item.getAmount() != 0) {
+                item.setSelected(isItemUsed.get(item));
+            }
         }
 
         startButtonSelected = false;
@@ -5188,34 +5309,36 @@ public class GamePanel extends JPanel implements Runnable {
                 graphics2D.drawImage(bingoCompletedImg, 15 + x * 129, 75 + y * 129, null);
             }
 
-            String raw = task.getName();
-            String[] rawLines = raw.split(" ");
+            if(task != BingoTask.NONE) {
+                String raw = getString(task.toString().toLowerCase(Locale.ROOT) + "B");
+                String[] rawLines = raw.split(" ");
 
-            List<String> lines = new ArrayList<>();
-            String currentLine = "";
+                List<String> lines = new ArrayList<>();
+                String currentLine = "";
 
-            int j = 0;
-            while(j < rawLines.length) {
-                currentLine += rawLines[j] + " ";
+                int j = 0;
+                while (j < rawLines.length) {
+                    currentLine += rawLines[j] + " ";
 
-                String lengthLine = currentLine;
-                if(rawLines[j].length() > 8) {
-                    lengthLine = lengthLine.trim();
+                    String lengthLine = currentLine;
+                    if (rawLines[j].length() > 8) {
+                        lengthLine = lengthLine.trim();
+                    }
+                    if (halfTextLength(graphics2D, lengthLine) > 25) {
+                        lines.add(currentLine);
+                        currentLine = "";
+                    }
+                    if (j == rawLines.length - 1) {
+                        lines.add(currentLine);
+                    }
+                    j++;
                 }
-                if(halfTextLength(graphics2D, lengthLine) > 25) {
-                    lines.add(currentLine);
-                    currentLine = "";
-                }
-                if(j == rawLines.length - 1) {
-                    lines.add(currentLine);
-                }
-                j++;
-            }
 
-            int k = 0;
-            for(String string : lines) {
-                graphics2D.drawString(string, 20 + x * 128, 100 + y * 128 + k * 28);
-                k++;
+                int k = 0;
+                for (String string : lines) {
+                    graphics2D.drawString(string, 20 + x * 128, 100 + y * 128 + k * 28);
+                    k++;
+                }
             }
 
             i++;
@@ -5300,6 +5423,10 @@ public class GamePanel extends JPanel implements Runnable {
         switch (state) {
             case ITEMS -> {
                 itemsMenu = new BufferedImage(1080, 640, BufferedImage.TYPE_INT_RGB);
+
+                for (Item item : fullItemList) {
+                    isItemUsed.put(item, item.isSelected());
+                }
             }
             case CHALLENGE -> {
                 music.stop();
@@ -5326,8 +5453,8 @@ public class GamePanel extends JPanel implements Runnable {
         DiscordRichPresence rich = new DiscordRichPresence.Builder
                 ("In Menu")
                 .setDetails("PÉPITO RETURNED HOME")
-                .setBigImage("menu", "PÉPITO RETURNED HOME")
-                .setSmallImage("pepito", "PÉPITO RETURNED HOME")
+                .setBigImage("menu", "PEPITO RETURNED HOME")
+                .setSmallImage("pepito", "PEPITO RETURNED HOME")
                 .setStartTimestamps(launchedGameTime)
                 .build();
 
@@ -5356,10 +5483,12 @@ public class GamePanel extends JPanel implements Runnable {
         state = GameState.UNLOADED;
         loading = true;
 
+        timerY = -240;
         starlightMillis = 0;
         fadeOut(255, 255, 0);
         usage = 0;
         music.stop();
+        console.power = true;
 
         byte nightNumber = currentNight;
         if(type == GameType.ENDLESS_NIGHT) {
@@ -5397,6 +5526,8 @@ public class GamePanel extends JPanel implements Runnable {
                 } else {
                     item.disable();
                 }
+
+                isItemUsed.put(item, item.isSelected());
             }
         }
         for(int i = 0; i < usedItems.size(); i++) {
@@ -5410,7 +5541,7 @@ public class GamePanel extends JPanel implements Runnable {
                     bingoCardItem.disable();
                     usedItems.remove(bingoCardItem);
 
-                    new Pepitimer(() -> new Notification("+ unlocked Pepingo!"), 2000);
+                    new Pepitimer(() -> new Notification(getString("unlockedPepingo")), 2000);
                 }
             }
         }
@@ -5424,14 +5555,14 @@ public class GamePanel extends JPanel implements Runnable {
                 endless.addCoins(coinsAdd);
 
                 sound.play("sellsYourBalls", 0.15);
-                new Notification("Your Maxwell generated " + coinsAdd + " dabloons!");
+                new Notification(getString("maxwellGenerated").replaceAll("%d%", coinsAdd + ""));
                 notificationDelay[0] += 1400;
             }
             for(byte i = 0; i < 2; i++) {
                 if (corn[i].isEnabled() && corn[i].getStage() < 4) {
                     corn[i].increment();
                     if (corn[i].getStage() == 2) {
-                        new Pepitimer(() -> new Notification("Your Corn fully grew!"), notificationDelay[0]);
+                        new Pepitimer(() -> new Notification(getString("cornGrew")), notificationDelay[0]);
                         notificationDelay[0] += 1000;
                     }
                     switch (corn[i].getStage()) {
@@ -5441,7 +5572,7 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
             if(endless.getNight() == 6) {
-                new Pepitimer(() -> new Notification("Milly is hosting a party at the shop!"), notificationDelay[0]);
+                new Pepitimer(() -> new Notification(getString("millyParty")), notificationDelay[0]);
                 notificationDelay[0] += 1600;
             }
         }
@@ -5492,6 +5623,10 @@ public class GamePanel extends JPanel implements Runnable {
             night.setItemless(true);
         }
         night.setUsedItemAmount((short) usedItems.size());
+        
+        if(volume == 0) {
+            night.setSoundless(true);
+        }
 
         final GameType finalType = type;
 
@@ -5567,15 +5702,21 @@ public class GamePanel extends JPanel implements Runnable {
             case DAY -> details = "ENDLESS - DAY " + endless.getNight();
             case PREPARTY -> details = "PÉPITO'S PARTY PREPARATIONS";
             case PARTY -> details = "PÉPITO'S PARTY";
-            case CUSTOM -> details = "SIMULATION - CUSTOM NIGHT";
+            case CUSTOM -> {
+                if(CustomNight.isCustom()) {
+                    details = "SIMULATION - CUSTOM NIGHT";
+                } else {
+                    details = "SIMULATION - " + CustomNight.getSelectedChallengeName().toUpperCase(Locale.ROOT);
+                }
+            }
             case SHADOW -> details = "SHADOWNIGHT - START";
         }
 
         DiscordRichPresence rich = new DiscordRichPresence.Builder
                 ("In-Game")
                 .setDetails(details)
-                .setBigImage(night.getType().getDiscordID(), "PÉPITO RETURNED HOME")
-                .setSmallImage("pepito", "PÉPITO RETURNED HOME")
+                .setBigImage(night.getType().getDiscordID(), "PEPITO RETURNED HOME")
+                .setSmallImage("pepito", "PEPITO RETURNED HOME")
                 .setStartTimestamps(launchedGameTime)
                 .build();
 
@@ -5791,7 +5932,7 @@ public class GamePanel extends JPanel implements Runnable {
             case "pepito" -> {
                 jumpscare = jumpscares[1].request();
                 sound.play("pepitoScare", 0.35);
-                killedBy = "killed by pépito";
+                killedBy = getString("kbPepito");
 
                 switch ((byte) Math.round(Math.random())) {
                     case 0 -> tip = "Tip: You can hear Pépito's footsteps!";
@@ -5799,11 +5940,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_PEPITO.getValue() == 0) {
-                    afterDeathText = "Pépito... Main enemy of the game. You'll hear his footsteps from left or right, close the respective door. Sound is directional.";
+                    afterDeathText = getString("pepitoDT1");
                 } else if(Statistics.DIED_TO_PEPITO.getValue() == 1) {
-                    afterDeathText = "Pépito again? Use the Metal Pipe to scare him away immediately. Enable headphones in settings if you're struggling with the direction.";
+                    afterDeathText = getString("pepitoDT2");
                 } else if(Statistics.DIED_TO_PEPITO.getValue() > 1) {
-                    afterDeathText = "You can figure this one out on your own. I believe in you.";
+                    afterDeathText = getString("pepitoDT3");
                 }
 
                 Statistics.DIED_TO_PEPITO.increment();
@@ -5811,7 +5952,7 @@ public class GamePanel extends JPanel implements Runnable {
             case "notPepito" -> {
                 jumpscare = jumpscares[2].request();
                 sound.play("notPepitoScare", 0.3);
-                killedBy = "killed by NotPepito";
+                killedBy = getString("kbNotPepito");
 
                 switch ((byte) Math.round(Math.random())) {
                     case 0 -> tip = "Tip: If you hear running, close the door immediately!";
@@ -5819,11 +5960,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_NOTPEPITO.getValue() == 0) {
-                    afterDeathText = "NotPepito... He's kinda like Pépito. Just faster. Way faster. React immediately. Lights will flicker.";
+                    afterDeathText = getString("notPepitoDT1");
                 } else if(Statistics.DIED_TO_NOTPEPITO.getValue() == 1) {
-                    afterDeathText = "NotPepito again.. gonna be a tough one. Lights flicker and you hear his footsteps. Just need to react faster.";
+                    afterDeathText = getString("notPepitoDT2");
                 } else if(Statistics.DIED_TO_NOTPEPITO.getValue() > 1) {
-                    afterDeathText = "Eventually you'll get used to it.";
+                    afterDeathText = getString("notPepitoDT3");
                 }
 
                 Statistics.DIED_TO_NOTPEPITO.increment();
@@ -5832,7 +5973,7 @@ public class GamePanel extends JPanel implements Runnable {
             }
             case "a90" -> {
                 sound.play("a90Dead", 0.08);
-                killedBy = "killed by uncanny cat";
+                killedBy = getString("kbUncanny");
 
                 byte randomTip = (byte) Math.round(Math.random());
                 if(adblocker.getAmount() > 0) {
@@ -5845,11 +5986,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_UNCANNY.getValue() == 0) {
-                    afterDeathText = "Uncanny Cat... when you see him appear stop moving or pressing keys IMMEDIATELY. He will give you two strikes until you die.";
+                    afterDeathText = getString("uncannyDT1");
                 } else if(Statistics.DIED_TO_UNCANNY.getValue() == 1) {
-                    afterDeathText = "Uncanny Cat again.. do. not. MOVE.                                    You can use the adblocker to suppress him for one night. Adblockers appear in the camera.";
+                    afterDeathText = getString("uncannyDT2");
                 } else if(Statistics.DIED_TO_UNCANNY.getValue() > 1) {
-                    afterDeathText = "Chill, stop moving so much already.";
+                    afterDeathText = getString("uncannyDT3");
                 }
 
                 Statistics.DIED_TO_UNCANNY.increment();
@@ -5857,7 +5998,7 @@ public class GamePanel extends JPanel implements Runnable {
                 miliseconds = 2300;
             }
             case "msi" -> {
-                killedBy = "killed by MSI";
+                killedBy = getString("kbMSI");
 //                jumpscare = jumpscares[4].request();
                 jumpscare = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 
@@ -5868,11 +6009,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_MSI.getValue() == 0) {
-                    afterDeathText = "MSI... Scary one. Move left or right at his command. Left, then right, then left, then right, then lef...";
+                    afterDeathText = getString("msiDT1");
                 } else if(Statistics.DIED_TO_MSI.getValue() == 1) {
-                    afterDeathText = "MSI again, huh. If you're really struggling use the flashlight on him, but that will summon Glitcher. Move LEFT and RIGHT";
+                    afterDeathText = getString("msiDT2");
                 } else if(Statistics.DIED_TO_MSI.getValue() > 1) {
-                    afterDeathText = "LEFT, RIGHT, LEFT, RIGHT, LEFT, RIGHT, LEFT, RIGHT. You'll learn it eventually.";
+                    afterDeathText = getString("msiDT3");
                 }
 
                 Statistics.DIED_TO_MSI.increment();
@@ -5880,7 +6021,7 @@ public class GamePanel extends JPanel implements Runnable {
             case "astarta" -> {
                 jumpscare = jumpscares[3].request();
                 sound.playRate("astartaAdSound", 0.2, 0.4);
-                killedBy = "killed by astarta";
+                killedBy = getString("kbAstarta");
 
                 switch ((byte) Math.round(Math.random())) {
                     case 0 -> tip = "Tip: Astarta's eyes glow! Close the door she looks at.";
@@ -5888,11 +6029,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_ASTARTA.getValue() == 0) {
-                    afterDeathText = "Astarta... Her eyes will appear in the door frames. After some time they will flicker, and then she will attack. Close the door.";
+                    afterDeathText = getString("astartaDT1");
                 } else if(Statistics.DIED_TO_ASTARTA.getValue() == 1) {
-                    afterDeathText = "Astarta again. Close the doors earlier if you want to, or just use the Flashlight in the door frame to scare her away.";
+                    afterDeathText = getString("astartaDT2");
                 } else if(Statistics.DIED_TO_ASTARTA.getValue() > 1) {
-                    afterDeathText = "Astarta. You'll meet this one a lot.";
+                    afterDeathText = getString("astartaDT3");
                 }
 
                 Statistics.DIED_TO_ASTARTA.increment();
@@ -5905,7 +6046,7 @@ public class GamePanel extends JPanel implements Runnable {
             case "colaCat" -> {
                 jumpscare = resize(jumpscares[5].request(), 1080, 640, Image.SCALE_FAST);
                 sound.play("colaJumpscare", 0.13);
-                killedBy = "killed by cola cat";
+                killedBy = getString("kbCola");
 
                 switch ((byte) Math.round(Math.random() * 2)) {
                     case 0 -> tip = "Tip: The Soda starts changing colors! Drink it.";
@@ -5914,11 +6055,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_COLACAT.getValue() == 0) {
-                    afterDeathText = "ColaCat... Your soda will start corrupting and become red after some time, and if you don't drink it you will die.";
+                    afterDeathText = getString("colaDT1");
                 } else if(Statistics.DIED_TO_COLACAT.getValue() == 1) {
-                    afterDeathText = "ColaCat again. In Classic he appears only when Soda is  used with Metal Pipe or Flashlight. Mini Soda does not get affected by ColaCat.";
+                    afterDeathText = getString("colaDT2");
                 } else if(Statistics.DIED_TO_COLACAT.getValue() > 1) {
-                    afterDeathText = "Soda go red -> Drink Soda.";
+                    afterDeathText = getString("colaDT3");
                 }
 
                 Statistics.DIED_TO_COLACAT.increment();
@@ -5928,16 +6069,16 @@ public class GamePanel extends JPanel implements Runnable {
             case "maki" -> {
                 jumpscare = resize(jumpscares[6].request(), 1080, 640, Image.SCALE_FAST);
                 sound.play("makiScare", 0.4);
-                killedBy = "killed by maki";
+                killedBy = getString("kbMaki");
 
                 tip = "Tip: Look at the camera next time!";
 
                 if(Statistics.DIED_TO_MAKI.getValue() == 0) {
-                    afterDeathText = "Maki... Maki's footsteps are not directional. You will need to look in the camera to see what direction she will go to.";
+                    afterDeathText = getString("makiDT1");
                 } else if(Statistics.DIED_TO_MAKI.getValue() == 1) {
-                    afterDeathText = "Maki again? Maki will indicate her direction with a red exclamation mark too. Your last resort will be using the Metal Pipe.";
+                    afterDeathText = getString("makiDT2");
                 } else if(Statistics.DIED_TO_MAKI.getValue() > 1) {
-                    afterDeathText = "How.";
+                    afterDeathText = getString("makiDT3");
                 }
 
                 Statistics.DIED_TO_MAKI.increment();
@@ -5952,7 +6093,7 @@ public class GamePanel extends JPanel implements Runnable {
 
                 sound.play("boop", 0.1);
 
-                killedBy = "killed by shark";
+                killedBy = getString("kbShark");
 
                 switch ((byte) Math.round(Math.random() * 2)) {
                     case 0 -> tip = "Tip: Move your fish away from Shark!";
@@ -5961,11 +6102,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_SHARK.getValue() == 0) {
-                    afterDeathText = "Shark... The Flood is an entire 1 minute sequence. You can make the Flood go 2x faster using the Fan. Green squares will appear, make the fish avoid them at all cost.";
+                    afterDeathText = getString("sharkDT1");
                 } else if(Statistics.DIED_TO_SHARK.getValue() == 1) {
-                    afterDeathText = "Shark again? You can make the Flood go 2x faster using the Fan. Green squares will appear, make the fish avoid them at all cost.";
+                    afterDeathText = getString("sharkDT2");
                 } else if(Statistics.DIED_TO_SHARK.getValue() > 1) {
-                    afterDeathText = "Avoid green squares.";
+                    afterDeathText = getString("sharkDT3");
                 }
 
                 Statistics.DIED_TO_SHARK.increment();
@@ -5975,7 +6116,7 @@ public class GamePanel extends JPanel implements Runnable {
 
                 sound.play("boop", 0.1);
 
-                killedBy = "his name is silly cat....    ";
+                killedBy = getString("kbBoykisser");
 
                 switch ((byte) Math.round(Math.random() * 2)) {
                     case 0 -> tip = "Tip: bro how did you die";
@@ -5993,7 +6134,7 @@ public class GamePanel extends JPanel implements Runnable {
 
                 miliseconds = 4000;
 
-                killedBy = "killed by lemonade cat";
+                killedBy = getString("kbLemon");
 
                 switch ((byte) Math.round(Math.random())) {
                     case 0 -> tip = "Tip: Throw the lemons at him!";
@@ -6001,11 +6142,11 @@ public class GamePanel extends JPanel implements Runnable {
                 }
 
                 if(Statistics.DIED_TO_LEMONADE_CAT.getValue() == 0) {
-                    afterDeathText = "Lemonade Cat... Right-Click to throw lemons at him. Lemons take a bit to reach him, so go a bit ahead. Lemonade Cat will bounce up and down too.";
+                    afterDeathText = getString("lemonDT1");
                 } else if(Statistics.DIED_TO_LEMONADE_CAT.getValue() == 1) {
-                    afterDeathText = "Lemonade Cat again. Aim BETTER. THROW THOSE LEMONS. DONT RUN OUT.";
+                    afterDeathText = getString("lemonDT2");
                 } else if(Statistics.DIED_TO_LEMONADE_CAT.getValue() > 1) {
-                    afterDeathText = "Aim better PLEASE.";
+                    afterDeathText = getString("lemonDT3");
                 }
 
                 Statistics.DIED_TO_LEMONADE_CAT.increment();
@@ -6014,7 +6155,7 @@ public class GamePanel extends JPanel implements Runnable {
 
             }
             case "scaryCat" -> {
-                killedBy = "killed by scary cat";
+                killedBy = getString("kbScary");
 
                 miliseconds = 5500;
                 sound.play("scaryCatJumpscare", 0.2);
@@ -6023,11 +6164,11 @@ public class GamePanel extends JPanel implements Runnable {
                 tip = "Tip: Move your camera around!";
 
                 if(Statistics.DIED_TO_SCARY_CAT.getValue() == 0) {
-                    afterDeathText = "Scary Cat... he will try to go in the center of your view. Move and don't let him reach you. After some time he will disappear.";
+                    afterDeathText = getString("scaryCatDT1");
                 } else if(Statistics.DIED_TO_SCARY_CAT.getValue() == 1) {
-                    afterDeathText = "Scary Cat is very forgiving, i don't know how you are dying. But move your camera away from him.";
+                    afterDeathText = getString("scaryCatDT2");
                 } else if(Statistics.DIED_TO_SCARY_CAT.getValue() > 1) {
-                    afterDeathText = "Move your camera.";
+                    afterDeathText = getString("scaryCatDT3");
                 }
 
                 Statistics.DIED_TO_SCARY_CAT.increment();
@@ -6036,7 +6177,7 @@ public class GamePanel extends JPanel implements Runnable {
                 miliseconds = 1600;
 
                 sound.playRate("dreadDead", 0.4, 0.8);
-                killedBy = "killed by dread";
+                killedBy = getString("kbDread");
 
                 final float[] intensity = {31};
                 RepeatingPepitimer[] pepitimer = new RepeatingPepitimer[1];
@@ -6051,14 +6192,14 @@ public class GamePanel extends JPanel implements Runnable {
                     }
                 }, 50, 50);
 
-                afterDeathText = "Who...?? I do not know that entity. It is not from our world.";
+                afterDeathText = "Who...?? I do not know that entity.";
 
                 Statistics.DIED_TO_DREAD.increment();
             }
             case "shadowAstarta" -> {
                 miliseconds = 0;
 
-                killedBy = "killed by Shadow Astarta";
+                killedBy = getString("kbShadowAstarta");
 
                 Statistics.DIED_TO_SHADOW_ASTARTA.increment();
             }
@@ -6101,7 +6242,7 @@ public class GamePanel extends JPanel implements Runnable {
                     pepitimer[0].cancel(false);
                 }, 10000);
 
-                killedBy = "killed by Shadow Pépito";
+                killedBy = getString("kbShadowPepito");
 
                 Statistics.DIED_TO_SHADOW_PEPITO.increment();
             }
@@ -6111,29 +6252,29 @@ public class GamePanel extends JPanel implements Runnable {
                 jumpscare = jumpscares[13].request();
                 sound.play("elAstartaScare", 0.2);
 
-                killedBy = "killed by El Astarta";
+                killedBy = getString("kbElAstarta");
 
                 if(Statistics.DIED_TO_EL_ASTARTA.getValue() == 0) {
-                    afterDeathText = "El Astarta... Sequence that lasts 40 seconds. El Astarta's eyes will appear in door frames and strike very fast. New doors will appear. Survive.";
+                    afterDeathText = getString("elAstartaDT1");
                 } else if(Statistics.DIED_TO_EL_ASTARTA.getValue() == 1) {
-                    afterDeathText = "El Astarta again... Close doors with eyes. Do not get confused. Survive.";
+                    afterDeathText = getString("elAstartaDT2");
                 } else if(Statistics.DIED_TO_EL_ASTARTA.getValue() > 1) {
-                    afterDeathText = "Survive.";
+                    afterDeathText = getString("elAstartaDT3");
                 }
 
                 Statistics.DIED_TO_EL_ASTARTA.increment();
             }
             case "radiation" -> {
                 miliseconds = 0;
-                killedBy = "died from radiation";
+                killedBy = getString("kbRadiation");
 
-                afterDeathText = "Avoid your cursor from entering green circles, they indicate radiation. If you reach too much radiation you WILL die.";
+                afterDeathText = getString("radiationDT");
 
                 Statistics.DIED_TO_RADIATION.increment();
             }
             case "pause" -> {
                 miliseconds = 0;
-                killedBy = "killed by intentional game design";
+                killedBy = getString("kbGameDesign");
 
                 Statistics.DEATHS.setValue(Statistics.DEATHS.getValue() - 1);
             }
@@ -6243,6 +6384,10 @@ public class GamePanel extends JPanel implements Runnable {
         music.play("chime", 0.15);
 
         tip = "";
+        
+        if(night.isSoundless()) {
+            BingoHandler.completeTask(BingoTask.BEAT_WITHOUT_SOUND);
+        }
 
         if(!type.isParty()) {
             if(type == GameType.CLASSIC) {
@@ -6758,8 +6903,8 @@ public class GamePanel extends JPanel implements Runnable {
             DiscordRichPresence rich = new DiscordRichPresence.Builder
                     ("In Menu")
                     .setDetails("PÉPITO RETURNED HOME")
-                    .setBigImage("menu", "PÉPITO RETURNED HOME")
-                    .setSmallImage("pepito", "PÉPITO RETURNED HOME")
+                    .setBigImage("menu", "PEPITO RETURNED HOME")
+                    .setSmallImage("pepito", "PEPITO RETURNED HOME")
                     .setStartTimestamps(launchedGameTime)
                     .build();
 
@@ -6831,6 +6976,47 @@ public class GamePanel extends JPanel implements Runnable {
         } catch (AWTException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public static String getString(String key) {
+        return languageText.get(key).replaceAll("%n", "\n");
+    }
+    String language = "english";
+    public void loadLanguage(String language) {
+        this.language = language;
+
+        try {
+            String data = new String(getClass().getResourceAsStream("/languages/" + language + ".txt").readAllBytes());
+
+            String[] array = data.split("\n");
+
+            languageText.clear();
+            for (String row : array) {
+                String[] split = row.split(":");
+
+                if(split.length == 2) {
+                    String text = split[1];
+
+                    if(row.endsWith(":")) {
+                        text += ":";
+                    }
+                    languageText.put(split[0], text);
+                } else {
+                    StringBuilder connect = new StringBuilder();
+                    for(int i = 1; i < split.length; i++) {
+                        connect.append(split[i]);
+                        if(i != split.length - 1) {
+                            connect.append(":");
+                        }
+                    }
+                    if(row.endsWith(":")) {
+                        connect.append(":");
+                    }
+
+                    languageText.put(split[0], connect.toString());
+                }
+            }
+        } catch (IOException exception) { }
     }
 
     public void stopAllSound() {
