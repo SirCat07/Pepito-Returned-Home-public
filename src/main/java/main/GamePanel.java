@@ -82,7 +82,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GameState state = GameState.UNLOADED;
 
-    String version = "2.0.15";
+    String version = "2.0.2";
     short versionTextLength = 0;
 
     Color currentLeftPan = new Color(0, 0, 0);
@@ -3625,7 +3625,7 @@ public class GamePanel extends JPanel implements Runnable {
                             graphics2D.setColor(Color.RED);
                             for(short x : night.generatorXes.clone()) {
                                 if(x != -1) {
-                                    graphics2D.fillRect(220 + x, 495, 25, 110);
+                                    graphics2D.fillRect(220 + x, 495, 35, 110);
                                 }
                             }
 
@@ -5046,7 +5046,7 @@ public class GamePanel extends JPanel implements Runnable {
         switch (type) {
             case SHADOW -> string = getString("SHADOWNIGHT");
             case PREPARTY -> string = getString("pepitoPartyPreparations");
-            case PARTY -> string = getString("night 666");
+            case PARTY -> string = getString("night666");
             case CUSTOM -> {
                 if(CustomNight.isCustom()) {
                     string = getString("customNightSmall");

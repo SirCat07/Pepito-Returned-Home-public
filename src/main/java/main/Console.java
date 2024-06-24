@@ -29,7 +29,7 @@ public class Console {
         g = panel;
 
         normalCommands = List.of("energy", "msi", "pepito", "notPepito", "mirror", "mk", "bloom", "a90", "astarta", "elastarta", "blizzard", "jmpcat", "roulette", "uncannyEventSec", "dvdEventSec", "holeEventSec", "mister", "astartaSpeed", "setABhealth", "lemon", "scarycat", "a120", "wires", "shadow", "shart", "makeballoons", "jumpscare", "bright", "starlight", "nightSeconds", "setEndlessNight", "locker", "sunglasses", "temp", "maki", "lag", "notify", "skipAB", "event", "kys", "win");
-        opCommands = List.of("debug", "itemLimit", "item", "ie", "volume", "timers", "countfps", "limbo", "infinitemoneyglitch", "reset", "state", "freesoda", "godmode", "getAch", "completePepingo", "remAch", "portal", "rift", "sigma", "testCutscene", "plat", "endlessCheck", "eventCheck", "help", "prikol");;
+        opCommands = List.of("debug", "itemLimit", "item", "ie", "volume", "timers", "countfps", "limbo", "infinitemoneyglitch", "reset", "state", "freesoda", "invincible", "getAch", "completePepingo", "remAch", "portal", "testCutscene", "plat", "endlessCheck", "eventCheck", "help", "prikol");;
     }
 
     static void type(String sequence) {
@@ -197,7 +197,7 @@ public class Console {
                         g.soda.enable();
                     }, 1, 1);
                 }
-                case "godmode" -> {
+                case "invincible" -> {
                     g.invincible = !g.invincible;
                 }
                 case "completePepingo" -> {
@@ -247,40 +247,8 @@ public class Console {
                     g.portalActive = true;
                     g.keyHandler.camSounds.play("shadowPortal", 0.1, true);
                 }
-                case "rift" -> {
-                    g.enterRift();
-                }
                 case "winbingo" -> {
                     g.bingoCard.complete();
-                }
-                case "sigma" -> {
-                    g.portalTransporting = true;
-
-                    g.everySecond20th.put("riftTint", () -> {
-                        if(g.riftTint < 251) {
-                            g.riftTint += 4;
-                        } else {
-                            g.everySecond20th.remove("riftTint");
-                        }
-                    });
-
-                    g.loading = true;
-                    g.state = GameState.UNLOADED;
-                    g.camOut(true);
-
-                    GamePanel.mirror = true;
-                    g.type = GameType.SHADOW;
-                    g.fadeOutStatic(0, 0, 0);
-                    g.state = GameState.HALFLOADED;
-                    g.soggyBallpit.disable();
-                    g.soggyBallpitActive = false;
-
-                    g.startGame();
-
-                    g.endless = null;
-                    g.portalTransporting = false;
-                    g.riftTint = 0;
-                    g.portalActive = false;
                 }
                 case "testCutscene" -> {
                     Cutscene cutscene = new Cutscene("test", 1080, 640, BufferedImage.TYPE_INT_RGB);

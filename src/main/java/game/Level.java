@@ -308,7 +308,7 @@ public class Level {
                 }
             }
             if(blizzardModifier) {
-                if(Math.random() < 0.01 && blizzardTime <= 0) {
+                if(Math.random() < 0.008 && blizzardTime <= 0) {
                     startBlizzard();
                 }
                 if(blizzardTime > 0) {
@@ -585,7 +585,7 @@ public class Level {
         switch (type) {
             case SHADOW -> {
                 g.music.play("theShadow", 0.1);
-                energy = 1003;
+                energy = 503;
             }
             case PREPARTY -> {
                 for(int i = 0; i < 5; i++){
@@ -713,7 +713,7 @@ public class Level {
                 a90.setAILevel(7);
                 astarta.setAILevel(3);
                 msi.setAILevel(2);
-                shark.setAILevel(6);
+                shark.setAILevel(5);
                 boykisser.setAILevel(5);
                 colaCat.setAILevel(4);
                 mirrorCat.setAILevel(4);
@@ -865,7 +865,7 @@ public class Level {
         a90.setAILevel(7);
         astarta.setAILevel(5);
         msi.setAILevel(4);
-        shark.setAILevel(8);
+        shark.setAILevel(7);
         boykisser.setAILevel(8);
         colaCat.setAILevel(0);
         mirrorCat.setAILevel(7);
@@ -874,8 +874,8 @@ public class Level {
         wires.setAILevel(5); // 2
         scaryCat.setAILevel(3); // 2
 
-        energy += 500;
-        maxEnergy += 500;
+        energy += 400;
+        maxEnergy += 400;
 
         g.announceNight((byte) 60, GameType.SHADOW);
         g.nightAnnounceText = GamePanel.getString("halfwayPointCaps");
@@ -1007,9 +1007,9 @@ public class Level {
 
     public void startGeneratorMinigame() {
         generatorStage = 0;
-        generatorXes[0] = (short) (30 + Math.random() * 560);
-        generatorXes[1] = (short) (30 + Math.random() * 560);
-        generatorXes[2] = (short) (30 + Math.random() * 560);
+        generatorXes[0] = (short) (30 + Math.random() * 540);
+        generatorXes[1] = (short) (30 + Math.random() * 540);
+        generatorXes[2] = (short) (30 + Math.random() * 540);
         inGeneratorMinigame = true;
 
         g.generatorSound.play("connectToGenerator", 0.1, true);

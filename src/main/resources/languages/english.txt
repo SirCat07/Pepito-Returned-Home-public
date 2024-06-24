@@ -81,7 +81,7 @@ moveThe:move the
 fishAway:fish away!
 lemonadeCatAppears:uh oh! the lemonade cat appears!
 giveHimLemons:right click to give him some lemons!
-tries:Tries:
+tries:Tries: 
 somethingChangedInCamera:Something changed in your camera...
 hide:hide
 show:show

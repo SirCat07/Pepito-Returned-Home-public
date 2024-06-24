@@ -211,10 +211,10 @@ public class MSI extends Enemy {
 
     boolean killed = false;
 
-    public void kill(boolean removeSensor) {
+    public void kill(boolean removeSensor, boolean glitcher) {
         killed = true;
 
-        if(g.getNight().getEvent() != GameEvent.ASTARTA) {
+        if(g.getNight().getEvent() != GameEvent.ASTARTA && glitcher) {
             if (g.getNight().getGlitcher().isEnabled()) {
                 g.getNight().getGlitcher().spawn();
             }

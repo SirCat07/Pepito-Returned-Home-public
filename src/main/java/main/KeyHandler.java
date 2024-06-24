@@ -564,7 +564,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     g.night.getPepito().scare();
                                     g.night.getMaki().scare();
                                     if(g.night.getMSI().isActive()) {
-                                        g.night.getMSI().kill(false);
+                                        g.night.getMSI().kill(false, false);
                                     }
                                     g.night.getColaCat().leave();
 
@@ -676,7 +676,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                             int order = 0;
                             for(short x : g.getNight().generatorXes.clone()) {
-                                Rectangle rect2 = new Rectangle(220 + x, 495, 25, 110);
+                                Rectangle rect2 = new Rectangle(220 + x, 495, 35, 110);
 
                                 if(rect1.intersects(rect2) && g.getNight().generatorXes[order] != -1) {
                                     g.getNight().generatorXes[order] = -1;
@@ -684,9 +684,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     short[] array = g.getNight().generatorXes;
                                     if(array[0] == -1 && array[1] == -1 && array[2] == -1) {
                                         g.getNight().generatorStage++;
-                                        g.getNight().generatorXes[0] = (short) (30 + Math.random() * 560);
-                                        g.getNight().generatorXes[1] = (short) (30 + Math.random() * 560);
-                                        g.getNight().generatorXes[2] = (short) (30 + Math.random() * 560);
+                                        g.getNight().generatorXes[0] = (short) (30 + Math.random() * 540);
+                                        g.getNight().generatorXes[1] = (short) (30 + Math.random() * 540);
+                                        g.getNight().generatorXes[2] = (short) (30 + Math.random() * 540);
 
                                         g.generatorSound.play("generatorNextStage", 0.1);
 
@@ -710,9 +710,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     g.getNight().generatorStage--;
                                 }
                             }
-                            g.getNight().generatorXes[0] = (short) (30 + Math.random() * 560);
-                            g.getNight().generatorXes[1] = (short) (30 + Math.random() * 560);
-                            g.getNight().generatorXes[2] = (short) (30 + Math.random() * 560);
+                            g.getNight().generatorXes[0] = (short) (30 + Math.random() * 540);
+                            g.getNight().generatorXes[1] = (short) (30 + Math.random() * 540);
+                            g.getNight().generatorXes[2] = (short) (30 + Math.random() * 540);
 
                             g.generatorSound.play("generatorFail", 0.1);
                         }
@@ -1273,7 +1273,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     g.flashLightCooldown = 28;
 
                                     if (g.night.getMSI().isActive()) {
-                                        g.night.getMSI().kill(true);
+                                        g.night.getMSI().kill(true, true);
                                         g.night.addEnergy(-4F);
                                     } else {
                                         for (int i : g.getNight().getDoors().keySet()) {

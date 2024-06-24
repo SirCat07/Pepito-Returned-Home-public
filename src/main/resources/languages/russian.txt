@@ -81,7 +81,7 @@ moveThe:Двигай рыбу
 fishAway:в сторону!
 lemonadeCatAppears:о нет! лимонад кет появился!
 giveHimLemons:нажимай ПКМ что бы дать ему лемонов!
-tries:Попытки:
+tries:Попытки: 
 somethingChangedInCamera:В камере что то изменилось...
 hide:скрыть
 show:показ
@@ -123,7 +123,7 @@ five:пять
 six:шесть
 seven:семь
 SHADOWNIGHT:ШАДОУНАЙТ
-pepitoPartyPreparations:Подготовка к Пéпито Вечеринке
+pepitoPartyPreparations:Подготовка Вечеринки Пéпито
 night666:ночь 666
 customNightSmall:своя ночь
 challengeSmall:испытание
