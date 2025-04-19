@@ -1,0 +1,562 @@
+startingSimulation:начинаем симуляцию...
+fartingSimulation:взрываем симуляцию...
+wouldYouLikeToEnter:Вы хотите переидти в
+theVoid?:Пустоту?
+Yes:Да
+No:Нет
+s:с
+randomEvent:СЛУЧАЙНЫЙ ИВЕНТ:
+uncannyDelivery:ДОСТАВКА АНКЕННИ
+dvdEvent:ДВД ЗАСТАВКА
+blackHoles:ЧЁРНЫЕ ДЫРЫ
+pressToSkip:[нажми что бы скипнуть]
+equipped:ЭКИПИРОВАН
+selectedItems:Предметов взято: 
+itemsWarning1:Внимание: предметы
+itemsWarning2:тратятся при старте
+itemsNotConsumed1:Предметы НЕ тратятся
+itemsNotConsumed2:при старте!
+statistics:Статистика
+achievements:Достижения
+start:старт
+back:назад
+custom:кастом
+on:вкл
+off:выкл
+Enemies:Враги
+SHUFFLE:СМЕШАТЬ
+NEXT:СЛЕД
+PREV:ПРЕД
+customNight:Кастом ночь
+challenge:Испытание
+volume:громкость
+fixedRatio:чёрные края
+headphones:наушники
+deafMode:(режим для глухих) ^
+resetNight:сбросить ночь
+showDisclaimer:показ. дисклеймер
+showManual:показ. мануал
+saveScreenshots:сохранять скриншоты
+rtx:оч крутой RTX блум
+fpsCounter:счётчик фпс
+fpsCap:фпс лимит:
+jumpscareShake:тряска скримера:
+screenShake:тряска экрана
+disableFlickering:отключить мигание света
+UNLIMITED:БЕЗЛИМИТ
+windowAndScreen:окно + экран
+screen:экран
+noShake:тряска запрещена
+languageSelect:язык:
+language:Русский
+keybindSettingsGuide:Shift+Z - Скриншот | Esc - Пауза | -+ - Громкость | F11 - Полный экран
+price:Цена
+pressAnyKey:[нажми любую кнопку]
+time:Время: 
+m:м
+startBingo:начать бинго
+stopBingo:стоп бинго
+restartBingo:рестарт бинго
+timeSpent:Потрачено времени: 
+24minutes:У тебя 24 минуты!
+sillyGame:Глупенькая мини игра где
+completeAll:ты должен выполнить все
+tasksTimeLimit:задания с лимитом времени!
+currentlyPlaying:Сейчас играет:
+firstNightWarning:Внимание: ночь перезапишется на первую
+left:left
+right:right
+loading:loading...
+halfwayPoint:Половина Пути
+halfwayPointCaps:ПОЛОВИНА ПУТИ
+astartaTime:ВРЕМЯ АСТАРТЫ
+waitForStart:Подождите 7 секунд чтобы начать на 8 PM
+click:[клик]
+door:Дверь
+transporting:перемещаем...
+battery:Батарея:
+generatorFuel:Топливо Генератора:
+maxwellTheCat:Кнопка кота
+button:Максвелла
+transportInto:Переместить в
+shadownight:Шадоунайт
+selectTwo:Выберите два.
+riftArrowsToChange:Стрелки - Поменять предмет
+riftSpaceToSelect:Пробел - Выбрать предмет
+riftEnabled:РАЗЛОМ ОТКРЫТ РАЗЛОМ ОТКРЫТ РАЗЛОМ ОТКРЫТ
+floodedAgain:о нет! похоже офис снова затопило!
+bewareOfSharks:остерегайся Акул!
+moveThe:Двигай рыбу
+fishAway:в сторону!
+lemonadeCatAppears:о нет! лимонад кет появился!
+giveHimLemons:нажимай ПКМ что бы дать ему лемонов!
+dscSplash1:СТРЕЛЯЙ В СУЩЕСТВО.
+dscSplash2:ПКМ
+dscWarning1:ОНО ПОДХОДИТ
+dscWarning2:ДВИГАЙСЯ
+tries:Попытки: 
+somethingChangedInCamera:В камере что то изменилось...
+hide:скрыть
+show:показ
+close:убрать
+surviveUntil4AM:Цель: Выжить до 4 AM
+shadowAstarta:Теневая Астарта
+keybinds:Клавиши
+unlockedAchievement:открыта ачивка
+hiddenAchievement:Это достижение скрыто...
+play:играть
+bingo:бинго
+achievementsSmall:достижения
+settings:настройки
+usage:Трата:
+completedPepingo:Ты завершил пепинго!
+paused:Пауза
+die:сдохнуть
+outOf:отсутствие
+luck:удачи
+gotAdblocker:Ты получил Адблокер!
+foundAdblocker:Ты нашёл Адблокер! выживи до 4 AM что бы получить его!
+keptMaxwell:ТВОЙ МАКСВЕЛЛ ОСТАЛСЯ!!!
+infiniteBirthdayHats:Бесконечные колпаки после 6 AM!
+score:Счет
+best:Рекорд
+ggWonned:гг ты победил
+pressAnyKeyButAwesome:нажми любую кнопку!!!
+beat4Nights:Ты прошёл 4 ночи!!!
+beatPreparations:Ты прошёл Подготовку к вечеринке!
+beatNight666:Ты прошёл ночь 666 - вечеринку Пéпито!!!
+rewardMaxwell:награда: 1 максвелл
+playBasementAgain:ТЕПЕРЬ ЗАЙДИ В ПОДВАЛ СНОВА
+points:очки
+night:ночь
+one:один
+two:два
+three:три
+four:четыре
+five:пять
+six:шесть
+seven:семь
+SHADOWNIGHT:ШАДОУНАЙТ
+pepitoPartyPreparations:Подготовка Вечеринки Пéпито
+night666:ночь 666
+customNightSmall:своя ночь
+challengeSmall:испытание
+day:день
+perfectStorm:идеальный шторм
+returnFromHydro:назад в огонь
+newChallenger:В ЛОГОВО ЗАШЁЛ НОВЫЙ ЧУДИК!
+peace:МИР!
+newChallengers:В ЛОГОВО ЗАШЛИ НОВЫЕ ЧУДИКИ!
+basementAnnouncement:ПОДВАЛ
+basementPartyAnnouncement:НАСТОЯЩЕЕ ИСПЫТАНИЕ
+hydrophobiaChamber:камера гидрофобии
+neonSogSkipsLeft:Осталось пропусков Неон Сога: 
+neonSogText:Купить пропуски 1 Ночи?
+neonSogFull:Заполнено!
+soggyTime:Время Мочить!
+intermission:АНТРАКТ
+dryCatPressE:Нажмите [E] чтобы войти.
+hcCamGuideline:[C] для Камеры.
+hcLockerGuideline:[W] чтобы Выйти из Шкафа.
+hcConditionerOff:Он выключен.
+hcConditionerOn:Работает.
+fieldObjective: Цель: Сядьте в машину
+red40NeedWater:Нужна вода чтобы активировать.
+imHere:Я тут.
+sodaExpired:Ваша Сода больше не работает
+miniSodaExpired:Ваша Мини Сода больше не работает
+megaSodaWithheld:Мега Сода удерживается
+monitorForgot:эмм я забыл
+monitorDay:День 
+monitorOutage:Отключение:
+monitorPowerBack:Свет через:
+blueHour:синий:час
+hydroRespawn:Возродится
+hydroGoToMenu:Уйти в Меню
+selectNightGuide:[ШИФТ+A/D]
+endlessDisclaimer1:- ОТ РАЗРАБОТЧИКОВ -
+endlessDisclaimer2:Обычный Режим по большей части это обучение
+endlessDisclaimer3:Почти всё в игре разблокировывается через
+endlessDisclaimer4:Эндлесс, так что я уверен что вам стоит
+endlessDisclaimer5:в него поиграть!!
+endlessDisclaimer6:[НАЖМИ ЛЮБУЮ КНОПКУ]
+krunlic:крындлик
+//://
+unlockedPepingo:+ разблокировано Пепинго!
+maxwellGenerated:Ваш Максвелл сгенерировал %d% даблунов!
+cornGrew:Ваша Кукуруза выросла!
+millyParty:Милли устроила вечеринку в магазине!
+larrySweepAnnouncement:У Милли распродажа!
+//://
+sodaName:СОДАА
+sodaDesc:очень вкусно круто%n[S]: даёт +40% энергии
+flashlightName:фонарик
+flashlightDesc:темно не видно%n[ПКМ]: %nпугает Астарту%nперезарядка: 28с%n[ЗАЖАТЬ]: светит
+fanName:вентилятор
+fanDesc:аа жарко жарко%n[F]: понижает шанс%nНеПепито;%nускоряет потоп
+metalPipeName:МЕТАЛ ПАЙП
+metalPipeDesc:МЕТАЛ ПАЙП%n[M]: пугает Пéпито%nперезарядка: 25с
+sensorName:СЕНСОР
+sensorDesc:видит движение.%nпобочные эффекты могут%nиметь: MSI
+adblockerName:адблокер
+adblockerDesc:лёгкий режим игры!%n- убирает uncanny%n- убирает glitcher
+maxwellName:максвелл
+maxwellDesc:это максвелл%nendless: генерирует%nдаблуны
+freezeName:зелье льда
+freezeDesc:замедляет игру%n[I]: замораживает%nвсё на 30с
+planksName:доски
+planksDesc:блокирует двери%nдержит 12 ударов%n[B+1]: дверь 1 %n[B+2] дверь 2
+miniSodaName:МИНИСОДА
+miniSodaDesc:мини сода%n[D]: даёт +10% энергии
+soupName:суп
+soupDesc:ОСТОРОЖНО: ОПАСНОЕ%nСУЩЕСТВО ВНУТРИ%n[U]: призывает СУП%nи всех ликвидирует
+bMaxwellName:крутой максвелл
+bMaxwellDesc:это максвелл%n:активирует концовку:
+birthdayHatName:колпак пéпито
+birthdayHatDesc:даёт тебе попытку на%nПодготовку к вечеринке%n1 предмет%nразламывается в 10
+bingoCardName:бинго карта
+bingoCardDesc:открывает пепинго навсегда%nиспользуйте в игре%nодин раз
+starlightName:флакон звёздного света
+starlightDesc:[L]: использовать%nсодержит свет%n%nне украдено из%nроблокс дорс%nдорсик
+sticketName:теневой билет
+sticketDesc:отправляет в%nшадоунайт
+subscriptionName:подписка
+subscriptionDesc:а вы хотели%nразрыв во времени%nвнутри шариков?%nЭто ваш выбор!%nподпишитесь сейчас!
+cornName:кукуруза
+cornDesc:кукуруза!%nвырастает 3 ночи%nпонижает ИИ врагов%nна 1 когда%nвырастает
+styroPipeName:пенопластовая труба
+styroPipeDesc:СМЕШАЙ С БЕНЗИНОМ%n[P]: бросить её
+hisPictureName:его фото
+hisPictureDesc:Выглядите прекрасно,%n Мистер Жоу
+hisPaintingName:его картина
+hisPaintingDesc:Выглядите прекрасно,%n Мистер Жоу
+basementKeyName:ключи ларри
+basementKeyDesc:даёт тебе попытку%nпопасть в ПОДВАЛ%n1 предмет%nразламывается в ∞
+sunglassesName:очки ларри
+sunglassesDesc:Какая кража!%n(у Ларри)%n[G]: одеть/снять очки
+manualName:мануал
+manualDesc:Твой лучший,%nБесконечный друг
+riftGlitchName:глич разлома
+riftGlitchDesc:x7uy5aspxd%n0uo1b20nbr%ni7fmv6u4z1%ne6c52nyz1x%neu9x7pzw4s%nm7kkcosp84
+pishPishName:пульверизатор
+pishPishDesc:мочит котов!%nначинает пару миниигр
+weatherStationName:метеостанция
+weatherStationDesc:показывает%nпогоду
+soggyPenName:мокрая ручка
+soggyPenDesc:мокрая ручка%n[ШИФТ+КЛИК]: рисовать
+iceBucketName:ведро льда
+iceBucketDesc:[T]: нажмите чтобы%nснять жару%nмоментально
+red40Name:красный 40
+red40Desc:[R]: красит всю воду%nрядом в красный
+shadowblockerName:ШАДОУБЛОКЕР
+shadowblockerDesc:ЛЁГКИЙ режим игры!%n- стирает КОГО УГОДНО
+megaSodaName:МЕГАСОДАА
+megaSodaDesc:[O]: даёт 20% энергии%n4 использования%n%nможет включить свет%nкогда он выключен
+//://
+achievementCategory_normal:- Обычные -
+achievementCategory_special:- Специальные -
+achievementCategory_statistics:- Статистика -
+achievementCategory_challenge:- Испытания -
+beginnerName:Начинающий
+beginnerDesc:Пройти Ночь 1
+advancerName:Продвинутый
+advancerDesc:Пройти Ночь 2
+conquerorName:Завоеватель
+conquerorDesc:Пройти Ночь 3
+all_nighterName:Прохожденец
+all_nighterDesc:Пройти Ночь 4
+millyName:Динг
+millyDesc:Купить предмет в магазине Милли в Эндлессе
+shopping_spreeName:Шоппинг
+shopping_spreeDesc:Купить все предметы в магазине Милли в Эндлессе
+dabloonsName:Даблуны
+dabloonsDesc:Иметь 1000 даблунов в Эндлессе
+survivorName:Выживший
+survivorDesc:Достигни 8 Ночи в Эндлессе
+is_it_possibleName:Это вообще возможно?
+is_it_possibleDesc:Достигни 14 Ночи в Эндлессе
+one_of_manyName:Одна из многих
+one_of_manyDesc:Умереть первый раз
+skullcrackerName:Череполом
+skullcrackerDesc:Умереть 10 раз
+darwin_awardName:Премия Дарвина
+darwin_awardDesc:Умереть 100 раз
+kamikazeName:Камикадзе
+kamikazeDesc:Умереть 500 раз
+how_did_we_get_hereName:Невозможное возможно
+how_did_we_get_hereDesc:Начать Испытание со всеми модификаторами
+whole_lotta_pointsName:оч много поинтов
+whole_lotta_pointsDesc:Получить 100000 общих поинтов в кастом ночи
+brokeName:Банкрот
+brokeDesc:Пройди 4 Ночь без предметов
+visit_partyName:Вечеринка Милли
+visit_partyDesc:Придти на Вечеринку Милли в Эндлессе
+prepartyName:Пре-вечеринка Пéпито
+prepartyDesc:Пройти Пре-вечеринку Пéпито
+partyName:Пéпито вечеринка
+partyDesc:Пройти вечеринку Пéпито (настоящую)
+frogName:nyoom
+frogDesc:напечатай FROG и смотри что произойдёт
+bingusName:Бингус
+bingusDesc:Пройти Пепинго
+riftName:Ломится прямо к тебе
+riftDesc:Вытащи предмет из Разлома
+halfwayName:Тенегляд
+halfwayDesc:етйануодаШ в итуП ыниволоП од итйоД
+shadownightName:Это всё был лишь сон?
+shadownightDesc:ТЙАНУОДАШ итйорП
+basementName:ПОДВАЛ
+basementDesc:Пройти Подвал
+basement_partyName:НАСТОЯЩЕЕ ИСПЫТАНИЕ
+basement_partyDesc:Пройти Подвал Ларри: НАСТОЯЩЕЕ ИСПЫТАНИЕ
+basement_100Name:Подвал 100%
+basement_100Desc:Пройти Подвал: НАСТОЯЩЕЕ ИСПЫТАНИЕ, с полным обходом через Камеру Гидрофобии
+shadowbasementName:ШАДОУПОДВАЛ
+shadowbasementDesc:етйануодаШ в лавдоП итйорП
+hydrophobiaName:Новое Место
+hydrophobiaDesc:Найти Камеру Гидрофобии
+exitName:Найдено
+exitDesc:Выйти из Камеры Гидрофобии
+el_astartaName:Эль Астарта
+el_astartaDesc:Пройти Испытание 1: Эль Астарта
+blizzardName:Буря
+blizzardDesc:Пройти Испытание 2: Буря
+time_is_tickingName:Время Тикает
+time_is_tickingDesc:Пройти Испытание 3: Время Тикает
+the_fog_is_comingName:Туман Идёт
+the_fog_is_comingDesc:Пройти Испытание 4: Туман Идёт
+gruggenheimedName:Груггенхаймер
+gruggenheimedDesc:Пройти Испытание 5: Груггенхаймер
+perfect_stormName:Идеальный Шторм
+perfect_stormDesc:Пройди ночь с Туманом, Дождём и Бурей
+krunlicName:ТЫ НЕ ДОЛЖЕН
+krunlicDesc:БЫЛ ЭТОГО ДЕЛАТЬ
+//://
+msiIsWatchingL:MSI всё видит
+elAstartaL:Эль Астарта
+blizzardL:Буря
+timeIsTickingL:Время Тикает
+fogIsComingL:Туман Идёт
+gruggenheimedL:Груггенхаймер
+uraniumFeverL:УРАН ЛИХОРАДКА
+//://
+h:ч
+winsSt:Выиграно игр
+deathsSt:Смертей
+playtimeSt:Времени в игре
+endlessSt:Рекорд Эндлесса
+pepingoSt:Пепинго карточек пройдено
+pepingo_tasksSt:Пепинго заданий выполнено
+items_boughtSt:Предметов куплено у Милли
+items_riftedSt:Предметов перенесено в разломе
+points_totalSt:Общие очков кастом ночи
+points_maxSt:Рекорд очков кастом ночи
+balloons_poppedSt:Лопнуто шариков
+died_to_pepitoSt:Смертей от Пéпито
+died_to_notpepitoSt:Смертей от НеПепито
+died_to_uncannySt:Смертей от Анкенни Кета
+died_to_msiSt:Смертей от MSI
+died_to_astartaSt:Смертей от Астарты
+died_to_sharkSt:Смертей от Шарка
+died_to_colacatSt:Смертей от Кола Кета
+died_to_makiSt:Смертей от Маки
+died_to_lemonade_catSt:Смертей от Лимонад Кета
+died_to_scary_catSt:Смертей от Страшного Кета
+died_to_el_astartaSt:Смертей от Эль Астарты
+died_to_radiationSt:Смертей от Радиации
+died_to_shadow_pepitoSt:Смертей от Теневого Пéпито
+died_to_shadow_astartaSt:Смертей от Теневой Астарты
+died_to_kijiSt:Смертей от Киджи
+died_to_shockSt:Смертей от Шока
+died_to_deep_sea_creatureSt:Смертей от Глубоководного Существа
+died_to_dreadSt:Смертей от дрэда
+gotten_burn_endingSt:Получено концовку Поджога
+gotten_void_endingSt:Получено концовку Пустоты
+gotten_basement_endingSt:Получено концовку Подвала
+gotten_corn_endingSt:Получено концовку Кукурузы
+//://
+pmChallenge:Испытания
+pmNormal:Обычный
+pmEndless:Эндлесс
+pmPlay:играть
+pmNight:ночь
+pmBest:рекорд
+//://
+pepitoCn:Пéпито
+notPepitoCn:НеПепито
+glitcherCn:Глитчер
+uncannyCatCn:Анкенни Кет
+msiCn:MSI
+astartaCn:Астарта
+sharkCn:Шарк
+boykisserCn:Глунгус
+colaCatCn:Кола Кет
+mirrorCatCn:Зазу
+makiCn:Маки
+lemonadeCatCn:Лимонад Кет
+wiresCn:Вайрс
+scaryCatCn:Страшный Кет
+jumpscareCatCn:Скример Кет
+elAstartaCn:Эль Астарта
+deepSeaCreatureCn:Глубоководное Существо
+shockCn:Шок
+hydrophobiaCn:Гидрофобия
+beastCn:Зверь
+overseerCn:Надзиратель
+a120Cn:A!@0
+powerOutageCn:Энергоутечка
+blizzardCn:Буря
+timersCn:Таймеры
+fogCn:Туман
+radiationCn:Радиация
+rainCn:Дождь
+//://
+manualMSIAstarta:Закрывайте двери если видите глаза. MSI говорит куда двигать камеру.
+manualShark:Шарк показывает индикаторы. Двигайте камеру.
+manualBoykisser:Отвечайте Глунгусу (будьте честны)
+manualMakiLemonade:Посмотрите в камеру чтобы увидеть направление Маки; Кидайте лимоны в Лимонад Кета.
+manualZazu:Нажмите ПКМ на Зазу чтобы закрыть его дверь.
+//://
+metal_pipe_useB:кинуть метайл пайп
+metal_pipe_use_6_timesB:кинуть метал пайп 6 раз
+boop_pepitoB:бупнуть нос Пéпито
+survive_astartaB:выжить Астарту
+survive_pepitoB:выжить Пéпито
+survive_makiB:выжить Маки
+survive_a90B:выжить a90
+survive_boykisserB:выжить глунгуса
+encounter_ratB:встретить крысу
+survive_cola_catB:выжить кола кета
+beat_night_1B:пройти ночь 1
+survive_msiB:выжить MSI
+survive_floodB:выжить потоп
+use_soda_at_1_energyB:выпить соду на 1% энергии
+flash_msiB:посветить на MSI фонариком
+four_usage_barsB:иметь 4 шкалы траты
+a90_forgiveB:быть прощё нным a90
+see_notpepito_camB:увидеть НеПепито на камере
+beat_with_less_itemsB:пройти ночь 1+ с <3 предме тами
+find_adblockerB:найти адблокер
+beat_night_2B:пройти ночь 2
+beat_night_3B:пройти ночь 3
+beat_without_soundB:пройти игру на 0 громкости
+beat_without_powerB:пройти игру без энергии
+survive_a90_with_msiB:выжить а90 и MSI
+beat_with_less_less_itemsB:пройти ночь 1+ с <2 предме тами
+beat_with_less_less_less_itemsB:пройти ночь 1+ без предметов
+//://
+pepitoDiscName:Pépito
+pepitoDiscDesc:Открыта изначально%nПервая и главная песня игры!
+pepitoButCoolerDiscName:Pépito but Cooler
+pepitoButCoolerDiscDesc:Открыта после прохождения%nВечеринки Пéпито
+megaSecretSongDiscName:zhou. think
+megaSecretSongDiscDesc:schmungus%namong us
+spookersDiscName:Spookers
+spookersDiscDesc:Открыта после прохождения%nПодвала (НАСТОЯЩЕЕ ИСПЫТАНИЕ)
+//://
+kbPepito:убит пéпито
+kbNotPepito:убит НеПепито
+kbUncanny:убит анкенни кетом
+kbMSI:убит MSI
+kbAstarta:убит астартой
+kbCola:убит кола кетом
+kbMaki:убит маки
+kbShark:убит шарком
+kbBoykisser:его зовут силли кет....    
+kbLemon:убит лимонад кетом
+kbScary:убит страшным кетом
+kbDread:убит дредом
+kbShadowAstarta:убит Теневой Астартой
+kbShadowPepito:убит Теневым Пéпито
+kbElAstarta:убит Эль Астартой
+kbKiji:убит киджи
+kbShock:убит шоком
+kbDsc:убит Глубоководным Существом
+kbRadiation:умер от радиации
+kbGameDesign:убит намеренным дизайном игры
+kbKrunlic:ладно
+kbHydrophobia:Убит Гидрофобией
+kbBeast:Убит Зверем
+kbOverseer:Убит Надзиратилем
+kbObstacles:Умер от Препятствий
+kbLandmine:Умер от Мины
+kbBlimp:Умер от Дирижабля
+//://
+sensorNoConnection:Нет подключения! Подключитесь к сети.
+sensorAstartaMovement:движение замечено на двери #
+sensorSusSoda1:твоя сода выглядит ммммммммммммммммммм
+sensorSusSoda2:очень СТРАННО
+sensorGlitchingSounds:*звуки глюков*
+sensorMsiAdblocker1:MSI отключил ваш адблокер!
+sensorMsiAdblocker2:Нажмите %d% чтобы его перезапустить.
+sensorMsiKill1:упс, ваша программа вылетела
+sensorMsiKill2:выключаем СЕНСОР
+sensorMsiKill3:выключаем MSI
+sensorPepito:пéпито появился!
+sensorPepitoLeave:Пепито вышел (%d%)
+sensorMaki:ПРОНИКНОВЕНИЕ НА ДВЕРИ #
+sensorMakiLeave:Это был не Пепито! (%d%)
+sensorA90:анкенни скоро появится
+sensorSubRenewed:Ваша подписка была возновлена.
+sensorBoop:буп
+sensorNotPepito:НЕ ПЕПИТО ИДЁТ ! ! !
+//://
+invstgButtonName:Доска Следствия
+invstgButtonDesc:Ваш путь в расследовании [########]
+invstgRequiresNight4:[НУЖНА НОЧЬ 4]
+invstgOngoing:Следствие продолжается...
+invstgUnknown:Неизвестно...
+invstgDone:Ветка завершена
+invstgParty1:Нужен Колпак Пéпито
+invstgParty2:Отведуй Вечеринку Пéпито
+invstgParty3:Нужен Крутой Максвелл
+invstgShadow1:В поисках Портала
+invstgShadow2:Найдите Шадоу Астарту
+invstgBasement1:Получите ключи
+invstgBasement2:Отведуйте Подвал
+invstgBasement3:Отключите питание
+invstgHydrophobia1:Получите доступ
+invstgHydrophobia2:Пройдите до конца
+invstgStorm1:Включите погоду сильнее
+//://
+pepitoDT1:Пéпито... Основной персонаж этой игры. Его шаги подскажут тебе, откуда он идёт.
+pepitoDT2:Пéпито... Если услышишь его шаги слева или справа, закрой соответствующую дверь. Звук имеет направление.
+pepitoDT3:Снова Пéпито? Его можно увидеть заранее на камере. Так же можно использовать МЕТАЛ ПАЙП, чтобы немедленно спугнуть его. <<<Можно включить наушники в настройках если звук непонятен.>>>
+notPepitoDT1:НеПепито... Он похож на Пéпито. Будьте готовы быстро реагировать.
+notPepitoDT2:Снова НеПепито.. это будет трудно. При его появлении, свет мигает и слышно его бег.
+notPepitoDT3:В очередной раз НеПепито. Звук бега, мигающий свет, очень быстро. В основном всё тот же Пéпито.
+uncannyDT1:Анкенни Кет... Когда он здесь, просто не шевелись.
+uncannyDT2:Снова Анкенни Кет. Не двигайся, просто... НЕ нажимай кнопки. Будь внимательнее.
+uncannyDT3:Анкенни Кет. НЕ двигайся. Ты можешь взять Адблокер. Адблокеры так же появляются на камере, нажми на него и действуй по инструкциям.
+msiDT1:MSI... Страшно. Слушай его команды. НАЛЕВО. НАПРАВО. НАЛЕВО. НАПРАВО.
+msiDT2:MSI. Двигайся в сторону которую он упоминает. В противном случае: СМЕРТЬ.
+msiDT3:Снова MSI... Двигайся НАЛЕВО и НАПРАВО. Если тебе действительно трудно, просто его можно ослепить фонариком, но приходит Глитчер. При высокой сложности могут появиться последовательные похожие команды.
+astartaDT1:Астарта... Ты видишь её глаза. Это твоя подсказка.
+astartaDT2:Снова Астарта. Её глаза видно в дверях. Через некоторое время они начнут мерцать, и тогда она нападёт. Закрой дверь.
+astartaDT3:Астарта. Вам не нужно ждать до последнего момента чтобы закрыть дверь. Можно использовать фонарик в дверном проёме, чтобы ослепить её.
+colaDT1:Кола Кет... Твоя газировка начинает портиться и стаёт красной. Как только ты это заметишь, выпей соду пока не поздно.
+colaDT2:Снова Кола Кет. В Обычном режиме, он появится только если с газировкой взять МЕТАЛ ПАЙП или Фонарик. На мини соду это не распростроняется.
+colaDT3:Кола Кет. Всё достаточно просто. Газировка краснеет -> выпей. Появляется только в комбинации с другими предметами, или в режиме Испытаний. На мини и мега соду это не распростроняется.
+makiDT1:Маки... Её шаги НЕ направлены. Следует посмотреть на камерах где она прежде чем действовать.
+makiDT2:Снова Маки? Маки укажет направление красным восклицательным знаком. В крайнем случае, можно спугнуть её метал пайпом.
+makiDT3:Как.
+sharkDT1:Шарк... Избегай зелёной зоны. Не дай ему укусить рыбу.
+sharkDT2:Снова Шарк? Потоп длится всего минуту. Уходи от зелёных квадратов.
+sharkDT3:Шарк. Потоп длится минуту. Ты можешь урезать время вдвое используя вентилятор. Избегай зелёной зоны.
+lemonDT1:Лимонад Кет... Кидайте в него лимоны правой кнопкой мыши.
+lemonDT2:Снова Лимонад Кет. Киньте ему несколько лимонов. Им нужно время для того что бы долететь. Если у вас закончится -
+lemonDT3:Лимонад Кет. Киньте ему лимонов, немного наперёд. При удачном попадании вы вернёте себе очко. Не спеши и будь аккуратен, иначе умрёшь.
+scaryCatDT1:Страшный Кет... Он пытается влезть в твой вид. Отворачивайся от него.
+scaryCatDT2:Страшный Кет очень слабо атакует. Отворачивайся от него, он уйдёт через время.
+scaryCatDT3:Страшный Кет очень слабо атакует. Двигайся постоянно. Столкновение идёт долго, но если вовремя отворачиватся то он не будет твоим главным приоритетом.
+elAstartaDT1:Эль Астарта... Закрывай двери с глазами. Не запутайся. Выживи.
+elAstartaDT2:Снова Эль Астарта... Схватка с ней идёт 40 секунд. Глаза Эль Астарты появятся в дверных проёмах, нападает быстро. Новые двери начнут появлятся. Выживи.
+elAstartaDT3:Эль Астарта. Схватка идёт 40 секунд. Глаза появятся в дверных проёмах, нападает быстро. Новые двери начнут появлятся. Фонарик НЕ поможет.
+shockDT1:Шок... Он взламывает твой компьютер, прежде чем напасть. Видно, через какую дверь он будет идти.
+shockDT2:Снова Шок... Он появится на твоём мониторе с соответствующим звуковым сигналом, прежде чем броситься на тебя. Дверь которой он воспользуется подсветится.
+shockDT3:Шок. Он появится на мониторе. Проиграет звук. Начнётся фаза СМЕРТЬ после чего он побежит в дверь.
+dscDT1:Глубоководное Существо... Это почти как потоп. Но у тебе даётся гарпун. Стреляй в него.
+dscDT2:Глубоководное Существо снова. Он заполоняет всю комнату водой. Однако у тебя есть гарпун. Стреляй в него. Если ты двигаешься он замедляется!!!
+dscDT3:Глубоководное Существо. После затопления комнаты тебе нужно постоянно в него стрелять. Гарпуну нужно время на перезарядку. Не промахивайся. Если двигаться ему нужно будет больше времени чтобы добраться!!!
+radiationDT:Не входи курсором в зелёные круги, они показывают радиацию. Если у тебя будет слишком много радиации ты УМРЁШЬ.
+afterTheFirstNuclearStrike:После первого ядерного удара вы должны НЕМЕДЛЕННО отправиться на Индонезийский остров Суматра, на котором расположено озеро Тоба. На этом озере Тоба есть остров Самосир. На острове Самосир стоит лютеранская церковь "GEREJA HKBP BOLON PANGURURAN". Напротив этой церкви расположен холм где и будет стоять моя палатка!!! - Ларри Жоу
