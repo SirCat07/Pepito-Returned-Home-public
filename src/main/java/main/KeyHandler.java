@@ -2,15 +2,25 @@ package main;
 
 import cutscenes.Cutscene;
 import cutscenes.Presets;
-import enemies.Rat;
+import enemies.*;
 import game.*;
 import game.achievements.AchievementHandler;
 import game.achievements.Achievements;
 import game.bingo.BingoHandler;
 import game.bingo.BingoTask;
+import game.cornfield.Player;
 import game.custom.CustomNight;
 import game.custom.CustomNightEnemy;
 import game.custom.CustomNightModifier;
+import game.enviornments.Basement;
+import game.enviornments.BasementKeyOffice;
+import game.enviornments.Enviornment;
+import game.enviornments.HChamber;
+import game.field.Field;
+import game.items.Item;
+import game.items.Triggerable;
+import game.particles.BubbleParticle;
+import game.particles.WaterParticle;
 import game.playmenu.PlayMenu;
 import game.shadownight.AstartaBlackHole;
 import game.shadownight.Mister;
@@ -18,13 +28,15 @@ import javafx.scene.media.MediaPlayer;
 import utils.*;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,8 +49,8 @@ import java.util.HashMap;
 public class KeyHandler implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     GamePanel g;
 
-    Point pointerPosition = new Point(0, 0);
-    Cursor defaultCursor;
+    public Point pointerPosition = new Point(0, 0);
+    public Cursor defaultCursor;
 
     public KeyHandler(GamePanel gamePanel) {
         this.g = gamePanel;
@@ -65,16 +77,30 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
         g.state = previous;
         g.pauseDieSelected = false;
 
-        g.resumeAllSound();
+        g.resumeAllSound(true);
 
         for (Pepitimer pepitimer : StaticLists.timers) {
-            pepitimer.resume();
+            pepitimer.gameResume();
         }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
+
+        if(e.isShiftDown()) {
+            holdingShift = true;
+        }
+
+        if(code == KeyEvent.VK_F11 || (e.isAltDown() && code == KeyEvent.VK_ENTER)) {
+            GamePanel.fullscreen = !GamePanel.fullscreen;
+            if(GamePanel.fullscreen) {
+                g.toFullscreen();
+            } else {
+                g.removeFullscreen();
+            }
+            return;
+        }
 
         if(e.isControlDown() && e.isShiftDown() && code == KeyEvent.VK_X) {
             Console.toggle();
@@ -94,10 +120,47 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
         if(g.state == GameState.GAME) {
             g.getNight().afk = 17;
             // below is testing code
-//            if (code == KeyEvent.VK_G) {
+//            if (code == KeyEvent.VK_NUMPAD2) {
 //                g.getNight().seconds += 4;
 //            }
+//            if (code == KeyEvent.VK_NUMPAD3) {
+//                g.getNight().getKiji().spawn();
+//            }
+//            if (code == KeyEvent.VK_NUMPAD4) {
+//                g.getNight().getShock().spawn();
+//            }
+//            if (code == KeyEvent.VK_NUMPAD5) {
+//                g.getNight().getToleTole().spawn();
+//            }
+//            if(code == KeyEvent.VK_NUMPAD6) {
+//                g.pepitoClockProgress = 0;
+//            }
+            if(code == KeyEvent.VK_NUMPAD7) {
+                g.window.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                g.window.setSize(screenSize.width,screenSize.height);
+            }
         }
+
+        if (code == KeyEvent.VK_NUMPAD1) {
+            g.debugMode = !g.debugMode;
+        }
+//        if(code == KeyEvent.VK_NUMPAD2) {
+//            g.fieldIntro();
+//        }
+//        if(code == KeyEvent.VK_NUMPAD3) {
+//            g.getNight().getToleTole().spawn();
+//            GamePanel.toleToleSpawned++;
+//        }
+//        if(code == KeyEvent.VK_NUMPAD4) {
+//            g.getNight().getShock().spawn();
+//        }
+//        if(code == KeyEvent.VK_NUMPAD5) {
+//            g.getNight().getKiji().spawn();
+//        }
+//        if (code == KeyEvent.VK_NUMPAD2) {
+//            g.enviornmentEditor = !g.enviornmentEditor;
+//        }
 
         if(e.isShiftDown()) {
             if(code == KeyEvent.VK_Z) {
@@ -156,7 +219,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 return;
             }
         }
-
+        
         boolean stopPause = false;
 
         if(!g.state.equals(GameState.UNLOADED)) {
@@ -166,24 +229,57 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     return;
                 }
                 if (g.pressAnyKey) {
-                    if(g.riftItems.size() >= 2 && g.endless.getNight() >= 3) {
-                        if(g.riftTransparency <= 0) {
-                            g.enterRift();
+                    if(g.type == GameType.HYDROPHOBIA && g.getNight().getEvent() == GameEvent.DYING) {
+                        HChamber chamber = (HChamber) g.getNight().env;
+                        if(chamber.showDeathOptions) {
+                            if (code == KeyEvent.VK_DOWN || code == KeyEvent.VK_S || code == KeyEvent.VK_UP || code == KeyEvent.VK_W) {
+                                chamber.selectedDeathOption = (byte) (1 - chamber.selectedDeathOption);
+                                return;
+                            }
                         }
-                    } else {
-                        if(processDeathScreenPress())
-                            return;
-
-                        g.stopGame(true);
                     }
+                    pressAnyKeyStuff();
                     return;
                 }
             }
             switch (g.state) {
                 case MENU -> {
+                    if(code == KeyEvent.VK_LEFT || code == KeyEvent.VK_RIGHT) {
+                        krunlicActivation += code;
+                        if(krunlicActivation.endsWith("3739373937393739")) {
+                            
+                            if(GamePanel.krunlicPhase == 0) {
+                                if (!GamePanel.krunlicMode) {
+                                    g.version += "krunlic";
+                                    g.initializeFontMetrics();
+                                    g.sound.play("krunlicTrigger", 0.2);
+                                    g.fadeOutStatic(1, 0.05F, 0.01F);
+                                    g.fadeOut(255, 160, 1);
+                                } else {
+                                    g.version = g.version.replace("krunlic", "");
+                                    g.initializeFontMetrics();
+                                    g.fadeOut(255, 160, 2);
+                                    g.fadeOutStatic(0.05F, 0.05F, 0);
+                                    
+                                    new Notification("opted out");
+                                }
+                                
+                                GamePanel.krunlicMode = !GamePanel.krunlicMode;
+                                
+                            } else {
+                                new Notification("CAN'T OPT OUT NOW =)");
+                            }
+
+                            krunlicActivation = "";
+                        }
+                    } else {
+                        krunlicActivation = "";
+                    }
+                    
                     if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_SPACE || code == KeyEvent.VK_Z) {
                         clickMenuButton();
-                    }if (code == KeyEvent.VK_DOWN || code == KeyEvent.VK_S) {
+                    }
+                    if (code == KeyEvent.VK_DOWN || code == KeyEvent.VK_S) {
                         if(g.selectedOption - g.menuButtonOffset == 3) {
                             g.menuButtonOffset++;
                         }
@@ -265,29 +361,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                             try {
                                 Item item = g.itemList.get(g.selectedItemX + (g.selectedItemY * g.columns));
 
-                                if (item.getAmount() != 0) {
-                                    if (item.isSelected()) {
-                                        item.deselect();
-                                        g.itemLimit -= item.getItemLimitAdd();
-                                    } else {
-                                        if (g.checkItemsAmount() < g.itemLimit && !item.isMarkedConflicting()) {
-                                            item.select();
-                                            g.itemLimit += item.getItemLimitAdd();
-                                            g.sound.play("select", 0.1, false);
-                                        } else {
-                                            g.sound.play("selectFail", 0.12, false);
-
-                                            if(item.isMarkedConflicting()) {
-                                                item.setShakeIntensity((byte) 60);
-                                            }
-                                        }
-                                    }
-
-                                    g.updateItemList();
-                                    g.redrawItemsMenu();
-                                } else {
-                                    g.sound.play("selectFail", 0.12, false);
-                                }
+                                clickItem(item);
                             } catch (IndexOutOfBoundsException ignored) {
                                 g.sound.play("selectFail", 0.12, false);
                             }
@@ -325,26 +399,52 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         g.startItemSelect();
                     }
                 }
+                case MUSIC_MENU -> {
+                    if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_BACK_SPACE) {
+                        stopPause = true;
+                        g.backToMainMenu();
+                    }
+                }
                 case PLAY -> {
-                    if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
-                        if (PlayMenu.index == PlayMenu.list.size() - 1) {
-                            PlayMenu.index = 0;
-                        } else {
-                            PlayMenu.index++;
+                    if(e.isShiftDown() && PlayMenu.index == 1 && Achievements.ALL_NIGHTER.isObtained()) {
+                        if (code == KeyEvent.VK_D) {
+                            g.currentNight++;
+                            if(g.currentNight > 4) {
+                                g.currentNight = 1;
+                            }
+                            g.sound.play("select", 0.1);
+                        } else if (code == KeyEvent.VK_A) {
+                            g.currentNight--;
+                            if(g.currentNight < 1) {
+                                g.currentNight = 4;
+                            }
+                            g.sound.play("select", 0.1);
                         }
-                        g.sound.playRate("playMenuChange", 0.05, 2);
-                        PlayMenu.movedMouse = false;
 
-                    } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_A) {
-                        if (PlayMenu.index == 0) {
-                            PlayMenu.index = PlayMenu.list.size() - 1;
-                        } else {
-                            PlayMenu.index--;
+                        String subtext1 = ">> " + GamePanel.getString("pmPlay");
+                        PlayMenu.getList().get(1).setSubtext(g.currentNight == 1 ? subtext1 : subtext1 + " - " + GamePanel.getString("pmNight") + " " + g.currentNight);
+                    } else {
+                        if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
+                            if (PlayMenu.index == PlayMenu.list.size() - 1) {
+                                PlayMenu.index = 0;
+                            } else {
+                                PlayMenu.index++;
+                            }
+                            g.sound.playRate("playMenuChange", 0.05, 2);
+                            PlayMenu.movedMouse = false;
+
+                        } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_A) {
+                            if (PlayMenu.index == 0) {
+                                PlayMenu.index = PlayMenu.list.size() - 1;
+                            } else {
+                                PlayMenu.index--;
+                            }
+                            g.sound.playRate("playMenuChange", 0.05, 2);
+                            PlayMenu.movedMouse = false;
                         }
-                        g.sound.playRate("playMenuChange", 0.05, 2);
-                        PlayMenu.movedMouse = false;
+                    }
 
-                    } else if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_SPACE || code == KeyEvent.VK_Z) {
+                    if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_SPACE || code == KeyEvent.VK_Z) {
                         clickPlayButton();
                     } else if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_BACK_SPACE) {
                         stopPause = true;
@@ -360,7 +460,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         }
 
                         g.stopAllSound();
-                        g.music.play("pepito", 0.2, true);
+                        g.music.play(g.menuSong, 0.15, true);
                     }
 
                     if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_BACK_SPACE) {
@@ -379,15 +479,51 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         }
                     }
                 }
+                case INVESTIGATION -> {
+                    if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_BACK_SPACE) {
+                        stopPause = true;
+                        g.backToMainMenu();
+                    }
+                }
+                
                 case GAME -> {
                     if (g.getNight().getEvent().canUseItems()) {
                         if (g.night.getA90().isActive()) {
-                            g.night.getA90().dying = true;
+                            if(e.getKeyCode() != KeyEvent.VK_TAB && e.getKeyCode() != KeyEvent.VK_ESCAPE) {
+                                g.night.getA90().dying = true;
+                            }
+                        }
+                        
+                        for(Item item : g.usedItems) {
+                            if(item instanceof Triggerable triggerable) {
+                                if(String.valueOf(e.getKeyChar()).equals(triggerable.getKey())) {
+                                    triggerable.run();
+                                }
+                            }
                         }
 
                         switch (code) {
                             case KeyEvent.VK_M -> { // metal pipe
                                 if (g.metalPipe.isEnabled()) {
+                                    if(g.getNight().getEvent().isFlood()) {
+                                        Enviornment env = g.getNight().env();
+                                        Rectangle rect = env.metalPipe;
+                                        
+                                        if(rect.y > g.currentWaterLevel) {
+                                            g.sound.play("bubbles", 0.05);
+
+                                            BufferedImage bubbleImage = g.getBubbleImage(0.5F);
+                                            short phase = (short) (g.fixedUpdatesAnim % 251);
+                                            byte limit = (byte) Math.round(3 + Math.random());
+
+                                            for (int i = 0; i < limit; i++) {
+                                                g.bubbles.add(new BubbleParticle(rect.x, rect.y + 12 + rect.height / 2, phase, 30, bubbleImage));
+                                                g.bubbles.add(new BubbleParticle(rect.x + rect.width, rect.y + 12, phase, 30, bubbleImage));
+                                            }
+                                            return;
+                                        }
+                                    }
+                                    
                                     if (g.metalPipeCooldown == 0) {
                                         g.sound.play("metalPipe", 0.025);
 
@@ -404,20 +540,17 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                             g.night.getMaki().scare();
                                         }
 
-                                        g.metalPipeCooldown = 22;
+                                        g.metalPipeCooldown = 25;
                                         g.night.getPepito().notPepitoChance += 1;
                                     } else {
                                         g.sound.play("error", 0.08);
-                                    }
-                                    if(g.getNight().getEvent() == GameEvent.FLOOD) {
-                                        g.sound.play("bubbles", 0.05);
                                     }
                                 }
                             }
 
                             case KeyEvent.VK_F -> { // fan
                                 if (g.night.hasPower()) {
-                                    if (g.fan.isEnabled()) {
+                                    if (g.fan.isEnabled() && g.type != GameType.HYDROPHOBIA) {
                                         g.fanActive = !g.fanActive;
 
                                         if (g.fanActive) {
@@ -427,6 +560,8 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                                             g.everySecond20th.put("fan", () -> {
                                                 g.fanDegrees += 46;
+                                                g.rotatedFanBlade = g.rotate(g.fanImg[2], g.fanDegrees);
+                                                g.redrawBHO = true;
                                             });
                                         }
                                         if (!g.fanActive) {
@@ -434,6 +569,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                             g.sound.play("stopFan", 0.15);
                                             g.usage--;
                                             g.fanDegrees = 0;
+                                            g.rotatedFanBlade = g.rotate(g.fanImg[2], g.fanDegrees);
 
                                             g.everySecond20th.remove("fan");
                                         }
@@ -445,6 +581,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                             }
 
                             case KeyEvent.VK_C -> {
+                                if(g.getNight().getGlitcher().visualFormTicks > 0)
+                                    return;
+                                
                                 if (!g.night.hasPower() || g.night.getGlitcher().isGlitching) {
                                     g.sound.play("error", 0.08);
                                 } else if(!g.portalTransporting) {
@@ -453,7 +592,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     if (g.inCam) {
                                         g.sound.play("camPull", 0.12);
                                         camSounds.play("buzzlight", 0.25, true);
-                                        g.fadeOutStatic(1F, 0.3F, 0.01F);
+                                        g.fadeOutStatic(1F, 0.25F, 0.01F);
 
                                         g.usage++;
                                         g.night.addEnergy(-0.2F);
@@ -463,7 +602,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                                         if(g.getNight().getType().isEndless()) {
                                             double rand = Math.random();
-                                            g.portalActive = g.endless.getNight() >= 4 && rand < 0.015F + g.endless.getNight() / 150F;
+                                            g.portalActive = g.endless.getNight() >= 5 && rand < 0.015F + g.endless.getNight() / 150F && g.night.getEvent().isGuiEnabled();
                                             if (g.portalActive) {
                                                 camSounds.play("shadowPortal", 0.1, true);
                                             }
@@ -472,10 +611,14 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                             g.outOfLuck = true;
                                             new Pepitimer(() -> g.outOfLuck = false, 120);
                                         }
+                                        if(g.getNight().getType() == GameType.HYDROPHOBIA) {
+                                            HChamber chamber = (HChamber) g.getNight().env();
+                                            chamber.cameraGuidelineAlpha = 0;
+                                        }
 
                                         g.updateCam();
                                         if (g.night.getGlitcher().isEnabled()) {
-                                            g.night.getGlitcher().counter += 0.4F;
+                                            g.night.getGlitcher().counter += 0.45F;
 
                                             if(g.night.getGlitcher().counter > 12) {
                                                 new Pepitimer(() -> {
@@ -486,15 +629,22 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                                 }, 400 + (short) (Math.random() * 400));
                                             }
                                         }
-                                    }
-                                    if (!g.inCam) {
+                                    } else { // if not incam
                                         g.camOut(true);
+
+                                        if(g.night.getGlitcher().counter > 13 && Math.random() < (g.night.getGlitcher().counter - 11) / 3) {
+                                            g.getNight().getGlitcher().visualFormTicks = 25;
+                                            g.sound.stop();
+                                            g.sound.play("glitcherScare", 0.1);
+                                        }
                                     }
                                 }
                             }
 
                             case KeyEvent.VK_S -> {
                                 if (g.soda.isEnabled()) {
+                                    g.redrawBHO = true;
+                                    
                                     if(g.getNight().getEnergy() <= 5) {
                                         BingoHandler.completeTask(BingoTask.USE_SODA_AT_1_ENERGY);
                                     }
@@ -503,9 +653,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                         if (g.night.getEnergy() > g.night.getMaxEnergy()) {
                                             g.night.setMaxEnergy(g.night.getEnergy());
                                         }
-                                        g.night.setEnergy(Math.min(g.night.getEnergy() + 200, g.night.getMaxEnergy()));
+                                        g.getNight().addEnergyLimited(200);
                                     } else {
-                                        new Notification("Your Soda was expired", 2000);
+                                        new Notification(GamePanel.getString("sodaExpired"), 2);
                                     }
                                     g.sound.play("sodaOpen", 0.03);
                                     g.soda.disable();
@@ -519,9 +669,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                         if (g.night.getEnergy() > g.night.getMaxEnergy()) {
                                             g.night.setMaxEnergy(g.night.getEnergy());
                                         }
-                                        g.night.setEnergy(Math.min(g.night.getEnergy() + 50, g.night.getMaxEnergy()));
+                                        g.getNight().addEnergyLimited(50);
                                     } else {
-                                        new Notification("Your Mini Soda was expired", 2000);
+                                        new Notification(GamePanel.getString("miniSodaExpired"), 2);
                                     }
                                     g.sound.playRate("sodaOpen", 0.05, 0.5);
                                     g.sound.play("minnesota", 0.2);
@@ -531,17 +681,104 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 }
                             }
 
+                            case KeyEvent.VK_O -> {
+                                if (g.megaSoda.isEnabled()) {
+                                    if(g.getNight().getColaCat().megaSodaWithheld > 0) {
+                                        g.sound.play("error", 0.08);
+                                    } else {
+                                        if (g.night.getEnergy() > g.night.getMaxEnergy()) {
+                                            g.night.setMaxEnergy(g.night.getEnergy());
+                                        }
+                                        g.getNight().addEnergyLimited(100);
+
+                                        if (!g.getNight().hasPower()) {
+                                            g.lightsOn();
+                                            g.getNight().megaSodaLightsOnTicks = 16;
+
+                                            g.getNight().setFlicker(60 + (int) (Math.random() * 20));
+                                            g.sound.play("flicker" + (int) (Math.round(Math.random()) + 1), 0.05);
+                                        }
+
+                                        g.sound.playRate("sodaOpen", 0.05, 0.5);
+                                        g.sound.play("megasota", 0.2);
+
+                                        if (g.getNight().megaSodaUses == 1) {
+                                            g.megaSoda.disable();
+                                        }
+                                        g.getNight().megaSodaUses--;
+                                    }
+                                }
+                            }
+
                             case KeyEvent.VK_I -> {
                                 if(g.freezePotion.isEnabled()) {
                                     GamePanel.freezeModifier -= 0.25F;
+
+                                    GamePanel.universalGameSpeedModifier = GamePanel.originalGameSpeedModifier * GamePanel.freezeModifier;
+                                    g.allTimers.shutdown();
+                                    g.startupTimers();
+                                    
                                     g.sound.play("icePotionUse", 0.1F);
 
                                     freezeChange = new Pepitimer(() -> {
                                         GamePanel.freezeModifier += 0.25F;
-                                    }, 30000);
+
+                                        GamePanel.universalGameSpeedModifier = GamePanel.originalGameSpeedModifier * GamePanel.freezeModifier;
+                                        g.allTimers.shutdown();
+                                        g.startupTimers();
+                                    }, (int) Math.max(1, (40000 * GamePanel.universalGameSpeedModifier)));
 
                                     g.freezePotion.disable();
                                     g.repaintOffice();
+                                }
+                            }
+
+                            case KeyEvent.VK_T -> {
+                                if(g.iceBucket.isEnabled()) {
+                                    g.sound.play("icePotionUse", 0.15F);
+
+                                    if(g.getNight().getTemperature() > 15) {
+                                        g.getNight().setTemperature(Math.max(15, g.getNight().getTemperature() - 35));
+                                    }
+                                    
+                                    g.iceBucket.disable();
+                                    g.repaintOffice();
+                                }
+                            }
+                            
+                            case KeyEvent.VK_R -> {
+                                if(g.red40.isEnabled()) {
+                                    if(g.getNight().getEvent().isFlood()) {
+                                        g.getNight().red40Phase++;
+                                        
+                                        g.getNight().getShark().setAILevel(g.getNight().getShark().getAILevel() * 2);
+                                        g.getNight().getDsc().setAILevel(g.getNight().getDsc().getAILevel() * 2);
+                                        
+                                        float hueOffset = -1.58F;
+                                        
+                                        float[] hsb = new float[3];
+                                        Color.RGBtoHSB(g.currentWaterColor.getRed(), g.currentWaterColor.getGreen(), g.currentWaterColor.getBlue(), hsb);
+                                        Color hsbColor = Color.getHSBColor(hsb[0] + hueOffset, hsb[1], hsb[2] / 2);
+                                        g.currentWaterColor = new Color((120 << 24) | (hsbColor.getRed() << 16) | (hsbColor.getGreen() << 8) | (hsbColor.getBlue()), true);
+                                      
+                                        hsb = new float[3];
+                                        Color.RGBtoHSB(g.currentWaterColor2.getRed(), g.currentWaterColor2.getGreen(), g.currentWaterColor2.getBlue(), hsb);
+                                        hsbColor = Color.getHSBColor(hsb[0] + hueOffset, hsb[1], hsb[2] / 2);
+                                        g.currentWaterColor2 = new Color((180 << 24) | (hsbColor.getRed() << 16) | (hsbColor.getGreen() << 8) | (hsbColor.getBlue()), true);
+                                    
+                                            
+                                        if(g.currentWaterImage != null) {
+                                            g.currentWaterImage = GamePanel.changeHSB(g.currentWaterImage, hueOffset, 1, 0.5F);
+                                        }
+                                        g.sound.play("sodaOpen", 0.03);
+                                        
+                                        g.red40.disable();
+                                        g.repaintOffice();
+                                        
+                                    } else {
+                                        new Notification(GamePanel.getString("red40NeedWater"));
+                                        g.sound.play("error", 0.08);
+                                    }
                                 }
                             }
 
@@ -568,8 +805,11 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     }
                                     g.night.getColaCat().leave();
 
-                                    if(g.night.getShark().isActive()) {
-                                        g.night.getShark().floodDuration = 1;
+                                    if(g.night.getEvent() == GameEvent.FLOOD) {
+                                        g.night.getShark().fullReset();
+                                    }
+                                    if(g.night.getEvent() == GameEvent.DEEP_FLOOD) {
+                                        g.night.getDsc().fullReset();
                                     }
                                     if(g.night.getBoykisser().isAwaitingResponse()) {
                                         g.night.getBoykisser().leave();
@@ -578,8 +818,24 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     g.night.getMirrorCat().kill();
                                     g.night.getWires().leave();
                                     g.night.getScaryCat().leave();
-//                                    g.night.getA120().ac = false;
+                                    g.night.getElAstarta().leaveEarly();
+                                    g.night.getKiji().stop();
+                                    g.night.getShock().stop();
+                                    g.night.getA120().fullReset();
+                                    g.night.getBeast().fullReset();
+                                    g.night.getOverseer().disappear();
                                     //stop
+
+                                    Hydrophobia hydrophobia = g.night.getHydrophobia();
+                                    if(hydrophobia.isEnabled()) {
+                                        if (hydrophobia.getCurrentPos() < 2) {
+                                            hydrophobia.setCurrentPos(hydrophobia.getCurrentPos() - 1);
+                                        } else {
+                                            hydrophobia.setCurrentPos(hydrophobia.getCurrentPos() + 1);
+                                        }
+                                        hydrophobia.resetSound();
+                                    }
+                                    
 
                                     if(g.getNight().getEvent() == GameEvent.ASTARTA) {
                                         g.getNight().getAstartaBoss().damage(2);
@@ -588,8 +844,73 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     g.repaintOffice();
                                 }
                             }
+                            case KeyEvent.VK_P -> { // styrofoam pipeh
+                                if (g.styroPipe.isEnabled()) {
+                                    g.sound.play("styrofoamPipe", 0.1);
+                                }
+                            }
+                            case KeyEvent.VK_G -> { // sunglasses
+                                if (g.sunglasses.isEnabled()) {
+                                    g.fadeOut(255, g.endFade, 3);
+                                    g.sunglassesOn = !g.sunglassesOn;
+                                    
+                                    if(g.sunglassesOn) {
+                                        g.sgRadius = 1;
+                                        g.sound.play("camPull", 0.12);
+                                        if(!g.inCam) {
+                                            g.fadeOutStatic(1, 0F, 0.05F);
+                                        }
+                                        
+                                        g.sgPolygons.clear();
+                                        if(g.getNight().env instanceof HChamber chamber) {
+                                            g.sgPolygons.add(GamePanel.rectangleToPolygon(chamber.exit));
+                                        } else {
+                                            for (Door door : g.getNight().doors.values()) {
+                                                Polygon hitbox = new Polygon(door.getHitbox().xpoints, door.getHitbox().ypoints, door.getHitbox().npoints);
+                                                g.sgPolygons.add(hitbox);
+                                            }
+                                        }
+                                        
+                                        new Pepitimer(() -> g.sound.play("larryGlasses", 0.1), 0);
+                                    } else {
+                                        g.sound.play("camOut", 0.15);
+                                        if(!g.inCam) {
+                                            g.fadeOutStatic(0.3F, 0F, 0.03F);
+                                        }
+                                        
+//                                        new Pepitimer(() -> g.sound.play("larryGlasses", 0.1), 0);
+                                    }
+                                }
+                            }
+                            
+                            case KeyEvent.VK_W -> {
+                                if (g.inLocker) {
+                                    g.inLocker = false;
+                                    g.sound.play("lockerOut", 0.15);
+
+                                    g.fadeOut(255, 180, 0.7F);
+
+                                    if (g.type == GameType.HYDROPHOBIA) {
+                                        HChamber chamber = (HChamber) g.getNight().env();
+                                        chamber.lockerGuidelineAlpha = 0;
+                                        
+                                        chamber.setShake(Math.max(15, chamber.getShake()));
+                                    }
+                                }
+                            }
+
                             case KeyEvent.VK_B -> holdingB = true;
-                            case KeyEvent.VK_TAB -> holdingTab = true;
+                            case KeyEvent.VK_TAB -> {
+                                for(Item item : g.fullItemList) {
+                                    if(item.isEnabled() && !g.usedItems.contains(item)) {
+                                        g.usedItems.add(item);
+                                    }
+                                }
+                                g.usedItems.removeIf(item -> !item.isEnabled());
+
+                                holdingTab = true;
+                            }
+                            case KeyEvent.VK_E -> holdingE = true;
                         }
 
                         if(g.planks.isEnabled() && holdingB) {
@@ -610,7 +931,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                         if (g.adBlocked) {
                             if (String.valueOf(e.getKeyChar()).equals(g.randomCharacter)) {
-                                g.console.add("Your subscription has been renewed.");
+                                g.console.add(GamePanel.getString("sensorSubRenewed"));
                                 g.adBlocked = false;
 
                                 g.sound.play("a90Alive", 0.08);
@@ -644,7 +965,12 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                         GamePanel.mirror = false;
 
                                         Cutscene cutscene = Presets.voidEnding(g);
+                                        if(g.getNight().env() instanceof Basement basement) {
+                                            cutscene = Presets.voidEndingPEPITOLESS(g);
+                                        }
                                         cutscene.setAntiAliasing(true);
+
+                                        Statistics.GOTTEN_VOID_ENDING.increment();
 
                                         g.currentCutscene = cutscene;
 
@@ -659,7 +985,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                                         g.music.play("void", 0.1);
 
-                                        new Pepitimer(cutscene::nextScene, 30060);
+                                        new Pepitimer(cutscene::nextScene, 30040);
                                         new Pepitimer(() -> g.stopGame(true), 32500);
                                     }, 5000);
                                 }
@@ -668,10 +994,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     }
                     if(g.getNight().isInGeneratorMinigame()) {
                         if (code == KeyEvent.VK_Z || code == KeyEvent.VK_SPACE) {
-                            int x0 = g.fixedUpdatesAnim * 5 + (int) (Math.sin(g.fixedUpdatesAnim * 0.05) * 14);
-                            while (x0 > 630) {
-                                x0 -= 630;
-                            }
+                            int x0 = (g.fixedUpdatesAnim * 5 + (int) (Math.sin(g.fixedUpdatesAnim * 0.05) * 14)) % 630;
                             Rectangle rect1 = new Rectangle(218 + x0, 485, 14, 130);
 
                             int order = 0;
@@ -684,13 +1007,11 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     short[] array = g.getNight().generatorXes;
                                     if(array[0] == -1 && array[1] == -1 && array[2] == -1) {
                                         g.getNight().generatorStage++;
-                                        g.getNight().generatorXes[0] = (short) (30 + Math.random() * 540);
-                                        g.getNight().generatorXes[1] = (short) (30 + Math.random() * 540);
-                                        g.getNight().generatorXes[2] = (short) (30 + Math.random() * 540);
+                                        g.getNight().regenerateGeneratorXes();
 
                                         g.generatorSound.play("generatorNextStage", 0.1);
 
-                                        if(g.getNight().generatorStage >= 4) {
+                                        if(g.getNight().generatorStage >= 3) {
                                             g.getNight().setGeneratorEnergy(103);
                                             g.getNight().inGeneratorMinigame = false;
                                             g.generatorSound.stop();
@@ -705,17 +1026,159 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 order++;
                             }
 
-                            if(Math.random() < 0.6) {
-                                if (g.getNight().generatorStage > 0) {
-                                    g.getNight().generatorStage--;
-                                }
+                            if(Math.random() < 0.8 && g.getNight().generatorStage > 1) {
+                                g.getNight().generatorStage--;
                             }
-                            g.getNight().generatorXes[0] = (short) (30 + Math.random() * 540);
-                            g.getNight().generatorXes[1] = (short) (30 + Math.random() * 540);
-                            g.getNight().generatorXes[2] = (short) (30 + Math.random() * 540);
+                            g.getNight().regenerateGeneratorXes();
 
                             g.generatorSound.play("generatorFail", 0.1);
                         }
+                    }
+                    
+                    
+                    // NOW THE SAME THING BUT FOR THE BASEMENT
+                    if(g.getNight().getType().isBasement()) {
+                        Basement basement = (Basement) g.getNight().env();
+                        
+                        if(basement.isInGeneratorMinigame()) {
+                            if (code == KeyEvent.VK_Z || code == KeyEvent.VK_SPACE) {
+                                int x0 = g.fixedUpdatesAnim * 5 + (int) (Math.sin(g.fixedUpdatesAnim * 0.05) * 14);
+
+                                if(basement.getStage() == 5) {
+                                    x0 += g.fixedUpdatesAnim / 2;
+                                }
+                                x0 = x0 % 630;
+                            
+                                Rectangle rect1 = new Rectangle(218 + x0, 485, 14, 130);
+
+                                int order = 0;
+                                for (short x : basement.generatorXes.clone()) {
+                                    Rectangle rect2 = new Rectangle(220 + x, 495, 35, 110);
+
+                                    if (rect1.intersects(rect2) && basement.generatorXes[order] != -1) {
+                                        basement.generatorXes[order] = -1;
+
+                                        short[] array = basement.generatorXes;
+                                        if (array[0] == -1 && array[1] == -1 && array[2] == -1) {
+                                            basement.setGeneratorStage((byte) (basement.getGeneratorStage() + 1));
+                                            basement.regenerateGeneratorXes();
+
+                                            if (basement.getStage() < 5) {
+                                                basement.setStage((byte) 5);
+                                                g.getNight().getPepito().seconds = 5;
+                                                g.getNight().getA90().shots = 0;
+                                                g.restartBasementSong();
+                                                g.getNight().setMaxEnergy(500F);
+                                                g.getNight().setEnergy(500F);
+                                                basement.setShake(45);
+
+                                                g.getNight().shirtfart.cancel(false);
+
+                                                g.generatorSound.stop();
+                                                g.generatorSound.play("basementTheme5Generator", 0.1, true);
+                                            }
+
+                                            g.generatorSound.play("generatorNextStage", 0.1);
+
+                                            if(basement.getGeneratorStage() >= 16) {
+                                                g.generatorSound.stop();
+                                                g.getNight().redrawBasementScreen();
+                                                basement.setStage((byte) 6);
+                                                basement.setInGeneratorMinigame(false);
+                                                
+                                                g.basementSound.stop();
+
+                                                g.getNight().basementDoorBlocks();
+                                                basement.blockedWalls.clear();
+                                                g.getNight().setDefaultBasementDoors();
+                                                g.repaintOffice();
+
+                                                g.getNight().cancelAfterGame.add(new Pepitimer(() -> {
+                                                    g.sound.play("challenger", 0.5);
+                                                    basement.setGasLeakMillis(4000);
+                                                }, 1000));
+
+                                                g.getNight().cancelAfterGame.add(new Pepitimer(() -> {
+                                                    g.getNight().getMSI().setAILevel(1);
+                                                    float d = 1.615F;
+                                                    g.getNight().getMSI().modifier = d;
+                                                    g.getNight().getMSI().spawn();
+
+                                                    g.getNight().cancelAfterGame.add(new Pepitimer(() -> {
+                                                        if(basement.doWiresWork()) {
+                                                            g.restartBasementSong();
+
+                                                            g.getNight().cancelAfterGame.add(new Pepitimer(() -> {
+                                                                basement.spark();
+                                                                g.sound.playRate("sparkSound", 0.15, 0.9 + Math.random() / 5F);
+
+                                                                g.getNight().cancelAfterGame.add(new Pepitimer(() -> {
+                                                                    g.sound.play("explosionSound", 0.2);
+                                                                    basement.setShake(55);
+                                                                    basement.setStage((byte) 7);
+                                                                    basement.setWhiteScreen(255);
+                                                                    basement.setRedAlarmY(-100);
+                                                                    g.repaintOffice();
+                                                                    g.getNight().setTemperature(0);
+                                                                    g.getNight().redrawBasementScreen();
+                                                                    g.getNight().doors.clear();
+                                                                    
+                                                                    g.white200 = Color.WHITE;
+                                                                    g.basementHyperOptimization = true;
+                                                                    g.redrawBHO = true;
+                                                                    g.sound.play("helicopter", 0.2, true);
+                                                                }, 100));
+                                                            }, 38150));
+                                                        } else {
+                                                            g.basementSound.play("gasLeakSound", 0.15);
+                                                            
+                                                            new Pepitimer(() -> {
+                                                                g.startCorn();
+                                                                Statistics.GOTTEN_CORN_ENDING.increment();
+                                                            }, 21000);
+                                                        }
+                                                    }, (int) (1860 + 300 / d)));
+                                                }, 4000));
+                                            }
+                                        } else {
+                                            g.generatorSound.play("generatorSuccess", 0.1);
+                                        }
+                                        
+                                        g.getNight().redrawBasementScreen();
+                                        return;
+                                    }
+                                    order++;
+                                }
+
+//                                if (Math.random() < 0.8) {
+//                                    if (g.getNight().generatorStage > 0) {
+//                                        g.getNight().generatorStage--;
+//                                    }
+//                                }
+                                basement.regenerateGeneratorXes();
+
+                                g.generatorSound.play("generatorFail", 0.1);
+                            } else if(code == KeyEvent.VK_ESCAPE) {
+                                basement.setInGeneratorMinigame(false);
+                                
+                                if(basement.getStage() == 4) {
+                                    g.generatorSound.stop();
+                                } else {
+                                    for (MediaPlayer player : g.generatorSound.clips) {
+                                        player.setVolume(0);
+                                    }
+                                }
+                                stopPause = true;
+                            }
+                        }
+                    }
+                }
+                case UH_OH -> {
+                    stopPause = true;
+                }
+                case CRATE -> {
+                    if (!e.isControlDown() && !e.isShiftDown() && !e.isAltDown()) {
+                        crateClick();
                     }
                 }
                 case BATTERY_SAVER -> {
@@ -732,13 +1195,36 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                             if (g.night.getEnergy() > g.night.getMaxEnergy()) {
                                 g.night.setMaxEnergy(g.night.getEnergy());
                             }
-                            g.night.setEnergy(Math.min(g.night.getEnergy() + 250, g.night.getMaxEnergy()));
+                            g.getNight().addEnergyLimited(250);
                         }
 
                         g.state = GameState.GAME;
                         GamePanel.mirror = true;
                         float rate = g.getNight().getAstartaBoss().hasMusicSpedUp() ? 1.1F : 1;
-                        g.music.playRateLooped("astartaFight", 0.06, rate);
+                        g.music.playRateLooped("astartaFight", 0.08, rate);
+                    }
+                }
+                case DRY_CAT_GAME -> {
+                    if(code == KeyEvent.VK_E) {
+                        if(g.dryCatGame.isDoorOpen() && !g.everyFixedUpdate.containsKey("doorAnimationEnter")) {
+                            g.everyFixedUpdate.put("doorAnimationEnter", () -> {
+                                g.dryCatGame.daZoom += 2;
+                                g.dryCatGame.daZoom *= 1.2F;
+
+                                if (g.dryCatGame.daZoom > 320) {
+                                    Level oldNight = g.getNight();
+                                    g.getNight().resetTimers();
+                                    g.getNight().getShock().stop();
+                                    
+                                    g.type = GameType.HYDROPHOBIA;
+                                    g.startGame();
+
+                                    HChamber env = (HChamber) g.getNight().env();
+                                    env.setOldNight(oldNight);
+                                    g.everyFixedUpdate.remove("doorAnimationEnter");
+                                }
+                            });
+                        }
                     }
                 }
                 case MILLY -> {
@@ -832,8 +1318,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 }
                 case RIFT -> {
                     if(g.riftItemsSelected[1] == null && g.riftText.equals("Welcome to the rift!")
-                    && !g.everyFixedUpdate.containsKey("riftAccelerateUp")) {
-
+                            && !g.everyFixedUpdate.containsKey("riftAccelerateUp")) {
                         byte index = (byte) (g.riftItems.indexOf(g.selectedRiftItem));
 
                         if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
@@ -843,6 +1328,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 index++;
                             }
                             g.sound.play("select", 0.1);
+                            
+                            g.riftFramesDoingNothing = -15000;
+                            g.riftMoonAlpha = 0;
                         } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_A) {
                             if(index <= 0) {
                                 index = (byte) (g.riftItems.size() - 1);
@@ -850,10 +1338,16 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 index--;
                             }
                             g.sound.play("select", 0.1);
+
+                            g.riftFramesDoingNothing = -15000;
+                            g.riftMoonAlpha = 0;
                         }
                         g.selectedRiftItem = g.riftItems.get(index);
 
                         if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_SPACE || code == KeyEvent.VK_Z) {
+                            g.riftFramesDoingNothing = -15000;
+                            g.riftMoonAlpha = 0;
+                            
                             g.sound.play("riftSelect", 0.3);
                             g.riftItems.remove(g.selectedRiftItem);
 
@@ -869,6 +1363,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                                 if (g.riftItemsSelected[0].getId().equals("birthdayHat") || g.riftItemsSelected[1].getId().equals("birthdayHat")) {
                                     g.birthdayHat.safeAdd(9);
+                                }
+                                if (g.riftItemsSelected[0].getId().equals("basementKey") || g.riftItemsSelected[1].getId().equals("basementKey")) {
+                                    g.basementKey.setAmount(-1);
                                 }
 
                                 new Pepitimer(() -> {
@@ -886,6 +1383,8 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                             g.fadeOut(255, 160, 1);
                                             g.stopGame(true);
                                             AchievementHandler.obtain(g, Achievements.RIFT);
+
+                                            g.riftTransparency = 0;
                                         } catch (Exception ignored) { }
                                     }, 3400);
                                 }, 2000);
@@ -904,14 +1403,77 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 }
                 case PLATFORMER -> {
                     switch (code) {
-                        case KeyEvent.VK_SPACE -> {
-                            g.platformer.jump();
+                        case KeyEvent.VK_A -> g.platformer.setMovingLeft(true);
+                        case KeyEvent.VK_D -> g.platformer.setMovingRight(true);
+                        case KeyEvent.VK_SPACE -> g.platformer.jump();
+                    }
+                }
+                case CORNFIELD -> {
+                    switch (code) {
+                        case KeyEvent.VK_W -> holdingW = true;
+                        case KeyEvent.VK_S -> holdingS = true;
+                        case KeyEvent.VK_D -> holdingD = true;
+                        case KeyEvent.VK_A -> holdingA = true;
+                    }
+                }
+                case FIELD -> {
+                    if(g.field.isInGeneratorMinigame()) {
+                        
+                        if (code == KeyEvent.VK_Z || code == KeyEvent.VK_SPACE) {
+                            int x0 = ((int) (g.fixedUpdatesAnim * 6.5F) + (int) (Math.sin(g.fixedUpdatesAnim * 0.05) * 12)) % 630;
+                            Rectangle rect1 = new Rectangle(215 + x0, 485, 20, 130);
+
+                            int order = 0;
+                            for(short x : g.field.generatorXes.clone()) {
+                                Rectangle rect2 = new Rectangle(220 + x, 495, 60, 110);
+
+                                if(rect1.intersects(rect2) && g.field.generatorXes[order] != -1) {
+                                    g.field.generatorXes[order] = -1;
+
+                                    short[] array = g.field.generatorXes;
+                                    if(array[0] == -1 && array[1] == -1) {
+                                        g.field.regenerateGeneratorXes();
+
+                                        g.generatorSound.play("generatorNextStage", 0.1);
+                                        // SHOOT IMPULSE HERE
+                                        g.field.impulseInterp = 1;
+                                        g.sound.playRate("beep", 0.1, 0.1F);
+                                        g.sound.playRate("enterNewRoom", 0.1, 0.2F);
+                                        g.sound.playRate("harpoonShoot", 0.16, 0.8F);
+                                        
+                                        if(g.field.getBlimp().lockedOn) {
+                                            g.field.getBlimp().lockedOn = false;
+                                            g.field.getBlimp().untilNextAttack = 5 + (int) (Math.random() * 5);
+                                            
+                                            new Pepitimer(() -> {
+                                                g.field.getBlimp().untilDirects = 5;
+                                            }, 2000);
+                                        }
+                                    } else {
+                                        g.generatorSound.play("generatorSuccess", 0.1);
+                                    }
+                                    return;
+                                }
+                                order++;
+                            }
+
+                            g.field.regenerateGeneratorXes();
+
+                            g.generatorSound.play("generatorFail", 0.1);
                         }
-                        case KeyEvent.VK_A -> {
-                            g.platformer.pressedLeft = true;
-                        }
-                        case KeyEvent.VK_D -> {
-                            g.platformer.pressedRight = true;
+                    }
+                    
+                    if (g.field.a90.isActive()) {
+                        g.field.a90.dying = true;
+                    }
+                    if(!g.field.lockedIn) {
+                        switch (code) {
+                            case KeyEvent.VK_W -> holdingW = true;
+                            case KeyEvent.VK_S -> holdingS = true;
+                            case KeyEvent.VK_D -> holdingD = true;
+                            case KeyEvent.VK_A -> holdingA = true;
+//                        case KeyEvent.VK_SHIFT -> holdingShift = true;
+//                        case KeyEvent.VK_SPACE -> holdingSpace = true;
                         }
                     }
                 }
@@ -937,42 +1499,75 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 }
 
                 for(MediaPlayer player : g.music.clips) {
-                    player.setVolume(g.music.clipVolume.get(player) * g.volume);
+                    player.setVolume(g.music.clipVolume.get(player) * Math.sqrt(g.volume));
                 }
                 for(MediaPlayer player : g.sound.clips) {
                     if(g.sound.clipVolume.containsKey(player)) {
-                        player.setVolume(g.sound.clipVolume.get(player) * g.volume);
+                        player.setVolume(g.sound.clipVolume.get(player) * Math.sqrt(g.volume));
                     }
                 }
                 for(MediaPlayer player : g.scaryCatSound.clips) {
-                    player.setVolume(g.scaryCatSound.clipVolume.get(player) * g.volume);
-                }
-                for(MediaPlayer player : g.generatorSound.clips) {
-                    player.setVolume(g.generatorSound.clipVolume.get(player) * g.volume);
+                    player.setVolume(g.scaryCatSound.clipVolume.get(player) * Math.sqrt(g.volume));
                 }
                 for(MediaPlayer player : g.bingoSound.clips) {
-                    player.setVolume(g.bingoSound.clipVolume.get(player) * g.volume);
+                    player.setVolume(g.bingoSound.clipVolume.get(player) * Math.sqrt(g.volume));
+                }
+                for(MediaPlayer player : g.rainSound.clips) {
+                    player.setVolume(g.rainSound.clipVolume.get(player) * Math.sqrt(g.volume));
+                }
+                for(MediaPlayer player : g.basementSound.clips) {
+                    player.setVolume(g.basementSound.clipVolume.get(player) * Math.sqrt(g.volume));
+                }
+                for(MediaPlayer player : g.krunlicSound.clips) {
+                    player.setVolume(g.krunlicSound.clipVolume.get(player) * Math.sqrt(g.volume));
+                }
+                for(MediaPlayer player : g.shockSound.clips) {
+                    player.setVolume(g.shockSound.clipVolume.get(player) * Math.sqrt(g.volume));
                 }
 
-                g.quickVolumeSeconds = 2;
+                for(MediaPlayer player : fanSounds.clips) {
+                    player.setVolume(fanSounds.clipVolume.get(player) * Math.sqrt(g.volume));
+                }
+                for(MediaPlayer player : camSounds.clips) {
+                    player.setVolume(camSounds.clipVolume.get(player) * Math.sqrt(g.volume));
+                }
+                
+                
+                boolean changeGeneratorSound = true;
+                if(g.getNight() != null) {
+                    if (g.getNight().getType().isBasement()) {
+                        Basement basement = (Basement) g.getNight().env();
+
+                        if (!basement.isInGeneratorMinigame()) {
+                            changeGeneratorSound = false;
+                        }
+                    }
+                }
+                if(changeGeneratorSound) {
+                    for(MediaPlayer player : g.generatorSound.clips) {
+                        player.setVolume(g.generatorSound.clipVolume.get(player) * Math.sqrt(g.volume));
+                    }
+                }
+
+                g.quickVolumeSeconds = 1;
                 g.quickVolumeY = 0;
 
                 g.everySecond.remove("quickVolumeSeconds");
                 g.everyFixedUpdate.remove("quickVolumeY");
 
                 g.everySecond.put("quickVolumeSeconds", () -> {
-                   if(g.quickVolumeSeconds > 0) {
-                       g.quickVolumeSeconds--;
-                   } else {
-                       g.everyFixedUpdate.put("quickVolumeY", () -> {
-                           if(g.quickVolumeY > -120) {
-                               g.quickVolumeY -= 3;
-                           } else {
-                               g.everyFixedUpdate.remove("quickVolumeY");
-                           }
-                       });
-                       g.everySecond.remove("quickVolumeSeconds");
-                   }
+                    if(g.quickVolumeSeconds > 0) {
+                        g.quickVolumeSeconds--;
+                    } else {
+                        g.everyFixedUpdate.put("quickVolumeY", () -> {
+                            if(g.quickVolumeY > -120) {
+                                g.quickVolumeY -= 3;
+                            } else {
+                                g.everyFixedUpdate.remove("quickVolumeY");
+                            }
+                        });
+                        g.everySecond.remove("quickVolumeSeconds");
+                    }
                 });
             }
 
@@ -1046,6 +1641,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             return;
 
         if(e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+            if(GamePanel.mirror) {
+                g.lastFullyRenderedUnshaded = g.mirror(g.lastFullyRenderedUnshaded, 1);
+            }
             g.lastBeforePause = g.lastFullyRenderedUnshaded;
             g.lastBeforePause = GamePanel.darkify(g.lastBeforePause, 3);
             g.paused = !g.paused;
@@ -1053,9 +1651,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             if(g.paused) {
                 previous = g.state;
                 g.state = GameState.UNLOADED;
-                g.pauseAllSound();
+                g.pauseAllSound(true);
                 for (Pepitimer pepitimer : StaticLists.timers) {
-                    pepitimer.pause();
+                    pepitimer.gamePause();
                 }
             } else {
                 unpause();
@@ -1081,25 +1679,67 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             if(millyDisco != null) {
                 millyDisco.cancel(false);
             }
-        } else {
-            if (g.endless.getCoins() >= g.millyShopItems[g.selectedMillyItem].getPrice() || infiniteMoneyGlitch) {
-                g.endless.addCoins(-g.millyShopItems[g.selectedMillyItem].getPrice());
-                Statistics.ITEMS_BOUGHT.increment();
 
-                if(g.millyShopItems[g.selectedMillyItem].getItem().getId().equals("starlightBottle")) {
+            for(Pepitimer timer : g.getNight().cancelAfterGame) {
+                timer.resume();
+            }
+            if(g.getNight().getType().isBasement()) {
+                g.basementSound.resume(false);
+            }
+        } else {
+            int coins = 0;
+            if(g.getNight().getType().isEndless()) {
+                coins = g.endless.getCoins();
+            } else if(g.getNight().getType().isBasement()) {
+                Basement env = (Basement) g.getNight().env();
+                coins = env.getCoins();
+            }
+            
+            if (coins >= g.millyShopItems[g.selectedMillyItem].getPrice() || infiniteMoneyGlitch) {
+                
+                if(g.getNight().getType().isEndless()) {
+                    g.endless.addCoins(-g.millyShopItems[g.selectedMillyItem].getPrice());
+                    
+                } else if(g.getNight().getType().isBasement()) {
+                    Basement env = (Basement) g.getNight().env();
+                    env.addCoins(-g.millyShopItems[g.selectedMillyItem].getPrice());
+                }
+                
+                Statistics.ITEMS_BOUGHT.increment();
+                
+                
+                Item item = g.millyShopItems[g.selectedMillyItem].getItem();
+
+                if(item.getId().equals("starlightBottle")) {
                     g.starlightBottle.safeAdd(1);
                 } else {
-                    g.millyShopItems[g.selectedMillyItem].getItem().enable();
+                    item.enable();
 
-                    if (g.fullItemList.contains(g.millyShopItems[g.selectedMillyItem].getItem())) {
-                        g.usedItems.add(g.millyShopItems[g.selectedMillyItem].getItem());
+                    if (g.fullItemList.contains(item)) {
+                        g.usedItems.add(item);
+                    }
+
+                    if(item.getId().equals("birthdayHat") || item.getId().equals("basementKey")) {
+                        g.riftGlitch.enable();
+                        g.usedItems.add(g.riftGlitch);
+                        System.out.println("enabled rift glitches");
                     }
                 }
 
-                if(g.millyShopItems[g.selectedMillyItem].getItem().getId().equals("adblocker")) {
+                if(item.getId().equals("adblocker")) {
                     g.adBlocked = false;
                 }
-                if(g.millyShopItems[g.selectedMillyItem].getItem() instanceof Corn c) {
+                if(item.getId().equals("megaSoda")) {
+                    g.getNight().megaSodaUses = 4;
+                    
+                    if(g.getNight().getColaCat().getAILevel() < 1) {
+                        g.getNight().getColaCat().setAILevel(1);
+                    }
+                }
+                if(item.getId().equals("shadowblocker")) {
+                    g.getNight().setShadowblocker(new Shadowblocker(1));
+                }
+                if(item instanceof Corn c) {
                     c.reset();
                 }
                 g.millyShopItems[g.selectedMillyItem] = null;
@@ -1140,15 +1780,70 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             }
         }
     }
+    
+    public void startMillyShop() {
+        for(Pepitimer timer : g.getNight().cancelAfterGame) {
+            timer.pause();
+        }
+        
+        g.state = GameState.MILLY;
+        g.secondsInMillyShop = 0;
+        g.dreadUntilGrayscale = 1;
+        g.dreadUntilVignette = 1;
+        g.sound.stop();
+
+        if (g.fanActive) {
+            fanSounds.stop();
+            g.fanActive = false;
+            g.usage--;
+
+            g.everySecond20th.remove("fan");
+        }
+
+        if (g.inCam) {
+            g.camOut(false);
+        }
+
+        g.fadeOut(255, 0, 2);
+
+        g.redrawMillyShop();
+        g.recalculateMillyRects();
+    }
 
     boolean holdingB = false;
     boolean holdingTab = false;
+    boolean holdingE = false;
+    boolean holdingShift = false;
+    boolean holdingSpace = false;
+    
+    public boolean holdingW = false;
+    public boolean holdingS = false;
+    public boolean holdingD = false;
+    public boolean holdingA = false;
+    
+    public boolean holdingI = false;
+    public boolean holdingK = false;
+    public boolean holdingJ = false;
+    public boolean holdingL = false;
+    
+    
+    public boolean holdingFlashlight = false;
+    
+
+    boolean isInEnemiesRectangle = false;
+    boolean hoveringPepitoClock = false;
+    boolean hoveringNeonSog = false;
+    boolean hoveringNeonSogSign = false;
+    boolean hoveringShadowblockerButton = false;
 
 
     SoundTest soundTest;
 
     Rat a;
+    
+    String krunlicActivation = "";
 
+    public boolean trueMouseHeld = false;
     public boolean mouseHeld = false;
     public boolean isRightClick = false;
     boolean holdingVolumeButton = false;
@@ -1163,15 +1858,40 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
         switch (e.getKeyCode()) {
             case KeyEvent.VK_B -> holdingB = false;
             case KeyEvent.VK_TAB -> holdingTab = false;
+            case KeyEvent.VK_E -> {
+                holdingE = false;
+                g.holdingEFrames = 0;
+            }
         }
+        if(!e.isShiftDown()) {
+            holdingShift = false;
+        }
+        
         if(g.state == GameState.PLATFORMER) {
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_A -> {
-                    g.platformer.pressedLeft = false;
-                }
-                case KeyEvent.VK_D -> {
-                    g.platformer.pressedRight = false;
-                }
+                case KeyEvent.VK_A -> g.platformer.setMovingLeft(false);
+                case KeyEvent.VK_D -> g.platformer.setMovingRight(false);
+            }
+        } else if(g.state == GameState.CORNFIELD) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_W -> holdingW = false;
+                case KeyEvent.VK_S -> holdingS = false;
+                case KeyEvent.VK_D -> holdingD = false;
+                case KeyEvent.VK_A -> holdingA = false;
+            }
+        } else if(g.state == GameState.FIELD || g.state == GameState.UH_OH) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_W -> holdingW = false;
+                case KeyEvent.VK_S -> holdingS = false;
+                case KeyEvent.VK_D -> holdingD = false;
+                case KeyEvent.VK_A -> holdingA = false;
+                case KeyEvent.VK_SHIFT -> holdingShift = false;
+                case KeyEvent.VK_SPACE -> holdingSpace = false;
+
+                case KeyEvent.VK_I -> holdingI = false;
+                case KeyEvent.VK_J -> holdingJ = false;
+                case KeyEvent.VK_K -> holdingK = false;
+                case KeyEvent.VK_L -> holdingL = false;
             }
         }
     }
@@ -1184,6 +1904,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
     @Override
     public void mousePressed(MouseEvent event) {
         boolean cancelMouseHolding = false;
+        trueMouseHeld = true;
 
         Point rescaledPoint = new Point((int) ((pointerPosition.x - g.centerX) / g.widthModifier), (int) ((pointerPosition.y - g.centerY) / g.heightModifier));
 
@@ -1192,16 +1913,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             return;
         }
         if(g.pressAnyKey) {
-            if(g.riftItems.size() >= 2 && g.endless.getNight() >= 3) {
-                if(g.riftTransparency <= 0) {
-                    g.enterRift();
-                }
-            } else {
-                if(processDeathScreenPress())
-                    return;
-
-                g.stopGame(true);
-            }
+            pressAnyKeyStuff();
             cancelMouseHolding = true;
         } else {
 
@@ -1213,18 +1925,38 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         if(g.pauseDieSelected && g.getNight().getEvent().isInGame()) {
                             unpause();
                             g.paused = false;
-                            g.jumpscare("pause");
+                            g.jumpscare("pause", g.getNight().getId());
+                        }
+                    }
+                    if(previous == GameState.FIELD) {
+                        if(g.pauseDieSelected) {
+                            unpause();
+                            g.paused = false;
+                            g.field.kill(g, "pause");
                         }
                     }
                 }
                 case MENU -> {
+                    if (new Rectangle(1025, 20, 35, 35).contains(rescaledPoint)) {
+                        g.save();
+                        System.exit(0);
+                    }
+                    
+                    if(g.hoveringPlatButton) {
+                        g.startPlatformer();
+                    }
                     if (g.discord == g.discordStates[1]) {
                         try {
                             g.discord = g.discordStates[0];
-                            Desktop.getDesktop().browse(new URL("https://discord.gg/r3re2hXu7k").toURI());
+                            Desktop.getDesktop().browse(new URI("https://discord.gg/r3re2hXu7k"));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    } else if(g.musicMenu == g.musicMenuStates[1]) {
+                        if(g.musicDiscs.size() > 1) {
+                            g.startMusicMenu();
+                        }
+                        
                     } else if (pointerPosition.x < 520 * g.widthModifier + g.centerX) {
                         short x = (short) g.visibleMenuButtons.size();
                         if (pointerPosition.y > (-40 * x + 520) * g.heightModifier + g.centerY) {
@@ -1238,83 +1970,607 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         g.state = GameState.CREDITS;
                         g.fadeOutStatic(1F, 0.3F, 0.00005F);
                     }
+                    
+                    if(g.hoveringPepVoteButton) {
+                        try {
+                            Desktop.getDesktop().browse(g.pepVoteButton.getUrl().toURI());
+                        } catch (IOException | URISyntaxException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
                 case GAME -> {
+                    Enviornment env = g.getNight().env;
+                    int maxOffset = env.maxOffset();
+                    
                     g.getNight().afk = 17;
                     g.recalculateButtons(GameState.GAME);
+
+                    if(g.getNight().getKiji().getState() != 0) {
+                        if(g.getNight().getKiji().getState() == 1) {
+                            g.sound.play("kijiSuccess", 0.1F);
+                        }
+                        return;
+                    }
 
                     if(g.getNight().getType() == GameType.SHADOW) {
                         if (GamePanel.mirror) {
                             rescaledPoint = new Point(1080 - rescaledPoint.x, rescaledPoint.y);
                         }
                     }
+                    
+                    if(g.soggyPen.isEnabled() && holdingShift) {
+                        Graphics2D graphics2D = (Graphics2D) g.getNight().soggyPenCanvas.getGraphics();
+                        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                    if (isRightClick) {
-                        if(g.getNight().getMirrorCat().isActive()) {
-                            int rectX = g.offsetX - 400 + g.getNight().getMirrorCat().getX() + g.currentWaterPos * 2;
-                            if(GamePanel.isMirror()) {
-                                rectX = 895 - rectX;
+                        int green = (int) ((Math.sin(g.fixedUpdatesAnim / 400F) / 2 + 1) * 255);
+                        graphics2D.setColor(isRightClick ? Color.WHITE : new Color(0, Math.max(0, Math.min(255, green)), 255));
+                        int dia = isRightClick ? 5 : 3;
+
+                        graphics2D.fillOval(rescaledPoint.x - 2 - g.offsetX + maxOffset, rescaledPoint.y - 2, dia, dia);
+                        graphics2D.dispose();
+
+                        return;
+                    }
+
+                    if(g.getNight().getEvent() == GameEvent.BASEMENT_KEY) {
+                        BasementKeyOffice office = ((BasementKeyOffice) env);
+
+                        office.setHoveringCanvas(new Rectangle(g.fixedOffsetX - maxOffset + 12, 239, 288, 184).contains(rescaledPoint) ||
+                                new Rectangle(g.fixedOffsetX - maxOffset + 3045, 239, 288, 184).contains(rescaledPoint));
+                        
+                        if(office.isHoveringCanvas()) {
+                            Graphics2D graphics2D = (Graphics2D) office.getCanvas().getGraphics();
+                            graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            graphics2D.setColor(isRightClick ? new Color(211, 191, 179) : Color.BLACK);
+                            int dia = isRightClick ? 5 : 3;
+                            
+                            graphics2D.fillOval(rescaledPoint.x - 2 - 17 - g.offsetX, rescaledPoint.y - 2 - 244, dia, dia);
+                            graphics2D.fillOval(rescaledPoint.x - 2 - 17 - g.offsetX + 3033, rescaledPoint.y - 2 - 244, dia, dia);
+                            graphics2D.dispose();
+                         
+                            return;
+                        }
+                        
+                        if(office.isHoveringEvilDoor()) {
+                            if (office.getEvilDoorPercent() == 1) {
+                                office.setEvilDoorPercent(0.999F);
+                                
+                                g.sound.play("evilDoorOpen", 0.1);
+                                
+                                new Pepitimer(() -> {
+                                    g.everySecond.put("evilDoor", () -> {
+                                        if(!g.getNight().getEvent().isInGame()) {
+                                            g.everySecond.remove("evilDoor");
+                                        }
+                                        office.setEvilDoorPercent(office.getEvilDoorPercent() - 0.05F);
+                                        g.sound.play("evilDoorSqueak" + (int) (Math.random() * 6 + 1), 0.1);
+
+                                        if (office.getEvilDoorPercent() <= 0) {
+                                            office.setEvilDoorPercent(0);
+                                            g.everySecond.remove("evilDoor");
+                                        }
+                                    });
+                                }, 4000);
+                            }
+                            if (office.getEvilDoorPercent() == 0) {
+                                if(g.basementEnterTimer != null)
+                                    return;
+
+                                g.sound.playRate(g.everEnteredBasement ? "evilDoorEnterShort" : "evilDoorEnter", 0.15, 0.15);
+                                g.fadeOut((int) g.tintAlpha, 255, 0.2F);
+                                
+                                g.basementEnterTimer = new Pepitimer(() -> {
+                                    g.basementKey.disable();
+                                    g.usedItems.remove(g.basementKey);
+                                    
+                                    g.state = GameState.HALFLOADED;
+                                    GameType oldType = g.type;
+                                    g.type = GameType.BASEMENT;
+                                    g.rainSound.stop();
+                                    g.startGame();
+
+                                    ((Basement) g.getNight().env).setDoWiresWork(!office.powerOff);
+                                    
+                                    if(oldType == GameType.SHADOW) {
+                                        g.type = GameType.SHADOW;
+                                        g.getNight().setType(GameType.SHADOW);
+                                        g.repaintOffice();
+                                        g.getNight().repaintMonitorImage();
+                                        g.music.play("theShadow", 0.1);
+                                    }
+
+                                    g.everEnteredBasement = true;
+                                    
+                                }, g.everEnteredBasement ? 0 : 4000);
                             }
 
-                            Rectangle rect = new Rectangle((int) (rectX * g.widthModifier) + g.centerX, (int) ((540 - g.kys()) * g.heightModifier) + g.centerY,  (int) (185 * g.widthModifier), (int) (100 * g.heightModifier));
-                            if(rect.contains(pointerPosition)) {
-                                g.getNight().getMirrorCat().kill();
+                            return;
+                        }
+                        
+                        if((Achievements.BASEMENT.isObtained() || Achievements.BASEMENT_PARTY.isObtained()) && !office.powerOff) {
+                            if(new Rectangle(690 - maxOffset + g.offsetX, 516, 49, 84).contains(rescaledPoint) ||
+                                    new Rectangle(690+3033 - maxOffset + g.offsetX, 516, 49, 84).contains(rescaledPoint)) {
+                                office.powerOff = true;
+                                g.sound.play("powerdown", 0.15);
+                                g.sound.playRate("select", 0.1, 0.5);
+                                
+                                for(MediaPlayer player : g.music.clips) {
+                                    if(player.getMedia().getSource().contains("brokenRadioSong.mp3")) {
+                                        player.stop();
+                                        player.dispose();
+                                        g.music.clips.remove(player);
+                                    }
+                                }
+
                                 return;
                             }
                         }
+                    }
+                    
+                    if(g.getNight().getType() == GameType.HYDROPHOBIA && g.getNight().getEvent().isInGame()) {
+                        HChamber chamber = ((HChamber) g.getNight().env());
 
-                        if (g.flashlight.isEnabled() && (g.getNight().getEvent() == GameEvent.NONE)) {
-                            if (g.night.hasPower()) {
-                                if (g.flashLightCooldown == 0) {
-                                    g.sound.play("sodaOpen", 0.03);
-                                    g.sound.play("camOut", 0.1);
-                                    g.fadeOut(0, g.endFade, 20);
-                                    g.night.addEnergy(-20F);
-                                    g.flashLightCooldown = 28;
+                        if (!g.inLocker) {
+                            if (chamber.isHoveringCompass()) {
+                                chamber.setShowCompassHint(false);
+                                chamber.setGoalCompassRotation(chamber.getGoalCompassRotation() + 180);
 
-                                    if (g.night.getMSI().isActive()) {
-                                        g.night.getMSI().kill(true, true);
-                                        g.night.addEnergy(-4F);
-                                    } else {
-                                        for (int i : g.getNight().getDoors().keySet()) {
-                                            Door door = g.getNight().getDoors().get(i);
-                                            Polygon hitbox = new Polygon(door.getHitbox().xpoints, door.getHitbox().ypoints, door.getHitbox().npoints);
-                                            hitbox.translate(g.offsetX - 400, 0);
+                                if (chamber.getGoalCompassRotation() > 360) {
+                                    chamber.setGoalCompassRotation(chamber.getGoalCompassRotation() - 360);
+                                    chamber.setCompassRotation(chamber.getCompassRotation() - 360);
+                                }
 
-                                            if (hitbox.contains(rescaledPoint)) {
-                                                door.setHovering(door.getHitbox().contains(rescaledPoint));
-                                                if(!door.isClosed()) {
-                                                    if (g.night.getAstarta().isActive()) {
-                                                        if (g.night.getAstarta().door == i) {
-                                                            g.night.getAstarta().leaveEarly();
+                                g.sound.playRate("compassTurn", 0.08, 0.9F + Math.random() / 10F);
 
-                                                            BingoHandler.completeTask(BingoTask.SURVIVE_ASTARTA);
-                                                        }
-                                                    }
+                                g.getNight().getHydrophobia().turn();
+                                
+                                return;
+                            }
+                            if(chamber.hasCup() && chamber.table.x < 1480) {
+                                Rectangle table = chamber.table;
+                                Rectangle newTable = new Rectangle(g.offsetX - maxOffset + table.x, table.y - table.height / 10, table.width, table.height / 5);
+                                if(newTable.contains(rescaledPoint)) {
+                                    chamber.setHasCup(false);
+                                    chamber.ermIndex = 0;
+
+                                    float percent = ((rescaledPoint.x - g.offsetX + maxOffset - table.x) * 1F) / table.width;
+                                    float size = (table.width / 900F);
+                                    int width = (int) (141 * size);
+                                    int height = (int) (105 * size);
+                                    chamber.cup = new Rectangle((int) (table.x + percent * (table.width - width)), (int) (table.y + table.height / 14F - height), width, height);
+                                    
+                                    g.repaintOffice();
+                                    g.sound.play("select", 0.1);
+                                    return;
+                                }
+                            }
+                            if (chamber.getBarrierRotation() <= -90 && chamber.isHoveringExit()) {
+                                if(chamber.getPrefieldCount() == 5) {
+                                    if(g.getNight().lockedIn)
+                                        return;
+                                    
+                                    // FIELD INTRO
+                                    g.getNight().lockedIn = true;
+                                    
+                                    g.everyFixedUpdate.put("fieldIntroOffsetX", () -> {
+                                        g.offsetX = (short) ((g.offsetX * 6F + 200) / 7F);
+                                        
+                                        if(Math.abs(g.offsetX - 200) < 8) {
+                                            g.everyFixedUpdate.remove("fieldIntroOffsetX");
+                                            
+                                            g.everyFixedUpdate.put("fieldIntroOffsetX2", () -> {
+                                                if(g.offsetX < 200) {
+                                                    g.offsetX++;
+                                                } else if(g.offsetX > 200) {
+                                                    g.offsetX--;
                                                 }
+                                                
+                                                if(g.offsetX == 200) {
+                                                    g.everyFixedUpdate.remove("fieldIntroOffsetX2");
+
+                                                    new Pepitimer(() -> {
+                                                        g.getNight().lockedIn = true;
+                                                        g.fieldIntro();
+                                                    }, chamber.isRespawnCheckpoint() ? 1000 : 1500);
+                                                }
+                                            });
+                                        }
+                                    });
+                                    // FIELD INTRO
+                                    return;
+                                }
+                                
+                                if(chamber.isInDustons()) {
+                                    chamber.setInDustons(false);
+                                    chamber.regenerateFurniture();
+                                    chamber.setMaxOffset(400);
+                                    g.offsetX = 200;
+                                    
+                                    g.repaintOffice();
+                                    
+                                    if(g.sunglassesOn) {
+                                        g.sgPolygons.clear();
+                                        g.sgPolygons.add(GamePanel.rectangleToPolygon(chamber.exit));
+                                    }
+                                    for(MediaPlayer clip : g.sound.clips) {
+                                        if(clip.getMedia().getSource().contains("dustonTune")) {
+                                            clip.setVolume(0);
+                                            g.sound.clipVolume.put(clip, 0d);
+                                        }
+                                    }
+                                    g.fadeOut(255, 70, 0.4F);
+                                    g.sound.play("enterNewRoom", 0.17);
+                                    return;
+                                }
+                                
+                                if (chamber.getBarrierRotation() <= -90) {
+                                    
+                                    if(chamber.isRewardRoom()) {
+                                        g.everyFixedUpdate.put("hydroChamberTransition", () -> {
+                                            chamber.daZoom += 1.5F;
+                                            chamber.daZoom *= 1.15F;
+
+                                            if (chamber.daZoom > 315) {
+                                                g.everyFixedUpdate.remove("hydroChamberTransition");
+                                                
+                                                g.sound.stop();
+                                                g.music.stop();
+
+                                                g.getNight().resetTimers();
+                                                short secondsAtStart = chamber.getOldNight().secondsAtStart;
+                                                
+                                                g.type = chamber.getOldNight().getType();
+                                                g.night = chamber.getOldNight();
+                                                g.getNight().start();
+                                                g.getNight().secondsAtStart = secondsAtStart;
+                                                
+                                                g.starlightMillis = 7000;
+                                                g.announceNight((byte) 1, GameType.HYDROPHOBIA);
+                                                g.nightAnnounceText = GamePanel.getString("returnFromHydro");
+
+                                                ((Basement) g.getNight().env).beenToHydrophobiaChamber = true;
+
+                                                AchievementHandler.obtain(g, Achievements.EXIT);
+                                                
+                                                g.restartBasementSong();
+
+                                                g.repaintOffice();
+
+                                                short endValue = 200;
+                                                float speed = 0.1F;
+                                                if (g.type == GameType.BASEMENT) {
+                                                    endValue = 160;
+                                                    speed = 0.2F;
+                                                }
+                                                g.fadeOut(255, endValue, g.flashlight.isEnabled() ? speed * 2 : speed);
                                             }
+                                        });
+                                    } else {
+                                        if(chamber.isPendingPrefield()) {
+                                            chamber.setPrefieldCount(chamber.getPrefieldCount() + 1);
+                                            chamber.setInPrefield(true);
+                                        }
+
+                                        if(chamber.table.x < 1480) {
+                                            if (chamber.roomsTillKey <= 0) {
+                                                chamber.roomsTillKey = 1000;
+                                            }
+                                        }
+                                        chamber.roomsTillKey--;
+
+                                        
+                                        enterNewHydrophobiaRoom(chamber);
+
+                                        
+                                        if (!chamber.isRewardRoom() && !chamber.isInPrefield()) {
+                                            g.music.stop();
+                                            int secondsLeft = (Math.max(0, g.getNight().getHydrophobia().distance() - 1)) * 25 + g.getNight().getHydrophobia().getSecondsUntilStep();
+                                            g.music.playFromSeconds("hydrophobiaSounds", 0.19, Math.max(0, 80 - secondsLeft));
+                                        }
+                                        if(chamber.isRewardRoom()) {
+                                            g.music.stop();
+                                            g.music.play("scaryAhhDoor", 0.25, true);
+                                        }
+                                        if(chamber.isInPrefield() && chamber.getPrefieldCount() == 1) {
+                                            g.music.stop();
+                                            g.music.play("halfwayHallway", 0.13, true);
+                                            
+                                            g.sound.play("dustonTune", 0, true);
                                         }
                                     }
                                 } else {
                                     g.sound.play("error", 0.08);
                                 }
+                                return;
+                            }
+                            if (chamber.isHoveringLocker()) {
+                                g.inLocker = true;
+                                g.fadeOut(255, 180, 1);
+                                chamber.setShake(Math.max(15, chamber.getShake()));
+                                g.sound.play("lockerEnter", 0.15);
+
+                                chamber.setHoveringLocker(false);
+                                return;
+                            }
+                            if(chamber.isHoveringPen()) {
+                                chamber.setHoveringPen(false);
+                                chamber.setPen(false);
+                                g.soggyPen.safeAdd(9);
+                                g.repaintOffice();
+
+                                g.sound.playRate("waterSpray" + (int) (Math.random() * 3 + 1), 0.06, 0.9F + Math.random() / 10F);
+                                g.sound.play("select", 0.1);
+                                g.sound.playRate("icePotionUse", 0.2, 0.75);
+
+                                return;
+                            }
+                            if(chamber.isHoveringKey()) {
+                                chamber.key = new Rectangle(2000, 1000, 1, 1);
+                                chamber.setHoveringKey(false);
+                                chamber.setHasKey(true);
+
+                                g.repaintOffice();
+                                
+                                g.sound.play("select", 0.1);
+                                g.sound.playRate("icePotionUse", 0.15, 0.3);
+                                g.sound.playRate("icePotionUse", 0.15, 0.2);
+                                return;
+                            }
+                            if(chamber.isHoveringCup()) {
+                                chamber.cup = new Rectangle(2000, 1000, 1, 1);
+                                chamber.setHoveringCup(false);
+                                chamber.setHasCup(true);
+
+                                g.repaintOffice();
+
+                                g.sound.play("select", 0.1);
+                                return;
+                            }
+                            
+                            if(chamber.isInPrefield() && chamber.getPrefieldCount() == 1) {
+                                if(chamber.isHoveringReinforced()) {
+                                    if(chamber.hasKey()) {
+                                        if (chamber.getReinforcedDoorPercent() == 1) {
+                                            chamber.setReinforcedDoorPercent(0.99F);
+
+                                            g.sound.play("reinforcedDoorOpen", 0.1);
+
+                                            new Pepitimer(() -> {
+                                                g.everySecond.put("reinforcedDoor", () -> {
+                                                    if (!g.getNight().getEvent().isInGame()) {
+                                                        g.everySecond.remove("reinforcedDoor");
+                                                    }
+                                                    chamber.setReinforcedDoorPercent(chamber.getReinforcedDoorPercent() - 0.1F);
+                                                    g.sound.play("evilDoorSqueak" + (int) (Math.random() * 6 + 1), 0.1);
+
+                                                    if (chamber.getReinforcedDoorPercent() <= 0) {
+                                                        chamber.setReinforcedDoorPercent(0);
+                                                        g.everySecond.remove("reinforcedDoor");
+                                                    }
+                                                    g.repaintOffice();
+                                                });
+                                            }, 3000);
+
+                                            return;
+                                        }
+                                    } else {
+                                        g.sound.play("error", 0.08);
+
+                                        return;
+                                    }
+                                    if (chamber.getReinforcedDoorPercent() == 0) {
+                                        chamber.setInDustons(true);
+                                        chamber.regenerateFurniture();
+                                        chamber.setHoveringReinforced(false);
+                                        chamber.setMaxOffset(200);
+                                        g.offsetX = 100;
+                                        g.repaintOffice();
+
+                                        for(MediaPlayer clip : g.sound.clips) {
+                                            if(clip.getMedia().getSource().contains("dustonTune")) {
+                                                clip.setVolume(0.16 * Math.sqrt(g.volume));
+                                                g.sound.clipVolume.put(clip, 0.16);
+                                            }
+                                        }
+                                        g.fadeOut(255, 70, 0.4F);
+                                        g.sgPolygons.clear();
+                                        g.sound.play("enterNewRoom", 0.17);
+                                        
+                                        return;
+                                    }
+                                }
+                            }
+                        } else {
+                            return;
+                        }
+                    }
+
+
+                    if(g.getNight().getType() == GameType.DAY) {
+                        if(hoveringPepitoClock) {
+                            g.night.seconds += 24;
+                            g.sound.play("endlessClockSound", 0.1);
+                            g.getNight().updateClockString();
+                            g.fadeOut(g.endFade, Math.min(255, g.endFade + 40), 2);
+                            return;
+                        }
+                        if(g.neonSogX < 0) {
+                            if (new Rectangle(g.offsetX - maxOffset + 20, 0, 150, 260).contains(rescaledPoint)) {
+                                if(!g.everyFixedUpdate.containsKey("neonSogAnim")) {
+                                    g.sound.play("boop", 0.1);
+                                }
+                                g.everyFixedUpdate.put("neonSogAnim", () -> {
+                                    g.neonSogX = Math.round(g.neonSogX / 1.1F);
+                                    g.neonSogX++;
+                                    
+                                    if(g.neonSogX >= 0) {
+                                        g.neonSogX = 0;
+                                        g.everyFixedUpdate.remove("neonSogAnim");
+                                        
+                                        g.sound.play("metalPipe", 0.08);
+                                    }
+                                });
+                            }
+                        } else if(hoveringNeonSog) {
+                            if(g.endless.getCoins() >= 100 && g.neonSogSkips < 5) {
+                                g.sound.play("select", 0.08);
+                                g.sound.play("sellsYourBalls", 0.2);
+                                g.endless.addCoins(-100);
+                                
+                                g.neonSogSkips = 5;
                             } else {
                                 g.sound.play("error", 0.08);
                             }
+                            return;
+                        }
+                    }
+                    if(g.getNight().getShadowblocker().state > 0) {
+                        if(g.getNight().getShadowblocker().state < 3) {
+                            if (new Rectangle(18, 18, 120, 120).contains(rescaledPoint)) {
+                                g.getNight().getShadowblocker().state = (byte) (-(g.getNight().getShadowblocker().state) + 3);
+                                g.sound.play("select", 0.08);
+
+                                return;
+                            }
+                        }
+                        if(g.getNight().getShadowblocker().selected != -1 && g.getNight().getShadowblocker().state == 2) {
+                            int enemiesSize = CustomNight.getEnemies().size();
+                            for (int i = 0; i < 24; i++) {
+                                int x = i % 6 * 105 + 230;
+                                int y = i / 6 * 130 + 130;
+
+                                if (new Rectangle(x, y, 95, 120).contains(rescaledPoint)) {
+                                    if (i < enemiesSize) {
+                                        CustomNightEnemy enemy = CustomNight.getEnemies().get(g.getNight().getShadowblocker().selected);
+                                        
+                                        Enemy en = g.getNight().getEnemies()[enemy.getId()];
+                                        enemy.setAI(en.getAILevel());
+
+                                        switch (enemy.getId()) {
+                                            case 0 -> enemy.setAI(g.getNight().getPepito().pepitoAI);
+                                            case 1 -> enemy.setAI(g.getNight().getPepito().notPepitoAI);
+                                        }
+
+                                        if (enemy.getAI() > 0) {
+                                            g.getNight().getShadowblocker().slop = g.getShadowblockerThing(enemy, new Color(140, 0, 255));
+                                            g.getNight().getShadowblocker().slopInt[0] = x;
+                                            g.getNight().getShadowblocker().slopInt[1] = y;
+                                            g.getNight().getShadowblocker().slopName = GamePanel.getString(enemy.getName());
+                                            g.sound.play("select", 0.08);
+                                            
+                                            new Pepitimer(() -> {
+                                                g.sound.play("shadowblockerErase", 0.1);
+                                            }, 1700);
+                                            
+                                            g.getNight().getShadowblocker().state = 3;
+                                        }
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if(g.hoveringBasementMonitor) {
+                        Basement basement = ((Basement) env);
+                        
+                        if(basement.getStage() < 6) {
+                            if(basement.getStage() >= 4) {
+                                if (basement.getCharge() >= 1) {
+                                    if(!basement.isInGeneratorMinigame()) {
+                                        basement.setInGeneratorMinigame(true);
+
+                                        if (basement.getStage() == 4) {
+                                            g.generatorSound.play("connectToGeneratorEmpty", 0.15, true);
+                                        } else {
+                                            for (MediaPlayer player : g.generatorSound.clips) {
+                                                player.setVolume(g.generatorSound.clipVolume.get(player) * Math.sqrt(g.volume));
+                                            }
+                                        }
+                                    }
+                                    return;
+                                } else if (basement.getCharge() == 0 && basement.getMonitorHeight() >= 115) {
+                                    g.everySecond10th.put("basementMonitorCharge", () -> {
+                                        g.generatorSound.playRate("generatorNextStage", 0.08, 0.8 + basement.getCharge());
+                                        basement.setCharge(basement.getCharge() + 0.05F);
+    
+                                        if (basement.getCharge() >= 1) {
+                                            basement.setCharge(1);
+                                            g.everySecond10th.remove("basementMonitorCharge");
+                                        }
+                                        g.getNight().redrawBasementScreen();
+                                    });
+    
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    if(g.basementLadderHovering) {
+                        g.basementLadderHeld = true;
+                        return;
+                    }
+
+                    if(!isRightClick) {
+                        Wires wires = g.getNight().getWires();
+                        if(wires.isActive()) {
+                            Rectangle h = wires.getHitbox();
+                            Rectangle hitbox = new Rectangle(g.offsetX - maxOffset + h.x, h.y, h.width, h.height + 10);
+                            
+                            if(hitbox.contains(rescaledPoint)) {
+                                wires.hit();
+                            }
+                        }
+                    }
+                    
+                    if (isRightClick) {
+                        MirrorCat mirrorCat = g.getNight().getMirrorCat();
+                        if(mirrorCat.isActive()) {
+                            if(mirrorCat.isInsideUnmirrored(rescaledPoint)) {
+                                mirrorCat.kill();
+                                return;
+                            }
+                        }
+
+                        if (g.flashlight.isEnabled()) {
+                            // FLASHLIGHT STUFF
+                            holdingFlashlight = true;
+                            g.holdingFlashlightFrames = 0;
+                        }
+                        
+                        
+                        if(g.getNight().getEvent() == GameEvent.NONE) {
+                            
                         } else if(g.getNight().getEvent() == GameEvent.LEMONADE) {
                             g.getNight().getLemonadeCat().throwLemonade(pointerPosition, GamePanel.isMirror());
+                            
+                        } else if(g.getNight().getEvent() == GameEvent.DEEP_FLOOD) {
+                            DeepSeaCreature dsc = g.getNight().getDsc();
+                            
+                            if(dsc.isFight() && dsc.getGunExtend() == 0 && !dsc.cantShoot() && !dsc.floodReceding) {
+                                dsc.setGunExtend(260);
+
+                                dsc.setShake(60);
+                                dsc.setFlash(true);
+                                new Pepitimer(() -> dsc.setFlash(false), 70);
+
+                                dsc.attack(rescaledPoint);
+
+                                BufferedImage bubbleImage = g.getBubbleImage(0.25F);
+                                short phase = (short) (g.fixedUpdatesAnim % 251);
+                                for (int i = 0; i < 10; i++) {
+                                    g.bubbles.add(new BubbleParticle(rescaledPoint.x - g.offsetX + maxOffset, rescaledPoint.y + 70, phase, 130, bubbleImage));
+                                }
+                            }
                         }
-                    } else if (g.boopButton.contains(pointerPosition)) {
+                    } else if (g.getNight().env().boop.contains(new Point(rescaledPoint.x - g.offsetX + maxOffset, rescaledPoint.y))) {
                         g.sound.play("boop", 0.08);
                         cancelMouseHolding = true;
 
                         BingoHandler.completeTask(BingoTask.BOOP_PEPITO);
 
-                        if (g.sensor.isEnabled()) {
-                            g.console.add("boop");
-                        }
-                        if (g.getNight().getWires().isActive() && g.getNight().getWires().getState() == 0) {
-                            g.getNight().getWires().hit();
+                        if (g.sensor.isEnabled() && g.console.getSize() < 16 && !(g.getNight().getWires().isActive() && g.getNight().getWires().getHitbox() == g.getNight().env.boop)) {
+                            g.console.add(GamePanel.getString("sensorBoop"));
                         }
                     } else if(g.manualFirstButtonHover) {
                         cancelMouseHolding = true;
@@ -1332,7 +2588,8 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         for (int i : g.getNight().getDoors().keySet()) {
                             Door door = g.getNight().getDoors().get(i);
 
-                            if (door.getButtonHitbox(g.offsetX).contains(rescaledPoint)) {
+                            Rectangle hitbox = door.getButtonHitbox(g.offsetX, g.getNight().env().maxOffset());
+                            if (hitbox.contains(rescaledPoint)) {
                                 if (!g.night.getA120().isActive()) {
                                     if (g.night.hasPower() || g.night.getGeneratorEnergy() > 0) {
                                         if(g.night.isTimerModifier()) {
@@ -1348,13 +2605,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                         }
                                         g.redrawUsage();
 
-                                        int doorPos = (int) (door.getHitbox().getBounds().x + door.getHitbox().getBounds().width / 2F);
-                                        float pan = (float) Math.sin(1.57 * (doorPos / 740F - 1)) / 1.3F;
-                                        g.sound.play("doorSlam", 0.08, pan);
-
-                                        if(g.getNight().getWires().isActive() && g.getNight().getWires().getState() == i + 1) {
-                                            g.getNight().getWires().hit();
-                                        }
+                                        g.sound.play("doorSlam", 0.08, Level.getDoorPan(door, g.getNight().getType()));
                                     } else {
                                         g.sound.play("error", 0.08);
                                     }
@@ -1370,7 +2621,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     }
                     if(g.getNight().getAstartaBoss() != null) {
                         if(g.getNight().getAstartaBoss().isStartingCutscene()) {
-                            if(g.shadowCheckpointUsed != 0 && g.getNight().getAstartaBoss().getStartCutsceneY() != 0) {
+                            if(g.shadowCheckpointUsed == 2 && g.getNight().getAstartaBoss().getStartCutsceneY() != 0) {
                                 g.getNight().getAstartaBoss().skipStartCutscene();
                                 g.fadeOut(255, 0, 3);
                                 return;
@@ -1433,50 +2684,54 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                             }
                         }
                     } else if(g.getNight().isPowerModifier()) {
-                        if (new Rectangle(g.offsetX - 400 + 790, 480, 220, 150).contains(rescaledPoint) && !g.getNight().isInGeneratorMinigame() && !(g.getNight().getGeneratorEnergy() != -1)) {
+                        if (new Rectangle(g.offsetX - maxOffset + env.generator.x, env.generator.y, env.generator.width, env.generator.height).contains(rescaledPoint) && !g.getNight().isInGeneratorMinigame() && !(g.getNight().getGeneratorEnergy() != -1)) {
                             g.getNight().startGeneratorMinigame();
                             g.hoveringGenerator = false;
-                        }
-                    }
-
-                    for(int i = 0; i < GamePanel.balloons.size(); i++) {
-                        Rectangle button = GamePanel.balloons.get(i).getRectangle(g.offsetX, g.widthModifier, g.heightModifier, g.centerX, g.centerY);
-                        if (button.contains(pointerPosition)) {
-                            GamePanel.balloons.remove(GamePanel.balloons.get(i));
-                            g.sound.play("balloonPop", 0.05);
-
-                            if(GamePanel.balloons.isEmpty()) {
-                                if(g.getNight().getEvent() != GameEvent.MAXWELL && g.getNight().getType() == GameType.PREPARTY) {
-                                    g.type = GameType.PARTY;
-                                    g.startGame();
-                                }
-                            }
                             return;
                         }
                     }
 
-                    if(g.getNight().getType() == GameType.DAY) {
+                    if(g.getNight().env().getBgIndex() != 4 && !isRightClick) {
+                        for (int i = 0; i < GamePanel.balloons.size(); i++) {
+                            if(GamePanel.balloons.get(i) == null)
+                                continue;
+                            
+                            Rectangle button = GamePanel.balloons.get(i).getRectangle(g.offsetX, maxOffset);
+                            if (button.contains(rescaledPoint)) {
+                                GamePanel.balloons.remove(GamePanel.balloons.get(i));
+                                g.sound.play("balloonPop", 0.05);
+                                
+                                Statistics.BALLOONS_POPPED.increment();
+
+                                if (GamePanel.balloons.isEmpty()) {
+                                    if (g.getNight().getEvent() != GameEvent.MAXWELL) {
+                                        if (g.getNight().getType() == GameType.PREPARTY) {
+                                            g.type = GameType.PARTY;
+                                            g.startGame();
+                                        } else if (g.getNight().getType() == GameType.BASEMENT) {
+                                            Basement basement = (Basement) g.getNight().env();
+                                            if(basement.getStage() < 4) {
+                                                g.type = GameType.BASEMENT_PARTY;
+                                                g.startGame();
+                                                ((Basement) g.getNight().env).setDoWiresWork(basement.doWiresWork());
+                                            }
+                                        }
+                                    }
+                                }
+                                g.redrawBHO = true;
+                                return;
+                            }
+                        }
+                    }
+
+                    if(g.getNight().getType() == GameType.DAY && g.getNight().getEvent().isInGame()) {
                         if (new Rectangle((int) ((g.offsetX + 685) * g.widthModifier) + g.centerX, (int) (315 * g.heightModifier) + g.centerY, (int) (315 * g.widthModifier), (int) (325 * g.heightModifier)).contains(pointerPosition)) {
-                            g.state = GameState.MILLY;
-                            g.secondsInMillyShop = 0;
-                            g.dreadUntilGrayscale = 1;
-                            g.dreadUntilVignette = 1;
-                            g.sound.stop();
+                            startMillyShop();
 
-                            if (g.fanActive) {
-                                fanSounds.stop();
-                                g.fanActive = false;
-                                g.usage--;
-
-                                g.everySecond20th.remove("fan");
-                            }
-
-                            if (g.inCam) {
-                                g.camOut(false);
-                            }
-
-                            if(g.endless.getNight() == 6) {
+                            if (g.endless.getNight() == 3) {
                                 g.music.play("partyFavors", 0.08, true);
+
+                                AchievementHandler.obtain(g, Achievements.VISIT_PARTY);
 
                                 final float[] millyPartyHue = {0};
                                 HashMap<Float, BufferedImage> millyPartyCache = new HashMap<>();
@@ -1486,18 +2741,45 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     if (millyPartyHue[0] >= 1) {
                                         millyPartyHue[0] = 0;
                                     }
-                                    if(!millyPartyCache.containsKey(millyPartyHue[0])) {
-                                        millyPartyCache.put(millyPartyHue[0], GamePanel.changeHue(g.millyShopColors.request(), millyPartyHue[0]));
+                                    if (!millyPartyCache.containsKey(millyPartyHue[0])) {
+                                        millyPartyCache.put(millyPartyHue[0], GamePanel.changeHSB(g.millyShopColors.request(), millyPartyHue[0], 1, 1));
                                     }
                                     g.millyShopColorsChanging = millyPartyCache.get(millyPartyHue[0]);
                                 }, 100, 100);
+                            } else if (g.endless.getNight() == 6) {
+                                g.music.play("larrySweep", 0.15, true);
                             } else {
                                 g.music.play("millyShop", 0.1, true);
                             }
-                            g.fadeOut(255, 0, 2);
+                        }
+                    }
+                    if(g.getNight().getType().isBasement() && g.getNight().getEvent().isInGame()) {
+                        Basement basement = (Basement) g.getNight().env();
+                        
+                        if(basement.isMillyVisiting()) {
+                            Rectangle rect = new Rectangle((int) (g.offsetX - maxOffset + basement.getMillyX() + 60), 230, 380, 390);
+                            
+                            if(rect.contains(rescaledPoint)) {
+                                startMillyShop();
 
-                            g.redrawMillyShop();
-                            g.recalculateMillyRects();
+                                g.basementSound.pause(false);
+                                g.music.play("spookers", 0.1, true);
+                                
+                                if(basement.doWiresWork()) {
+                                    g.doMillyFlicker = true;
+                                    g.sound.play("flicker" + (int) (Math.round(Math.random()) + 1), 0.05);
+
+                                    new Pepitimer(() -> {
+                                        g.sound.play("flicker" + (int) (Math.round(Math.random()) + 1), 0.05);
+
+                                        new Pepitimer(() -> {
+                                            g.doMillyFlicker = false;
+                                        }, 250);
+                                    }, 400);
+                                } else {
+                                    g.basementMillyLight = g.alphaify(g.basementMillyLightSource.request(), 0.97F);
+                                }
+                            }
                         }
                     }
 
@@ -1524,6 +2806,8 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                         cutscene.setAntiAliasing(true);
 
                                         g.currentCutscene = cutscene;
+
+                                        Statistics.GOTTEN_BURN_ENDING.increment();
 
                                         g.stopAllSound();
                                         GamePanel.balloons.clear();
@@ -1594,7 +2878,6 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     });
 
                                     new Pepitimer(() -> {
-                                        g.loading = true;
                                         g.state = GameState.UNLOADED;
                                         g.camOut(true);
 
@@ -1621,6 +2904,41 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         }
                     }
                 }
+                case FIELD -> {
+                    Field field = g.field;
+
+                    if (!field.isInCar() && !field.lockedIn && field.isHoveringCar()) {
+                        field.addDistance(2.5F);
+//                        field.addDistance(360);
+//                        field.addDistance(660);
+//                        field.addDistance(860);
+                        field.setInCar(true);
+                        
+                        field.setYaw(0);
+                        field.setPitch(0);
+                        
+                        field.saveSnapshot();
+                        
+                        g.sound.play("fieldCarDoorClose", 0.15F);
+                        g.fadeOut(255, 0, 1.2F);
+                        
+                        return;
+                    }
+                    if(field.isInCar()) {
+                        if (field.isHoveringLever()) {
+                            if(field.isInGeneratorMinigame()) {
+                                field.quitGenerator();
+                                g.sound.playRate("fieldLever", 0.1, 0.9);
+                            } else {
+                                field.regenerateGeneratorXes();
+                                field.setInGeneratorMinigame(true);
+                                field.leverDegreesGoal = (float) (Math.PI * 3 / 2);
+                                g.sound.playRate("fieldLever", 0.1, 1);
+                            }
+                            return;
+                        }
+                    }
+                }
                 case BINGO -> {
                     if (g.closeButton.contains(pointerPosition)) {
                         g.backToMainMenu();
@@ -1641,10 +2959,28 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 if (pointerPosition.x < 140 * g.widthModifier + g.centerX) {
                                     shiftAchievements();
                                 }
-                            } else if (pointerPosition.x > 940 * g.widthModifier + g.centerX) {
-                                shiftAchievements();
+                            } else {
+                                if (pointerPosition.x > 940 * g.widthModifier + g.centerX) {
+                                    shiftAchievements();
+                                }
+                                int categories = 4;
+                                double d = (double) (g.achievementsScrollY) / (160 + 30 + Achievements.values().length * 155 + categories * 80 - 530);
+                                int height = 530 / Achievements.values().length * 2;
+                                if(new Rectangle(-g.achievementsScrollX, (int) (d * (530 - height)) + 110, 10, height).contains(rescaledPoint)) {
+                                    g.holdingAchievementSlider = true;
+                                }
+                            }
+
+                            if(g.hoveringInvestigation) {
+                                g.startInvestigation();
+                                g.sound.play("select", 0.1);
                             }
                         }
+                    }
+                }
+                case INVESTIGATION -> {
+                    if (new Rectangle(1020, 20, 35, 35).contains(rescaledPoint)) {
+                        g.backToMainMenu();
                     }
                 }
                 case PLAY -> {
@@ -1655,42 +2991,57 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     }
                 }
                 case SETTINGS -> {
+                    BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+                    Graphics2D graphics2D = (Graphics2D) image.getGraphics();
+                    graphics2D.setFont(g.yuGothicPlain60);
+                    
+                    
                     if (new Rectangle((int) (g.volume * 800 + 115), 220 + g.settingsScrollY, 50, 50).contains(rescaledPoint)) {
                         holdingVolumeButton = true;
-                    } else if (new Rectangle(550, 310 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                    } else if (new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("fixedRatio")), 310 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
                         g.blackBorders = !g.blackBorders;
                         g.onResizeEvent();
                         if (g.blackBorders) {
                             g.sound.play("select", 0.1);
                         }
-                    } else if (new Rectangle(612, 390 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                    } else if (new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("headphones")), 390 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
                         g.headphones = !g.headphones;
                         if (g.headphones) {
                             g.sound.play("select", 0.1);
                         }
-                    } else if(new Rectangle(720, 630 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                    } else if(new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("showDisclaimer")), 630 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
                         g.disclaimer = !g.disclaimer;
                         if (g.disclaimer) {
                             g.sound.play("select", 0.1);
                         }
-                    } else if(new Rectangle(640, 710 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                    } else if(new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("showManual")), 710 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
                         g.showManual = !g.showManual;
                         if (g.showManual) {
                             g.sound.play("select", 0.1);
                         }
-                    } else if(new Rectangle(750, 790 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                    } else if(new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("saveScreenshots")), 790 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
                         g.saveScreenshots = !g.saveScreenshots;
                         if (g.saveScreenshots) {
                             g.sound.play("select", 0.1);
                         }
-                    } else if(new Rectangle(880, 870 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                    } else if(new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("rtx")), 870 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
                         g.bloom = !g.bloom;
                         if (g.bloom) {
                             g.sound.play("select", 0.1);
                         }
-                    } else if(new Rectangle(590, 950 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                    } else if(new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("fpsCounter")), 950 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
                         g.fpsCounters[0] = !g.fpsCounters[0];
                         if (g.fpsCounters[0]) {
+                            g.sound.play("select", 0.1);
+                        }
+                    } else if(new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("screenShake")), 1390 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                        g.screenShake = !g.screenShake;
+                        if (g.screenShake) {
+                            g.sound.play("select", 0.1);
+                        }
+                    } else if(new Rectangle(160 + g.textLength(graphics2D, ">> " + GamePanel.getString("disableFlickering")), 1470 + g.settingsScrollY, 60, 60).contains(rescaledPoint)) {
+                        GamePanel.disableFlickering = !GamePanel.disableFlickering;
+                        if (GamePanel.disableFlickering) {
                             g.sound.play("select", 0.1);
                         }
                     } else if (hoveringNightReset) {
@@ -1717,10 +3068,10 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                         g.sound.play("select", 0.1);
                     } else if(hoveringJumpscareShake) {
-                        switch (g.shake) {
-                            case 0 -> g.shake = 1;
-                            case 1 -> g.shake = 2;
-                            default -> g.shake = 0;
+                        switch (g.jumpscareShake) {
+                            case 0 -> g.jumpscareShake = 1;
+                            case 1 -> g.jumpscareShake = 2;
+                            default -> g.jumpscareShake = 0;
                         }
 
                         g.sound.play("select", 0.1);
@@ -1734,11 +3085,13 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         g.initializeFontMetrics();
                         g.initializeItemNames();
                         g.reloadMenuButtons();
-                        
+
                         g.sound.play("select", 0.1);
                     } else if (g.closeButton.contains(pointerPosition)) {
                         g.backToMainMenu();
                     }
+                    
+                    graphics2D.dispose();
                 }
                 case ITEMS -> {
                     if(g.everySecond20th.containsKey("startSimulation") && g.startSimulationTimer.getMiliseconds() > 300) {
@@ -1762,34 +3115,33 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                             try {
                                 Item item = g.itemList.get(g.selectedItemX + (g.selectedItemY * g.columns));
 
-                                if (item.getAmount() != 0) {
-                                    if (item.isSelected()) {
-                                        item.deselect();
-                                        g.itemLimit -= item.getItemLimitAdd();
-                                    } else {
-                                        if (g.checkItemsAmount() < g.itemLimit && !item.isMarkedConflicting()) {
-                                            item.select();
-                                            g.itemLimit += item.getItemLimitAdd();
-                                            g.sound.play("select", 0.1, false);
-                                        } else {
-                                            g.sound.play("selectFail", 0.12, false);
-
-                                            if(item.isMarkedConflicting()) {
-                                                item.setShakeIntensity((byte) 60);
-                                            }
-                                        }
-                                    }
-
-                                    g.updateItemList();
-                                    g.redrawItemsMenu();
-                                } else {
-                                    g.sound.play("selectFail", 0.12);
-                                }
+                                clickItem(item);
                             } catch (IndexOutOfBoundsException ignored) {
                                 g.sound.play("selectFail", 0.12);
                             }
                         }
                     }
+                }
+                case MUSIC_MENU -> {
+                    if(new Rectangle(0, 253, 1080, 387).contains(rescaledPoint)) {
+                        if(!g.menuSong.equals(g.hoveringMusicDisc)) {
+                            g.menuSong = g.hoveringMusicDisc;
+                            g.music.stop();
+                            g.music.play(g.menuSong, 0.15, true);
+                            g.musicMenuDiscX = 0;
+
+                            g.sound.play("select", 0.1);
+                        }
+                    }
+                    if (g.closeButton.contains(pointerPosition)) {
+                        g.backToMainMenu();
+                    }
+                }
+                case DRY_CAT_GAME -> {
+                    g.dryCatGame.particles.add(new WaterParticle(rescaledPoint.x, rescaledPoint.y));
+                    g.dryCatGame.attack(rescaledPoint);
+
+                    g.sound.playRate("waterSpray" + (int) (Math.random() * 3 + 1), 0.06, 0.9F + Math.random() / 10F);
                 }
                 case MILLY -> {
                     processMillyPress();
@@ -1809,30 +3161,38 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                 }
                             }
                         }
-                        if (rescaledPoint.x > 20 && rescaledPoint.y > 40) {
-                            if (rescaledPoint.x < 640 && rescaledPoint.y < 420) {
-                                if(CustomNight.selectedElement instanceof CustomNightEnemy) {
-                                    if (CustomNight.isCustom()) {
-                                        if (isRightClick) {
-                                            ((CustomNightEnemy) CustomNight.selectedElement).declick();
-                                        } else {
-                                            ((CustomNightEnemy) CustomNight.selectedElement).click();
-                                        }
+                        if (CustomNight.enemiesRectangle.contains(rescaledPoint)) {
+                            if(CustomNight.selectedElement instanceof CustomNightEnemy) {
+                                if (CustomNight.isCustom()) {
+                                    if (isRightClick) {
+                                        ((CustomNightEnemy) CustomNight.selectedElement).declick();
+                                    } else {
+                                        ((CustomNightEnemy) CustomNight.selectedElement).click(false);
+                                    }
+                                    CustomNight.holdingEnemyFrames = 0;
 
-                                        if(((CustomNightEnemy) CustomNight.selectedElement).getAI() == 0) {
-                                            g.sound.play("lowSound", 0.05);
+                                    if(((CustomNightEnemy) CustomNight.selectedElement).getAI() == 0) {
+                                        g.sound.play("lowSound", 0.05);
+                                    } else {
+                                        if (isRightClick) {
+                                            g.sound.play("aiDown", 0.05);
                                         } else {
-                                            if (isRightClick) {
-                                                g.sound.play("aiDown", 0.05);
-                                            } else {
-                                                g.sound.play("aiUp", 0.05);
+                                            g.sound.play("aiUp", 0.05);
+                                        }
+                                        
+                                        if(((CustomNightEnemy) CustomNight.selectedElement).getId() == 13) {
+                                            if (((CustomNightEnemy) CustomNight.selectedElement).getAI() == 5) {
+                                                g.sound.play("five alert", 0.15);
                                             }
                                         }
-                                    } else {
-                                        CustomNightEnemy e = ((CustomNightEnemy) CustomNight.selectedElement);
-                                        e.setWobbleIntensity(6);
-                                        g.sound.play("lowSound", 0.05);
+                                        if (((CustomNightEnemy) CustomNight.selectedElement).getAI() == 9) {
+                                            g.sound.play("nine alert", 0.15);
+                                        }
                                     }
+                                } else {
+                                    CustomNightEnemy e = ((CustomNightEnemy) CustomNight.selectedElement);
+                                    e.setWobbleIntensity(6);
+                                    g.sound.play("lowSound", 0.05);
                                 }
                             }
                         }
@@ -1859,7 +3219,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                             g.sound.play("buttonPress", 0.08);
 
                             if(CustomNight.isCustom()) {
-                                byte newId = (byte) (Math.random() * 100 + 1);
+                                int newId = (int) (Math.random() * 10000 + 1);
                                 CustomNight.limboId = newId;
                                 g.music.stop();
                                 g.music.play("limbos", 0.1);
@@ -1878,7 +3238,8 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         }
                         if(CustomNight.customSelected) {
                             g.sound.play("buttonPress", 0.08);
-                            
+                            cancelLimbo();
+
                             if(CustomNight.custom) {
                                 for (CustomNightEnemy enemy : CustomNight.getEnemies()) {
                                     CustomNight.customEnemyAIs.put(enemy, enemy.getAI());
@@ -1887,16 +3248,18 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                                     CustomNight.customModifiers.put(modifier, modifier.isActive());
                                 }
                             }
-                            
+
                             CustomNight.custom = !CustomNight.custom;
                             CustomNight.setEntityAIs();
 
                             if(!CustomNight.custom) {
                                 CustomNight.setEntityAIs();
                             }
-                            cancelLimbo();
                         }
                     } catch (NullPointerException ignored) { }
+                }
+                case CRATE -> {
+                    crateClick();
                 }
             }
         }
@@ -1908,9 +3271,42 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
     RepeatingPepitimer millyDisco;
 
+    // DONT GO TO MENU IF TRUE
     private boolean processDeathScreenPress() {
         if(g.state == GameState.GAME) {
-            if(g.getNight().getEvent() == GameEvent.DYING) {
+            Level night = g.getNight();
+            
+            if(night.getEvent() == GameEvent.DYING) {
+                if(night.getType() == GameType.HYDROPHOBIA) {
+                    HChamber old = ((HChamber) night.env);
+                    int deaths = old.getDeaths();
+                    
+                    if(deaths >= 2) {
+                        if(old.showDeathOptions) {
+                            if(old.allowDeathButtons) {
+                                if (old.selectedDeathOption == 1) {
+                                    doHydrophobiaRespawn();
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            } else {
+                                return true;
+                            }
+                        } else {
+                            old.showDeathOptions = true;
+                            new Pepitimer(() -> {
+                                old.allowDeathButtons = true;
+                            }, 700);
+                            return true;
+                        }
+                    } else {
+                        doHydrophobiaRespawn();
+                        return true;
+                    }
+                }
+                
+                
                 if(g.deathScreenY != 640) {
                     if (!g.afterDeathText.isEmpty()) {
                         deathScreenYThing();
@@ -1928,6 +3324,20 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     g.sound.play("riftSelect", 0.1);
                     return true;
                 }
+            } else if(night.getEvent() == GameEvent.WINNING) {
+                if(night.getType().isBasement()) {
+                    int hydroBonus = ((Basement) night.env).beenToHydrophobiaChamber ? 2 : 0;
+                    
+                    if(night.getType() == GameType.BASEMENT) {
+                        g.createCrate(1 + hydroBonus);
+                    }
+                    if(night.getType() == GameType.BASEMENT_PARTY) {
+                        g.createCrate(3 + hydroBonus);
+                    }
+                    
+                    g.pressAnyKey = false;
+                    return true;
+                }
             }
         }
         return false;
@@ -1936,6 +3346,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
     @Override
     public void mouseReleased(MouseEvent e) {
         mouseHeld = false;
+        trueMouseHeld = false;
         isRightClick = false;
 
         pointerPosition = e.getPoint().getLocation();
@@ -1943,7 +3354,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
         if(holdingVolumeButton) {
             g.music.stop();
-            g.music.play("pepito", 0.2, true);
+            g.music.play(g.menuSong, 0.15, true);
             holdingVolumeButton = false;
         }
 
@@ -1954,6 +3365,80 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                     g.unholdMister(mister);
                 }
             }
+            if(g.getNight().getKiji().isActive()) {
+                g.getNight().getKiji().setMouseEverReleased(true);
+
+                if(g.getNight().getKiji().getState() != 0) {
+                    if (g.getNight().getKiji().getState() == 2) {
+                        g.sound.play("kijiSuccess", 0.15F);
+                    } else {
+                        g.sound.play("kijiFail", 0.08F);
+                    }
+                }
+            }
+            g.basementLadderHeld = false;
+            g.basementLadderFrames = 0;
+
+
+            if(e.getButton() == MouseEvent.BUTTON3 && holdingFlashlight) {
+                // FLASHLIGHT STUFF
+                holdingFlashlight = false;
+                
+                if(g.holdingFlashlightFrames < 24) {
+                    if (g.flashlight.isEnabled() && (g.getNight().getEvent() == GameEvent.NONE)) {
+                        Point rescaledPoint = new Point((int) ((pointerPosition.x - g.centerX) / g.widthModifier), (int) ((pointerPosition.y - g.centerY) / g.heightModifier));
+                        Enviornment env = g.getNight().env;
+                        int maxOffset = env.maxOffset();
+
+                        if (g.night.hasPower()) {
+                            if (g.flashLightCooldown == 0) {
+                                g.sound.play("sodaOpen", 0.03);
+                                g.sound.play("camOut", 0.1);
+                                g.fadeOut(0, g.endFade, 20);
+                                g.night.addEnergy(-20F);
+                                g.flashLightCooldown = 28;
+
+                                if (g.night.getMSI().isActive()) {
+                                    g.night.getMSI().kill(true, true);
+                                    g.night.addEnergy(-4F);
+                                } else {
+                                    for (int i : g.getNight().getDoors().keySet()) {
+                                        Door door = g.getNight().getDoors().get(i);
+                                        Polygon hitbox = new Polygon(door.getHitbox().xpoints, door.getHitbox().ypoints, door.getHitbox().npoints);
+                                        hitbox.translate(g.offsetX - maxOffset, 0);
+
+                                        if (hitbox.contains(rescaledPoint)) {
+                                            door.setHovering(door.getHitbox().contains(rescaledPoint));
+                                            if(!door.isClosed()) {
+                                                if (g.night.getAstarta().isActive()) {
+                                                    if (g.night.getAstarta().door == i) {
+                                                        g.night.getAstarta().leaveEarly();
+
+                                                        BingoHandler.completeTask(BingoTask.SURVIVE_ASTARTA);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                g.sound.play("error", 0.08);
+                            }
+                        } else {
+                            g.sound.play("error", 0.08);
+                        }
+                    }
+                }
+
+                g.holdingFlashlightFrames = 0;
+            }
+            
+            
+        } else if(g.state == GameState.CHALLENGE) {
+            CustomNight.holdingEnemyFrames = 0;
+            
+        } else if(g.state == GameState.ACHIEVEMENTS) {
+            g.holdingAchievementSlider = false;
         }
     }
 
@@ -1969,62 +3454,146 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if(g.state == GameState.SETTINGS) {
-            if(holdingVolumeButton) {
-                pointerPosition = e.getPoint().getLocation();
-                setPoint();
+        switch (g.state) {
+            case SETTINGS -> {
+                if(holdingVolumeButton) {
+                    pointerPosition = e.getPoint().getLocation();
+                    setPoint();
 
-                float oldVolume = g.volume;
-                g.volume = Math.min(1, Math.max((float) (((pointerPosition.x - g.centerX) / g.widthModifier - 140) / 800.0), 0));
+                    float oldVolume = g.volume;
+                    g.volume = Math.min(1, Math.max((float) (((pointerPosition.x - g.centerX) / g.widthModifier - 140) / 800.0), 0));
 
-                for(MediaPlayer player : g.music.clips) {
-                    player.setVolume(player.getVolume() / oldVolume * g.volume);
+                    for(MediaPlayer player : g.music.clips) {
+                        player.setVolume(player.getVolume() / oldVolume * g.volume);
+                    }
                 }
             }
-        } else if(g.state == GameState.GAME) {
-            g.recalculateButtons(GameState.GAME);
+            case GAME -> {
+                g.recalculateButtons(GameState.GAME);
 
-            if(g.getNight().getAstartaBoss() != null) {
-                Mister mister = g.getNight().getAstartaBoss().getMister();
-                if(mister.isActive()) {
-                    if (mister.isBeingHeld()) {
+                
+                if(holdingFlashlight) {
+                    pointerPosition = e.getPoint().getLocation();
+                    setPoint();
+                }
+                if(g.getNight().env().getBgIndex() == 4) {
+                    BasementKeyOffice office = (BasementKeyOffice) g.getNight().env();
 
-                        Point newPoint = e.getPoint().getLocation();
+                    if(office.isHoveringCanvas()) {
+                        Point oldPoint = pointerPosition;
+                        pointerPosition = e.getPoint().getLocation();
+                        g.pointX = pointerPosition.x;
+                        g.pointY = pointerPosition.y;
+                        Point rescaledPoint = new Point((int) ((pointerPosition.x - g.centerX) / g.widthModifier), (int) ((pointerPosition.y - g.centerY) / g.heightModifier));
+                        Point oldRescaledPoint = new Point((int) ((oldPoint.x - g.centerX) / g.widthModifier), (int) ((oldPoint.y - g.centerY) / g.heightModifier));
 
-                        if(robotMovement) {
-                            pointerPosition = newPoint;
-                            robotMovement = false;
-                            return;
+                        if(GamePanel.mirror) {
+                            rescaledPoint = new Point(1080 - rescaledPoint.x, rescaledPoint.y);
+                            oldRescaledPoint = new Point(1080 - oldRescaledPoint.x, oldRescaledPoint.y);
                         }
 
-                        int dx = newPoint.x - pointerPosition.x;
-                        if(GamePanel.isMirror())
-                            dx = -dx;
-                        int dy = newPoint.y - pointerPosition.y;
-                        mister.translate(dx, dy);
+                        Graphics2D graphics2D = (Graphics2D) office.getCanvas().getGraphics();
+                        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        graphics2D.setColor(isRightClick ? new Color(211, 191, 179) : Color.BLACK);
+                        graphics2D.setStroke(new BasicStroke(isRightClick ? 5 : 3));
 
-                        if(g.getNight().getAstartaBoss().isBatterySaveMode()) {
-                            dx *= 2;
-                            dy *= 2;
-                        }
-                        mister.addVelocity(dx / 2F, dy / 2F);
+                        graphics2D.drawLine(oldRescaledPoint.x - 2 - 17 - g.offsetX, oldRescaledPoint.y - 2 - 244, rescaledPoint.x - 2 - 17 - g.offsetX, rescaledPoint.y - 2 - 244);
+                        graphics2D.drawLine(oldRescaledPoint.x - 2 - 17 - g.offsetX + 3033, oldRescaledPoint.y - 2 - 244, rescaledPoint.x - 2 - 17 - g.offsetX + 3033, rescaledPoint.y - 2 - 244);
 
-                        pointerPosition = newPoint;
-                        g.pointX = (int) (((GamePanel.isMirror() ? -mister.getPoint().x : mister.getPoint().x) - g.offsetX + 1080 + 250) * g.widthModifier + g.centerX);
-                        g.pointY = (int) ((mister.getPoint().y + 100) * g.heightModifier + g.centerY);
-
-                        if(pointerPosition.x > 100 * g.widthModifier + g.centerX && pointerPosition.x < 1000 * g.widthModifier + g.centerX && pointerPosition.y < 600 * g.heightModifier + g.centerY && pointerPosition.y > 120  * g.heightModifier + g.centerY)
-                            return;
-
-                        try {
-                            robotMovement = true;
-                            Robot robot = new Robot();
-                            robot.mouseMove(g.center.x, g.center.y);
-                        } catch (AWTException ex) {
-                            throw new RuntimeException(ex);
-                        }
-
+                        graphics2D.dispose();
                     }
+                }
+
+                if(g.soggyPen.isEnabled() && holdingShift) {
+                    Point oldPoint = pointerPosition;
+                    pointerPosition = e.getPoint().getLocation();
+                    g.pointX = pointerPosition.x;
+                    g.pointY = pointerPosition.y;
+                    Point rescaledPoint = new Point((int) ((pointerPosition.x - g.centerX) / g.widthModifier), (int) ((pointerPosition.y - g.centerY) / g.heightModifier));
+                    Point oldRescaledPoint = new Point((int) ((oldPoint.x - g.centerX) / g.widthModifier), (int) ((oldPoint.y - g.centerY) / g.heightModifier));
+
+                    if(GamePanel.mirror) {
+                        rescaledPoint = new Point(1080 - rescaledPoint.x, rescaledPoint.y);
+                        oldRescaledPoint = new Point(1080 - oldRescaledPoint.x, oldRescaledPoint.y);
+                    }
+
+                    Graphics2D graphics2D = (Graphics2D) g.getNight().soggyPenCanvas.getGraphics();
+                    graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                    int green = (int) ((Math.sin(g.fixedUpdatesAnim / 200F) / 2 + 0.5) * 255);
+                    graphics2D.setColor(isRightClick ? Color.WHITE : new Color(0, green, 255));
+
+                    graphics2D.setStroke(new BasicStroke(isRightClick ? 5 : 3));
+
+                    graphics2D.drawLine(oldRescaledPoint.x - 2 - g.offsetX + g.getNight().env().maxOffset(), oldRescaledPoint.y - 2, rescaledPoint.x - 2 - g.offsetX + g.getNight().env().maxOffset(), rescaledPoint.y - 2);
+
+                    graphics2D.dispose();
+                }
+
+
+                if(g.getNight().getAstartaBoss() != null) {
+                    Mister mister = g.getNight().getAstartaBoss().getMister();
+                    if (mister.isActive()) {
+                        if (mister.isBeingHeld()) {
+
+                            Point newPoint = e.getPoint().getLocation();
+
+                            if (robotMovement) {
+                                pointerPosition = newPoint;
+                                robotMovement = false;
+                                return;
+                            }
+
+                            int dx = newPoint.x - pointerPosition.x;
+                            if (GamePanel.isMirror())
+                                dx = -dx;
+                            int dy = newPoint.y - pointerPosition.y;
+                            mister.translate(dx, dy);
+
+                            if (g.getNight().getAstartaBoss().isBatterySaveMode()) {
+                                dx *= 2;
+                                dy *= 2;
+                            }
+                            mister.addVelocity(dx / 2F, dy / 2F);
+
+                            pointerPosition = newPoint;
+                            g.pointX = (int) (((GamePanel.isMirror() ? -mister.getPoint().x : mister.getPoint().x) - g.offsetX + 1080 + 250) * g.widthModifier + g.centerX);
+                            g.pointY = (int) ((mister.getPoint().y + 100) * g.heightModifier + g.centerY);
+
+                            if (pointerPosition.x > 100 * g.widthModifier + g.centerX && pointerPosition.x < 1000 * g.widthModifier + g.centerX && pointerPosition.y < 600 * g.heightModifier + g.centerY && pointerPosition.y > 120 * g.heightModifier + g.centerY)
+                                return;
+
+                            try {
+                                robotMovement = true;
+                                Robot robot = new Robot();
+                                robot.mouseMove(g.center.x, g.center.y);
+                            } catch (AWTException ex) {
+                                throw new RuntimeException(ex);
+                            }
+
+                        }
+                    }
+                }
+            }
+            case FIELD -> {
+                pointerPosition = e.getPoint().getLocation();
+                setPoint();
+            }
+            case ACHIEVEMENTS -> {
+                if(g.holdingAchievementSlider) {
+                    pointerPosition = e.getPoint().getLocation();
+                    setPoint();
+                    
+                    Point rescaledPoint = new Point((int) ((pointerPosition.x - g.centerX) / g.widthModifier), (int) ((pointerPosition.y - g.centerY) / g.heightModifier));
+                    float percentage = Math.min(1, Math.max(0, rescaledPoint.y - 110) / 530F);
+
+                    int length = Math.max(4, Achievements.values().length);
+                    int categories = 4;
+                    int max = 160 + 30 + length * 155 + categories * 80 - 530;
+                    
+                    g.achievementsScrollY = (int) (max * percentage);
+                    
+                    g.redrawAchievements();
                 }
             }
         }
@@ -2036,6 +3605,65 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        if(g.state == GameState.CORNFIELD) {
+            Player player = g.cornField3D.player;
+            Point newPointer = e.getPoint();
+
+            if(robotMovement) {
+                pointerPosition = newPointer;
+                robotMovement = false;
+                return;
+            }
+
+            player.yaw += (float) (newPointer.x - pointerPosition.x) / 2;
+            if(player.yaw > 360) player.yaw -= 360;
+            if(player.yaw < 0) player.yaw += 360;
+
+            player.pitch += (float) (pointerPosition.y - newPointer.y) / 4;
+            if(player.pitch > 90) player.pitch = 90;
+            if(player.pitch < -90) player.pitch = -90;
+            pointerPosition = newPointer;
+
+            if(pointerPosition.x > 100 && pointerPosition.x < 1000 && pointerPosition.y < 600 && pointerPosition.y > 120)
+                return;
+
+            try {
+                robotMovement = true;
+                Robot robot = new Robot();
+                robot.mouseMove(g.center.x, g.center.y);
+            } catch (AWTException ex) {
+                throw new RuntimeException(ex);
+            }
+            
+        } else if(g.state == GameState.GAME) {
+            if(g.getNight().getEvent() == GameEvent.MR_MAZE) {
+                MrMaze mrMaze = g.getNight().getMrMaze();
+                Point newPointer = e.getPoint();
+
+                if (robotMovement) {
+                    pointerPosition = newPointer;
+                    robotMovement = false;
+                    return;
+                }
+
+                mrMaze.moveX += (newPointer.x - pointerPosition.x) / 2d;
+                mrMaze.moveY += (newPointer.y - pointerPosition.y) / 2d;
+                pointerPosition = newPointer;
+
+                if (pointerPosition.x > 200 && pointerPosition.x < 900 && pointerPosition.y < 500 && pointerPosition.y > 220)
+                    return;
+
+                try {
+                    robotMovement = true;
+                    Robot robot = new Robot();
+                    robot.mouseMove(g.center.x, g.center.y);
+                } catch (AWTException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+        
+        
         Point oldPoint = pointerPosition;
         pointerPosition = e.getPoint().getLocation();
         setPoint();
@@ -2050,13 +3678,24 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
 
                     g.pauseDieSelected = new Rectangle(100, 500, 220, 80).contains(rescaledPoint);
                 }
+                if(previous == GameState.FIELD) {
+                    g.pauseDieSelected = new Rectangle(100, 500, 220, 80).contains(rescaledPoint);
+                }
             }
             case MENU -> {
-                if(g.discordButton.contains(pointerPosition)) {
+                if(GamePanel.isAprilFools) {
+                    g.hoveringPlatButton = new Rectangle(650, 50, 400, 45).contains(rescaledPoint);
+                }
+                if(new Rectangle(950, 510, 100, 100).contains(rescaledPoint)) {
                     g.discord = g.discordStates[1];
+                    
+                } else if(new Rectangle(950, 400, 100, 100).contains(rescaledPoint)) {
+                    g.musicMenu = g.musicMenuStates[1];
+                    
                 } else {
                     g.discord = g.discordStates[0];
-
+                    g.musicMenu = g.musicMenuStates[0];
+                    
                     short x = (short) g.visibleMenuButtons.size();
                     byte z = 0;
                     while (z < x) {
@@ -2070,6 +3709,10 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         z++;
                     }
                 }
+                
+                Polygon pepVotePolygon = GamePanel.rectangleToPolygon(new Rectangle(770, 188, 260, 165));
+                pepVotePolygon = GamePanel.rotatePolygon(pepVotePolygon, 900, 270, (Math.sin(g.fixedUpdatesAnim / 60F) * 0.2f));
+                g.hoveringPepVoteButton = pepVotePolygon.contains(rescaledPoint);
             }
             case PLAY -> {
                 if(pointerPosition.distance(oldPoint) > 2) {
@@ -2090,13 +3733,19 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 }
             }
             case SETTINGS -> {
-                hoveringNightReset = new Rectangle(146, 500 + g.settingsScrollY, 328, 80).contains(rescaledPoint);
+                BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+                Graphics2D graphics2D = (Graphics2D) image.getGraphics();
+                graphics2D.setFont(g.yuGothicPlain60);
+                
+                hoveringNightReset = new Rectangle(146, 500 + g.settingsScrollY, 540, 80).contains(rescaledPoint);
                 if(!hoveringNightReset) {
                     confirmNightReset = false;
                 }
-                hoveringFpsCap = new Rectangle(490, 1025 + g.settingsScrollY, 360, 80).contains(rescaledPoint);
-                hoveringJumpscareShake = new Rectangle(230, 1200 + g.settingsScrollY, 500, 80).contains(rescaledPoint);
-                hoveringLanguage = new Rectangle(560, 1290 + g.settingsScrollY, 500, 80).contains(rescaledPoint);
+                hoveringFpsCap = new Rectangle(280 + g.textLength(graphics2D, GamePanel.getString("fpsCap")), 1025 + g.settingsScrollY, 540, 80).contains(rescaledPoint);
+                hoveringJumpscareShake = new Rectangle(230, 1200 + g.settingsScrollY, 6540, 80).contains(rescaledPoint);
+                hoveringLanguage = new Rectangle(280 + g.textLength(graphics2D, GamePanel.getString("languageSelect")), 1290 + g.settingsScrollY, 540, 80).contains(rescaledPoint);
+                
+                graphics2D.dispose();
             }
             case MILLY -> {
                 int i = 0;
@@ -2121,25 +3770,34 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 g.manualFirstButtonHover = g.manualFirst.contains(pointerPosition);
                 g.manualSecondButtonHover = g.manualSecond.contains(pointerPosition);
 
+                Enviornment env = g.getNight().env;
+                int maxOffset = env.maxOffset();
+                int offset = g.offsetX - env.maxOffset();
+
 //                g.recalculateButtons(GameState.GAME);
                 // ^ this is probably HORRIBLE for performance and
                 // i have to fix this sometime later,but my game is releasing in 19 days
                 // and it's 22:47 on a sunday night, so i am NOT doing this right now
+                // update 5 months later: this function sucks lmao im removing this shit
 
                 if (GamePanel.mirror) {
                     rescaledPoint = new Point(1080 - rescaledPoint.x, rescaledPoint.y);
                 }
 
+                g.hoveringAnyDoorButton = false;
+                
                 for(Door door : g.getNight().getDoors().values()) {
                     Polygon hitbox = new Polygon(door.getHitbox().xpoints, door.getHitbox().ypoints, door.getHitbox().npoints);
-                    hitbox.translate(g.offsetX - 400, 0);
+                    hitbox.translate(g.offsetX - maxOffset, 0);
                     door.setHovering(hitbox.contains(rescaledPoint));
+                    
+                    g.hoveringAnyDoorButton = g.hoveringAnyDoorButton || door.getButtonHitbox(g.offsetX, maxOffset).contains(rescaledPoint);
                 }
-
+                
                 if(g.getNight().getType() == GameType.SHADOW) {
                     if(g.getNight().getAstartaBoss() != null) {
                         for (AstartaBlackHole hole : g.getNight().getAstartaBoss().getBlackHoles()) {
-                            if (new Point(g.offsetX - 400 + hole.getX(), hole.getY()).distance(rescaledPoint) < 160) {
+                            if (new Point(g.offsetX - maxOffset + hole.getX(), hole.getY()).distance(rescaledPoint) < 160) {
                                 hole.expand();
 
                                 for (AstartaBlackHole hole2 : g.getNight().getAstartaBoss().getBlackHoles()) {
@@ -2149,6 +3807,11 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                             }
                         }
                     }
+                }
+
+                if(g.getNight().getDsc().isFight()) {
+                    final Point lastRescaledPoint = rescaledPoint;
+                    new Pepitimer(() -> g.getNight().getDsc().recalculateEndVector(lastRescaledPoint), 120);
                 }
 
                 if(g.shadowTicket.isEnabled()) {
@@ -2177,24 +3840,122 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         }
                     }
                 } else if(g.getNight().isPowerModifier() && !g.getNight().isInGeneratorMinigame() && g.getNight().getGeneratorEnergy() == -1) {
-                    g.hoveringGenerator = new Rectangle(g.offsetX - 400 + 790, 480, 220, 150).contains(rescaledPoint);
+                    g.hoveringGenerator = new Rectangle(offset + env.generator.x, env.generator.y, env.generator.width, env.generator.height).contains(rescaledPoint);
                 }
-            }
-            case CHALLENGE -> {
-                if (rescaledPoint.x > 20 && rescaledPoint.y > 40) {
-                    if (rescaledPoint.x < 640 && rescaledPoint.y < 420) {
-                        for (int i = 0; i < CustomNight.getEnemies().size(); i++) {
-                            int x = i % 6 * 105 + 20;
-                            int y = i / 6 * 130 + 40;
 
-                            if (new Rectangle(x, y, 95, 120).contains(rescaledPoint)) {
-                                CustomNight.selectedElement = CustomNight.getEnemies().get(i);
-                                CustomNight.setLoadedPreviewPath(CustomNight.getEnemies().get(i).getPreview());
-                                break;
+                if(g.getNight().getEvent() == GameEvent.BASEMENT_KEY) {
+                    BasementKeyOffice office = ((BasementKeyOffice) g.getNight().env());
+
+                    office.setHoveringEvilDoor(new Rectangle(327 - maxOffset + g.offsetX, 301, 216, 316).contains(rescaledPoint) ||
+                            new Rectangle(3360 - maxOffset + g.offsetX, 301, 216, 316).contains(rescaledPoint));
+                }
+                
+                if(g.getNight().getType() == GameType.DAY) {
+                    hoveringPepitoClock = g.pepitoClockProgress >= 160 && new Rectangle(offset + 465, 330, 105, 140).contains(rescaledPoint);
+                    hoveringNeonSog = g.neonSogX == 0 &&  new Rectangle(offset + g.neonSogX, 0, 400, 640).contains(rescaledPoint);
+                    hoveringNeonSogSign = new Rectangle(offset + 20, 0, 150, 260).contains(rescaledPoint);
+                }
+                if(g.getNight().getType().isBasement()) {
+                    Basement basement = ((Basement) g.getNight().env());
+                    if(basement.getStage() >= 4) {
+                        Rectangle rect = new Rectangle(offset + 628, 236, 225, (int) (basement.getMonitorHeight()));
+                        
+                        g.hoveringBasementMonitor = rect.contains(rescaledPoint);
+                    }
+                    if(basement.getStage() == 7) {
+                        g.basementLadderHovering = new Rectangle(offset + 610, 137, 217, 452).contains(rescaledPoint);
+                    }
+                }
+                if(g.getNight().getShadowblocker().state > 0) {
+                    hoveringShadowblockerButton = new Rectangle(18, 18, 120, 120).contains(rescaledPoint);
+
+                    if(g.getNight().getShadowblocker().state == 2) {
+                        if (rescaledPoint.x >= 230 && rescaledPoint.x <= 850 && rescaledPoint.y >= 130 && rescaledPoint.y <= 511) {
+                            int enemiesSize = CustomNight.getEnemies().size();
+                            for (int i = 0; i < 24; i++) {
+                                int x = i % 6 * 105 + 230;
+                                int y = i / 6 * 130 + 130;
+                                
+                                if (new Rectangle(x, y, 95, 120).contains(rescaledPoint)) {
+                                    if (i >= enemiesSize) {
+                                        g.getNight().getShadowblocker().selected = -1;
+                                    } else {
+                                        g.getNight().getShadowblocker().selected = (byte) i;
+                                    }
+                                    break;
+                                }
                             }
+                        } else {
+                            g.getNight().getShadowblocker().selected = -1;
                         }
                     }
                 }
+                
+                if(g.getNight().getType() == GameType.HYDROPHOBIA) {
+                    HChamber ch = (HChamber) g.getNight().env();
+
+                    boolean oldHoveringCompass = ch.isHoveringCompass();
+
+                    ch.setHoveringExit(new Rectangle(offset + ch.exit.x, ch.exit.y, ch.exit.width, ch.exit.height).contains(rescaledPoint));
+                    ch.setHoveringCompass(new Rectangle(offset + ch.compass.x, ch.compass.y, ch.compass.width, ch.compass.height).contains(rescaledPoint));
+                    ch.setHoveringLocker(ch.hasLocker() && !g.inLocker && new Rectangle(offset + ch.locker.x, ch.locker.y, ch.locker.width, ch.locker.height).contains(rescaledPoint));
+
+                    if (!oldHoveringCompass) {
+                        ch.setShowCompassHint(ch.isHoveringCompass());
+                    }
+
+                    ch.setHoveringConditioner(!g.inLocker && new Rectangle(offset + ch.conditioner.x, ch.conditioner.y, ch.conditioner.width, ch.conditioner.height).contains(rescaledPoint));
+                    ch.setHoveringPen(ch.isRewardRoom() && ch.penExists() && new Rectangle(offset + 360, 334, 98, 122).contains(rescaledPoint));
+
+                    if (ch.isInPrefield() && ch.getPrefieldCount() == 1 && !ch.isInDustons()) {
+                        ch.setHoveringReinforced(new Rectangle(offset + 979, 323, 196, 297).contains(rescaledPoint));
+                    }
+                    if (ch.key.width > 1) {
+                        ch.setHoveringKey(new Rectangle(offset + ch.key.x, ch.key.y, ch.key.width, ch.key.height).contains(rescaledPoint));
+                    }
+                    if(ch.cup.width > 1) {
+                        ch.setHoveringCup(new Rectangle(offset + ch.cup.x, ch.cup.y, ch.cup.width, ch.cup.height).contains(rescaledPoint));
+                    }
+
+
+                    if (g.getNight().getEvent() == GameEvent.DYING) {
+                        if (ch.showDeathOptions) {
+                            ch.selectedDeathOption = (byte) ((rescaledPoint.y > 320) ? 1 : 0);
+                        }
+                    }
+                }
+            }
+            case FIELD -> {
+                Field field = g.field;
+
+                if (!field.isInCar() && !field.lockedIn) {
+                    field.setHoveringCar(new Rectangle(field.getYaw() + 520, field.getPitch() + 215, 263, 237).contains(rescaledPoint));
+                }
+                if(field.isInCar()) {
+                    field.setHoveringLever(new Rectangle(field.getYaw() - 540 + 1030, field.getPitch() - 320 + 300, 275, 150).contains(rescaledPoint));
+                }
+            }
+            case CHALLENGE -> {
+                Rectangle o = CustomNight.enemiesRectangle;
+                Rectangle enemiesRect = new Rectangle(o.x, o.y, o.width, Math.max(440, o.height));
+
+                if (enemiesRect.contains(rescaledPoint)) {
+                    for (int i = 0; i < CustomNight.getEnemies().size(); i++) {
+                        int x = i % 6 * 105 + 20;
+                        int y = i / 6 * 130 + 40;
+
+                        if (new Rectangle(x, y, 95, 120).contains(rescaledPoint)) {
+                            CustomNight.selectedElement = CustomNight.getEnemies().get(i);
+                            CustomNight.setLoadedPreviewPath(CustomNight.getEnemies().get(i).getPreview());
+                            break;
+                        }
+                    }
+                    isInEnemiesRectangle = true;
+                    return;
+                } else {
+                    isInEnemiesRectangle = false;
+                }
+
                 if (rescaledPoint.x > 660 && rescaledPoint.y > 220) {
                     if (rescaledPoint.x < 1080 && rescaledPoint.y < 440) {
                         for (int i = 0; i < CustomNight.modifiers.size(); i++) {
@@ -2244,6 +4005,30 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         CustomNight.selectedElement = null;
                     } else {
                         CustomNight.nextSelected = false;
+                    }
+                }
+            }
+            case MUSIC_MENU -> {
+                int i = 0;
+                for(String name : g.musicDiscs) {
+                    if(new Rectangle(16 + i * 190, 266, 183, 183).contains(rescaledPoint)) {
+                        g.hoveringMusicDisc = name;
+                        return;
+                    }
+                    i++;
+                }
+                if(!new Rectangle(0, 253, 1080, 387).contains(rescaledPoint)) {
+                    g.hoveringMusicDisc = "";
+                }
+            }
+            case ACHIEVEMENTS -> {
+                if(!g.achievementState && !g.shiftingAchievements) {
+                    Rectangle rect = new Rectangle(25, 130 - g.achievementsScrollY, 900, 155);
+                    boolean old = g.hoveringInvestigation;
+                    g.hoveringInvestigation = rect.contains(rescaledPoint) && Achievements.ALL_NIGHTER.isObtained();
+                    
+                    if(old != g.hoveringInvestigation) {
+                        g.redrawAchievements();
                     }
                 }
             }
@@ -2301,6 +4086,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         index--;
                     }
                     g.sound.play("select", 0.1);
+                    
+                    g.riftFramesDoingNothing = -15000;
+                    g.riftMoonAlpha = 0;
                 } else {
                     if (index >= g.riftItems.size() - 1) {
                         index = (byte) (0);
@@ -2308,6 +4096,9 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                         index++;
                     }
                     g.sound.play("select", 0.1);
+                    
+                    g.riftFramesDoingNothing = -15000;
+                    g.riftMoonAlpha = 0;
                 }
 
                 g.selectedRiftItem = g.riftItems.get(index);
@@ -2324,29 +4115,70 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             }
             case ACHIEVEMENTS -> {
                 if(!g.achievementState) {
-                    g.achievementsScrollY = (short) (Math.max(0, g.achievementsScrollY + e.getWheelRotation() * 30));
+                    g.achievementsScrollY = (short) (Math.max(0, g.achievementsScrollY + e.getWheelRotation() * 40));
 
                     int length = Math.max(4, Achievements.values().length);
+                    int categories = 4;
 
-                    while (30 + length * 155 - g.achievementsScrollY < 530) {
+                    while (160 + 30 + length * 155 + categories * 80 - g.achievementsScrollY < 530) {
                         g.achievementsScrollY -= (short) (e.getWheelRotation());
                     }
                     g.redrawAchievements();
                 } else {
-                    g.statisticsScrollY = (short) (Math.max(0, g.statisticsScrollY + e.getWheelRotation() * 30));
+                    g.statisticsScrollY = (short) (Math.max(0, g.statisticsScrollY + e.getWheelRotation() * 40));
 
-                    while (150 + Statistics.values().length * 40 - g.statisticsScrollY < 650) {
+                    while (160 + 150 + Statistics.values().length * 40 - g.statisticsScrollY < 650) {
                         g.statisticsScrollY -= (short) (e.getWheelRotation());
                     }
                 }
             }
 
             case SETTINGS -> {
-                g.settingsScrollY = Math.max(-900, Math.min(0, g.settingsScrollY - e.getWheelRotation() * 30));
+                g.settingsScrollY = Math.max(-1060, Math.min(0, g.settingsScrollY - e.getWheelRotation() * 30));
             }
         }
     }
 
+    
+    private void crateClick() {
+        if(!g.everyFixedUpdate.containsKey("crateAnimation")) {
+            if(g.crateY > 640) {
+
+                g.backToMainMenu();
+            } else {
+                if(g.crateRewards.size() <= 1) {
+                    g.crateItemDistance = 0;
+                }
+
+                g.everyFixedUpdate.put("crateAnimation", () -> {
+                    if (g.crateY >= 1000) {
+                        if(g.crateY != 1000) {
+                            g.crateShake = 15;
+                            g.sound.play("blockadeBreak", 0.1);
+               
+                            new Pepitimer(() -> {
+                                g.sound.playRate("icePotionUse", 0.2, 0.75);
+                                g.sound.play("boop", 0.1);
+                            }, 700);
+                        }
+                        g.crateY = 1000;
+                        g.crateItemDistance -= 0.008F;
+                        g.crateItemDistance *= 0.99F;
+
+                        if (g.crateItemDistance < 0) {
+                            g.crateItemDistance = 0;
+                            g.everyFixedUpdate.remove("crateAnimation");
+                        }
+                    } else {
+                        g.crateY++;
+                        g.crateY *= 1.05F;
+                    }
+                });
+            }
+        }
+    }
+    
+    
     private void shiftAchievements() {
         g.shiftingAchievements = true;
         g.achievementMargin = 1080;
@@ -2358,11 +4190,11 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
         } else {
             String selectedOption = g.menuButtons.get(g.selectedOption);
 
-            if(selectedOption.equals(">> " + g.getString("settings"))) {
+            if(selectedOption.equals(">> " + GamePanel.getString("settings"))) {
                 g.startSettings();
-            } else if(selectedOption.equals(">> " + g.getString("bingo"))) {
+            } else if(selectedOption.equals(">> " + GamePanel.getString("bingo"))) {
                 g.startBingo();
-            } else if(selectedOption.equals(">> " + g.getString("achievementsSmall"))) {
+            } else if(selectedOption.equals(">> " + GamePanel.getString("achievementsSmall"))) {
                 g.startAchievements();
             }
         }
@@ -2402,6 +4234,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
             if(CustomNight.limboTimer[0] != null) {
                 CustomNight.limboTimer[0].cancel(false);
                 CustomNight.limboTimer[0] = null;
+                CustomNight.resetEntityPositions();
             }
             CustomNight.limboId = -1;
         }
@@ -2411,7 +4244,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
         if(g.everyFixedUpdate.containsKey("deathScreenY")) {
             g.deathScreenY = 640;
             g.everyFixedUpdate.remove("deathScreenY");
-            g.music.play("orca", 0.06, true);
+            g.music.play("orca", 0.055, true);
 
             if (g.killedBy.contains(GamePanel.getString("kbRadiation")) && !g.afterDeathText.contains(GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 30))) {
                 new Pepitimer(() -> {
@@ -2429,7 +4262,7 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 } else {
                     g.deathScreenY = 640;
                     g.everyFixedUpdate.remove("deathScreenY");
-                    g.music.play("orca", 0.06, true);
+                    g.music.play("orca", 0.055, true);
 
                     if (g.killedBy.contains(GamePanel.getString("kbRadiation")) && !g.afterDeathText.contains(GamePanel.getString("afterTheFirstNuclearStrike").substring(0, 30))) {
                         new Pepitimer(() -> {
@@ -2443,5 +4276,183 @@ public class KeyHandler implements KeyListener, MouseListener, MouseMotionListen
                 }
             });
         }
+    }
+
+    
+    public void clickItem(Item item) {
+        if (item.getAmount() != 0) {
+            if (item.isSelected()) {
+                item.deselect();
+                g.itemLimit -= item.getItemLimitAdd();
+
+                int selectedItems = 0;
+                for(Item allItems : g.itemList) {
+                    if(allItems.isSelected()) {
+                        selectedItems++;
+                    }
+                }
+                if(selectedItems > g.itemLimit) {
+                    g.sound.play("select", 0.1, false);
+                    g.sound.play("selectFail", 0.12, false);
+                    
+                    int index = 0;
+                    while (selectedItems > g.itemLimit && g.itemList.get(index) != null) {
+                        g.itemList.get(index).deselect();
+                        selectedItems--;
+                        index++;
+                    }
+                }
+            } else {
+                if ((g.checkItemsAmount() < g.itemLimit || item.getItemLimitAdd() > 0) && !item.isMarkedConflicting()) {
+                    item.select();
+                    g.itemLimit += item.getItemLimitAdd();
+                    g.sound.play("select", 0.1, false);
+                } else {
+                    g.sound.play("selectFail", 0.12, false);
+
+                    if(item.isMarkedConflicting()) {
+                        item.setShakeIntensity((byte) 60);
+                    }
+                }
+            }
+
+            g.updateItemList();
+            g.redrawItemsMenu();
+        } else {
+            g.sound.play("selectFail", 0.12, false);
+        }
+    }
+    
+    
+    private void pressAnyKeyStuff() {
+        if(g.state == GameState.ENDLESS_DISCLAIMER) {
+            g.state = GameState.PLAY;
+            g.sound.play("select", 0.1);
+            g.fadeOut(255, 0, 3);
+            g.seenEndlessDisclaimer = true;
+            g.pressAnyKey = false;
+            return;
+        }
+        
+        if(g.riftItems.size() >= 2 && g.endless.getNight() >= 3) {
+            if(g.riftTransparency <= 0) {
+                g.enterRift();
+            }
+        } else {
+            if(processDeathScreenPress())
+                return;
+
+            g.stopGame(true);
+        }
+    }
+    
+    public boolean doHydrophobiaRespawn() {
+        Level nightBefore = g.getNight();
+        HChamber old = ((HChamber) g.getNight().env);
+        Level oldNight = old.getOldNight();
+        int deaths = old.getDeaths();
+        
+        g.stopGame(false);
+        g.type = GameType.HYDROPHOBIA;
+        g.startGame();
+
+        
+        HChamber chamber = (HChamber) g.getNight().env;
+        chamber.setOldNight(oldNight);
+        chamber.setDeaths(deaths + 1);
+        
+        chamber.setHasCup(old.hasCup());
+        
+        switch (old.checkpoint) {
+            case 1 -> {
+                chamber.setPendingPrefieldRoom(true);
+                chamber.setInPrefield(true);
+                chamber.setPrefieldCount(5);
+                g.getNight().seconds = 211;
+                
+                chamber.regenerateFurniture();      
+                g.repaintOffice();
+                chamber.setRespawnCheckpoint(true);
+                chamber.setRooms(6);
+
+                g.getNight().getHydrophobia().setAILevel(0);
+                g.getNight().getBeast().setAILevel(0);
+                g.getNight().getOverseer().setAILevel(0);
+
+                chamber.roomsTillKey = 1000;
+            }
+            case 2 -> {
+                chamber.resetField();
+                chamber.setRooms(6);
+                
+                g.getNight().seconds = 211;
+                chamber.regenerateSeed(false);
+                chamber.regenerateFurniture();
+                g.repaintOffice();
+                chamber.setRespawnCheckpoint(true);
+
+                chamber.roomsTillKey = 1000;
+            }
+        }
+        return true;
+    }
+    
+    
+    public void enterNewHydrophobiaRoom(HChamber chamber) {
+        boolean requiresLocker = (g.getNight().getBeast().isActive() && !chamber.isPendingRewardRoom() && !chamber.isPendingPrefield());
+
+        int iterations = 0;
+        while (iterations == 0 || (chamber.roomsTillKey <= 0 && chamber.table.x >= 1480 && !chamber.isPendingRewardRoom() && !chamber.isPendingPrefield())) {
+            int oldSeed = chamber.getSeed();
+            while (chamber.getSeed() == oldSeed) {
+                chamber.regenerateSeed(requiresLocker);
+            }
+            chamber.regenerateFurniture();
+
+            iterations++;
+        }
+//                                        System.out.println("IS BEAST ACTIVE? " + g.getNight().getBeast().isActive());
+//                                        System.out.println("DO WE NEED A LOCKER? " + requiresLocker);
+//                                        System.out.println("DO WE GOT A LOCKER? " + chamber.hasLocker());
+
+
+        g.sound.stop();
+
+        chamber.setRooms(chamber.getRoom() + 1);
+
+        if (chamber.hasConditioner()) {
+            g.sound.play("conditionerSounds", (chamber.isRewardRoom() || chamber.isInPrefield()) ? 0.08 : 0.15, true);
+        }
+
+        if(g.sunglassesOn) {
+            g.sgPolygons.clear();
+            g.sgPolygons.add(GamePanel.rectangleToPolygon(chamber.exit));
+        }
+
+        chamber.resetResettable();
+
+        chamber.setShake(0);
+
+        g.fadeOut(255, 180, 0.4F);
+
+        g.getNight().getHydrophobia().move();
+        g.getNight().getOverseer().disappear();
+
+        if (chamber.isPendingRewardRoom() || chamber.isPendingPrefield()) {
+            g.getNight().getHydrophobia().setAILevel(0);
+            g.getNight().getBeast().setAILevel(0);
+            g.getNight().getOverseer().setAILevel(0);
+
+            g.getNight().getBeast().fullReset();
+            g.getNight().getOverseer().disappear();
+
+            g.fadeOut(255, chamber.isPendingRewardRoom() ? 0 : 70, 0.4F);
+        }
+
+        g.repaintOffice();
+
+        chamber.setHoveringExit(false);
+
+        g.sound.play("enterNewRoom", 0.16);
     }
 }

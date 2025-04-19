@@ -37,4 +37,8 @@ public class PlayMenuElement {
 
         images[1] = GamePanel.resize(GamePanel.darkify(images[0], 2), (int) (images[0].getWidth() * 0.75), (int) (images[0].getHeight() * 0.75), BufferedImage.SCALE_SMOOTH);
     }
+
+    public void setSubtext(String subtext) {
+        this.subtext = subtext;
+    }
 }

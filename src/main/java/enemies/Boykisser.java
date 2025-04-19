@@ -8,7 +8,7 @@ import utils.Pepitimer;
 import java.util.concurrent.ScheduledFuture;
 
 public class Boykisser extends Enemy {
-    public short arrivalSeconds = (short) ((Math.random() * 120 + 30));
+    public short arrivalSeconds = (short) ((Math.random() * 120 + 45));
 
     public Boykisser(GamePanel panel) {
         super(panel);
@@ -50,7 +50,7 @@ public class Boykisser extends Enemy {
 
         BingoHandler.completeTask(BingoTask.SURVIVE_BOYKISSER);
 
-        arrivalSeconds = (short) ((Math.random() * 120 + 30));
+        arrivalSeconds = (short) ((Math.random() * 120 + 45));
 
         g.sound.playRate("boykisserOut", 0.1, 1.0 / Math.max(1, (modifier / 2)));
     }
@@ -60,13 +60,34 @@ public class Boykisser extends Enemy {
         active = false;
     }
 
-    public void tick() {
+    public void tick(float reconsideration) {
         if(AI <= 0)
             return;
+
+        if(reconsideration >= 1) {
+            float chance = 1.1F - AI * 0.135F;
+            float progress = 1 + (float) (g.getNight().seconds - g.getNight().secondsAtStart) / g.getNight().getDuration();
+            chance /= progress;
+
+            if(Math.random() < chance) {
+                System.out.println(getClass().getName() + " reconsidered! | chance: " + chance);
+                return;
+            }
+        }
 
         arrivalSeconds--;
         if(arrivalSeconds == 0) {
             spawn();
         }
+    }
+
+    @Override
+    public int getArrival() {
+        return arrivalSeconds;
+    }
+
+    @Override
+    public void fullReset() {
+        reset();
     }
 }

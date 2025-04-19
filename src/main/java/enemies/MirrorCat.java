@@ -3,8 +3,9 @@ package enemies;
 import main.GamePanel;
 import utils.GameEvent;
 import utils.GameType;
-import utils.Notification;
 import utils.Pepitimer;
+
+import java.awt.*;
 
 public class MirrorCat extends Enemy {
     boolean active = false;
@@ -39,22 +40,14 @@ public class MirrorCat extends Enemy {
                 return;
             g.getNight().seconds = (short) Math.max(g.getNight().seconds - 2, g.getNight().secondsAtStart);
         });
-
-        if(first) {
-            String h = "Right-Click Zazu!";
-            if(g.getNight().getType() == GameType.SHADOW) {
-                h = new StringBuilder(h).reverse().toString();
-            }
-            new Notification(h);
-            first = false;
-        }
     }
     boolean exploded = false;
 
     public void kill() {
-        if(closed)
+        if(closed || !active)
             return;
 
+        first = false;
         closed = true;
         g.sound.play("cageClose", 0.1);
         arrivalSeconds = (short) (Math.random() * (40 - AI * 1.5) + 5);
@@ -74,7 +67,7 @@ public class MirrorCat extends Enemy {
         }, 1000);
     }
 
-    short arrivalSeconds = (short) (Math.random() * (40 - AI * 1.5) + 7);
+    short arrivalSeconds = (short) (Math.random() * (40 - AI * 1.5) + 16);
 
     public void tick() {
         if(AI > 0 && !active) {
@@ -97,5 +90,36 @@ public class MirrorCat extends Enemy {
 
     public short getX() {
         return x;
+    }
+
+    public boolean isFirst() {
+        return first;
+    }
+    
+    public boolean isInside(Point point) {
+        int rectX = g.offsetX - g.getNight().env().maxOffset() + g.getNight().getMirrorCat().getX() + g.currentWaterPos * 2;
+        if(GamePanel.isMirror()) {
+            rectX = 895 - rectX;
+        }
+
+        Rectangle rect = new Rectangle(rectX, 540 - g.waterLevel(), 185, 100);
+        return rect.contains(point);
+    }
+
+    public boolean isInsideUnmirrored(Point point) {
+        int rectX = g.offsetX - g.getNight().env().maxOffset() + g.getNight().getMirrorCat().getX() + g.currentWaterPos * 2;
+
+        Rectangle rect = new Rectangle(rectX, 540 - g.waterLevel(), 185, 100);
+        return rect.contains(point);
+    }
+
+    @Override
+    public int getArrival() {
+        return arrivalSeconds;
+    }
+
+    @Override
+    public void fullReset() {
+        kill();
     }
 }

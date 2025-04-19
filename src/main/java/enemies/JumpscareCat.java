@@ -83,4 +83,14 @@ public class JumpscareCat extends Enemy {
     public void setShake(int shake) {
         this.shake = shake;
     }
+
+    @Override
+    public int getArrival() {
+        return -1;
+    }
+
+    @Override
+    public void fullReset() {
+        stop();
+    }
 }

@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 public class Balloon {
     private short x;
     public short counter = 0;
+    public short y = 0;
     BufferedImage image = GamePanel.getRandomBalloon();
 
     public BufferedImage getImage() {
@@ -17,6 +18,10 @@ public class Balloon {
     public BalloonDirection direction = BalloonDirection.random();
 
     public Balloon() {
+        x = (short) Math.round(Math.random() * 1390);
+    }
+    public Balloon(float alpha) {
+        this.alpha = alpha;
         x = (short) Math.round(Math.random() * 1390);
     }
 
@@ -31,6 +36,8 @@ public class Balloon {
     public void addX(int d) {
         x += (short) d;
     }
+    
+    public float alpha = 1;
 
     public void goLeft() {
         direction = (byte) (Math.round(Math.random())) == 0 ? BalloonDirection.LEFT : BalloonDirection.LEFT_LOW;
@@ -40,11 +47,11 @@ public class Balloon {
         direction = (byte) (Math.round(Math.random())) == 0 ? BalloonDirection.RIGHT : BalloonDirection.RIGHT_LOW;
     }
 
-    public Rectangle getRectangle(short offsetX, float widthModifier, float heightModifier, short centerX, short centerY) {
-        return new Rectangle((int) ((offsetX + x - 400) * widthModifier + centerX), (int) ((200 + getAdder()) * heightModifier + centerY), (int) (90 * widthModifier), (int) (125 * heightModifier));
+    public Rectangle getRectangle(short offsetX, int maxOffset) {
+        return new Rectangle(offsetX + x - maxOffset, 200 + getAdder(), 90, 125);
     }
 
-    public byte getAdder() {
-        return (byte) (Math.sin(Math.toRadians(counter)) * 40);
+    public short getAdder() {
+        return (short) (Math.sin(Math.toRadians(counter)) * 40 - y);
     }
 }

@@ -3,9 +3,9 @@ package game.shadownight;
 import enemies.A90;
 import game.achievements.AchievementHandler;
 import game.achievements.Achievements;
+import game.enviornments.Basement;
 import javafx.scene.media.MediaPlayer;
 import main.GamePanel;
-import utils.GameState;
 import utils.Pepitimer;
 import utils.RepeatingPepitimer;
 
@@ -112,7 +112,7 @@ public class AstartaBoss {
                 health = 200;
 
                 isFighting = true;
-                g.music.play("astartaFight", 0.06, true);
+                g.music.play("astartaFight", 0.08, true);
 
                 g.everyFixedUpdate.put("astartaMinecartEnter", () -> {
                     minecartYadd--;
@@ -253,11 +253,11 @@ public class AstartaBoss {
                         scaryCatCooldown--;
                     }
 
-                    if(g.getNight().getEnergy() < 25 && !batterySaveMode && !g.soda.isEnabled() && !g.miniSoda.isEnabled()) {
-                        g.state = GameState.BATTERY_SAVER;
-                        GamePanel.mirror = false;
-                        g.music.stop();
-                    }
+//                    if(g.getNight().getEnergy() < 25 && !batterySaveMode && !g.soda.isEnabled() && !g.miniSoda.isEnabled()) {
+//                        g.state = GameState.BATTERY_SAVER;
+//                        GamePanel.mirror = false;
+//                        g.music.stop();
+//                    }
 
                     if(uncannyEventSeconds > 0) {
                         uncannyEventSeconds--;
@@ -595,7 +595,17 @@ public class AstartaBoss {
                 damage(100);
             }
 
+            if(!Achievements.SHADOWNIGHT.isObtained()) {
+                g.shadowblocker.safeAdd(6);
+                g.receivedShadowblocker = true;
+            } else {
+                g.shadowblocker.safeAdd(3);
+            }
+            
             AchievementHandler.obtain(g, Achievements.SHADOWNIGHT);
+            if(g.getNight().env() instanceof Basement) {
+                g.beatShadownightBasement = true;
+            }
             g.pixelation = 1;
             g.music.stop();
             g.sound.playRateLooped("astartaEvilSound", 0.2, 0.5);
@@ -790,7 +800,7 @@ public class AstartaBoss {
         roulette = true;
 
         if(g.getNight().getMSI().isActive()) {
-            g.getNight().getMSI().quickKill();
+            g.getNight().getMSI().quickKill(true);
         }
         g.getNight().getMirrorCat().kill();
         g.getNight().getWires().leave();

@@ -148,7 +148,7 @@ public class ElAstarta extends Enemy {
                     return;
 
                 if (kindaActive) {
-                    if (g.getNight().getDoors().get((int) door).isClosed() || g.getNight().getDoors().get((int) door).getBlockade() > 0) {
+                    if (g.getNight().getDoors().get((int) door).isLocked()) {
                         if (g.getNight().getDoors().get((int) door).isClosed()) {
                             g.sound.play("knock", 0.08);
                         }
@@ -165,11 +165,11 @@ public class ElAstarta extends Enemy {
                         if (g.sensor.isEnabled()) {
                             byte random2 = (byte) Math.round(Math.random());
                             if (random2 == 0) {
-                                g.console.add("movement detected at door N" + (door + 1));
+                                g.console.add(GamePanel.getString("sensorAstartaMovement") + (door + 1));
                             }
                         }
                     } else {
-                        g.jumpscare("elAstarta");
+                        g.jumpscare("elAstarta", g.getNight().getId());
                     }
                     resetCounter();
                     kindaActive = false;
@@ -190,7 +190,7 @@ public class ElAstarta extends Enemy {
             if (g.sensor.isEnabled()) {
                 byte random2 = (byte) Math.round(Math.random());
                 if (random2 == 0) {
-                    g.console.add("movement detected at door N" + (door + 1));
+                    g.console.add(GamePanel.getString("sensorAstartaMovement") + (door + 1));
                 }
             }
 
@@ -227,6 +227,16 @@ public class ElAstarta extends Enemy {
     }
 
     public void resetCounter() {
-        arrivalSeconds = (short) (((Math.random() * 35 + 30) / (modifier * 1.5)) + modifier);
+        arrivalSeconds = (short) (((Math.random() * 150 + 50 + 40 / modifier)));
+    }
+
+    @Override
+    public int getArrival() {
+        return arrivalSeconds;
+    }
+
+    @Override
+    public void fullReset() {
+        stopService();
     }
 }

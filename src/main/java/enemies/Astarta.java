@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Astarta extends Enemy {
     public byte door = 0;
-    public short arrivalSeconds = (short) (((Math.random() * 40 + 35) / (modifier * 1.5)) + modifier);
+    public short arrivalSeconds = (short) (((Math.random() * 38 + 32) / (modifier * 1.5)) + modifier);
     public byte leaveSeconds = 0;
 
     public boolean active = false;
@@ -36,7 +36,7 @@ public class Astarta extends Enemy {
         if(g.sensor.isEnabled()) {
             int random = (int) Math.round(Math.random());
             if (random == 0) {
-                g.console.add("movement detected at door N" + (door + 1));
+                g.console.add(GamePanel.getString("sensorAstartaMovement") + (door + 1));
             }
         }
 
@@ -58,7 +58,7 @@ public class Astarta extends Enemy {
             if(timer != null) {
                 timer.cancel(true);
             }
-            short[] delay = {(short) (9000 / (modifier / 1.5))};
+            short[] delay = {(short) (9400 / (modifier / 1.5))};
 
             timer = new RepeatingPepitimer(() -> {
                 delay[0] -= 200;
@@ -69,7 +69,7 @@ public class Astarta extends Enemy {
                     return;
 
                 if(active) {
-                    if (g.getNight().getDoors().get((int) door).isClosed() || g.getNight().getDoors().get((int) door).getBlockade() > 0) {
+                    if (g.getNight().getDoors().get((int) door).isLocked()) {
                         if(g.getNight().getDoors().get((int) door).isClosed()) {
                             g.sound.play("knock", 0.03);
                         }
@@ -86,21 +86,20 @@ public class Astarta extends Enemy {
                         if(g.sensor.isEnabled()) {
                             byte random2 = (byte) Math.round(Math.random());
                             if (random2 == 0) {
-                                g.console.add("movement detected at door N" + (door + 1));
+                                g.console.add(GamePanel.getString("sensorAstartaMovement") + (door + 1));
                             }
                         }
                         leaveSeconds = 4;
 
                         BingoHandler.completeTask(BingoTask.SURVIVE_ASTARTA);
                     } else {
-                        g.jumpscare("astarta");
+                        g.jumpscare("astarta", g.getNight().getId());
                     }
                     resetCounter();
                     active = false;
                 }
             }, 200, 200);
-
-            timer.affectByFreeze();
+            
         }
     }
 
@@ -108,27 +107,43 @@ public class Astarta extends Enemy {
         stopService();
 
         try {
-            g.sound.play("knock", 0.02);
+            if(active) {
+                g.sound.play("knock", 0.02);
 
-            if (g.sensor.isEnabled()) {
-                byte random2 = (byte) Math.round(Math.random());
-                if (random2 == 0) {
-                    g.console.add("movement detected at door N" + (door + 1));
+                if (g.sensor.isEnabled()) {
+                    byte random2 = (byte) Math.round(Math.random());
+                    if (random2 == 0) {
+                        g.console.add(GamePanel.getString("sensorAstartaMovement") + (door + 1));
+                    }
                 }
+                leaveSeconds = 5;
             }
-            leaveSeconds = 4;
-
+            
             resetCounter();
             active = false;
         } catch (Exception ignored) { }
     }
 
-    public void tick() {
+    public void tick(float reconsideration) {
         if(AI <= 0)
             return;
 
         arrivalSeconds--;
         if(arrivalSeconds == 0) {
+            if(g.getNight().getShock().isDoom()) {
+                reconsideration += 0.8F;
+            }
+            if(reconsideration >= 1) {
+                float chance = 1.1F - AI * 0.135F;
+                float progress = 1 + (float) (g.getNight().seconds - g.getNight().secondsAtStart) / g.getNight().getDuration();
+                chance /= progress;
+
+                if(Math.random() < chance) {
+                    System.out.println(getClass().getName() + " reconsidered! | chance: " + chance);
+                    return;
+                }
+            }
+            
             spawn();
         }
         if(leaveSeconds > 0) {
@@ -143,12 +158,23 @@ public class Astarta extends Enemy {
     }
 
     public void resetCounter() {
-        arrivalSeconds = (short) (((Math.random() * 35 + 30) / (modifier * 1.5)) + modifier);
+        arrivalSeconds = (short) (((Math.random() * 35 + 28) / (modifier * 1.5)) + modifier);
 
         if(g.getNight().isBlizzardModifier()) {
             if(g.getNight().getBlizzardTime() > 0) {
                 arrivalSeconds = 4;
             }
         }
+    }
+    
+    @Override
+    public int getArrival() {
+        return arrivalSeconds;
+    }
+
+    @Override
+    public void fullReset() {
+        stopService();
+        leaveSeconds = 0;
     }
 }

@@ -3,9 +3,10 @@ package utils;
 import main.GamePanel;
 
 import java.awt.image.BufferedImage;
+import java.util.Objects;
 
 public class PepitoImage {
-    private BufferedImage image;
+    public BufferedImage image;
     private String path;
     private int sinceRequest = 0;
 
@@ -23,6 +24,21 @@ public class PepitoImage {
     }
 
     public BufferedImage request() {
+        if(GamePanel.krunlicMode) {
+            if(GamePanel.krunlicPhase == 5) {
+                if(!Objects.equals(path, "/game/entities/krunlic/krunlicScaryBlack.png")) {
+                    if(!path.contains("krEye") && !path.contains("achievements")) {
+                        float s = 0.2F;
+
+                        if (Math.random() < s) {
+                            setPath("/game/entities/krunlic/krunlicScaryBlack.png");
+                            reload();
+                        }
+                    }
+                }
+            }
+        }
+        
         StaticLists.loadedPepitoImages.add(this);
         if(image == null) {
             reload();

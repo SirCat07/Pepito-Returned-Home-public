@@ -64,7 +64,7 @@ public class Main extends Application {
                     gamePanel.everySecond10th.put("unfocusedRender", () -> gamePanel.repaint(0, 0, gamePanel.getWidth(), gamePanel.getHeight()));
                 }
             });
-
+            
             window.pack();
 
             window.setLocationRelativeTo(null);

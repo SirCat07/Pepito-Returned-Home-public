@@ -16,8 +16,8 @@ public class AchievementHandler {
 
         g.redrawAchievements();
 
-        String fullName = g.getString(achievement.toString().toLowerCase(Locale.ROOT) + "Name");
-        String fullDesc = g.getString(achievement.toString().toLowerCase(Locale.ROOT) + "Desc");
+        String fullName = GamePanel.getString(achievement.toString().toLowerCase(Locale.ROOT) + "Name");
+        String fullDesc = GamePanel.getString(achievement.toString().toLowerCase(Locale.ROOT) + "Desc");
 
         new AchievementNotification(fullName, fullDesc, achievement.getIcon());
     }

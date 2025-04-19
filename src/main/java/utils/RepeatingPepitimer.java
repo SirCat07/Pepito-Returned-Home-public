@@ -1,9 +1,7 @@
 package utils;
 
-import main.GamePanel;
-
 public class RepeatingPepitimer extends Pepitimer {
-    int delay;
+    float delay;
 
     public RepeatingPepitimer(Runnable runnable, int miliseconds, int delay) {
         super(runnable, miliseconds);
@@ -12,12 +10,9 @@ public class RepeatingPepitimer extends Pepitimer {
     }
 
     @Override
-    public void decrease(int delta) {
-        if(paused)
+    public void decrease(float delta) {
+        if(paused || gamePaused)
             return;
-
-        if(freezeAffected)
-            delta = (int) (delta * GamePanel.freezeModifier);
 
         if(miliseconds > delta / 2) {
             miliseconds -= delta;
@@ -32,7 +27,7 @@ public class RepeatingPepitimer extends Pepitimer {
         }
     }
 
-    public void setDelay(int delay) {
+    public void setDelay(float delay) {
         this.delay = delay;
     }
 

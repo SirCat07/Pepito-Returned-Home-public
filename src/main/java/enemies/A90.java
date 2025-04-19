@@ -28,7 +28,7 @@ public class A90 extends Enemy {
         return active;
     }
 
-    byte shots = 0;
+    public byte shots = 0;
 
     public float forgive = 1;
     public short margin = 0;
@@ -40,7 +40,7 @@ public class A90 extends Enemy {
     public int distance = 0;
 
     public void spawn() {
-        if(g.getNight().getScaryCat().isActive()) {
+        if (g.getNight().getScaryCat().isActive()) {
             arrivalSeconds += 3;
             return;
         }
@@ -54,8 +54,12 @@ public class A90 extends Enemy {
 
         points.clear();
         distance = 0;
-        g.sound.pause();
-        g.sound.playRate("a90Alert", 0.1, GamePanel.freezeModifier);
+        
+        if (!g.getNight().getShock().isActive() && g.getNight().getEvent() != GameEvent.WINNING) {
+            g.sound.pause(false);
+        }
+        
+        g.sound.play("a90Alert", 0.1);
         x = (short) (Math.random() * 540 + 120);
         y = (short) (Math.random() * 100 + 120);
         animation = 1;
@@ -89,7 +93,7 @@ public class A90 extends Enemy {
                 animation = 3;
                 active = true;
                 drawStopSign = true;
-                g.sound.playRate("a90Arrive", 0.04, GamePanel.freezeModifier * night.heatDistort());
+                g.sound.playRate("a90Arrive", 0.04, night.heatDistort());
                 new Pepitimer(() -> {
                     animation = 4;
                     new Pepitimer(() -> {
@@ -99,7 +103,7 @@ public class A90 extends Enemy {
                         new Pepitimer(() -> {
                             animation = 4;
                             drawStopSign = false;
-                            boolean forgiveConditions = (night.getMSI().isActive() || night.getShark().isActive()) && forgive > 0.7F;
+                            boolean forgiveConditions = (night.getMSI().isActive() || night.getEvent() == GameEvent.FLOOD || night.getEvent() == GameEvent.DEEP_FLOOD) && forgive > 0.7F;
 
                             for(int i = 0; i < 10; i++) {
                                 points.add(new Point((int) (x - 75 + Math.random() * 300), (int) (y + Math.random() * 300)));
@@ -109,7 +113,7 @@ public class A90 extends Enemy {
                                 g.everySecond20th.put("a90anim", () -> g.anim ^= 1);
 
                                 if(forgiveConditions) {
-                                    g.sound.playRate("a90FuckingDies", 0.05, GamePanel.freezeModifier * night.heatDistort());
+                                    g.sound.playRate("a90FuckingDies", 0.05, night.heatDistort());
                                     forgive -= 0.7F;
                                     margin = 70;
 
@@ -118,24 +122,24 @@ public class A90 extends Enemy {
                                     new Pepitimer(() -> {
                                         animation = 0;
                                         g.everySecond20th.remove("a90anim");
-                                    }, 350).affectByFreeze();
+                                    }, 350);
                                 } else {
-                                    g.sound.playRate("a90Dead", 0.08, GamePanel.freezeModifier * night.heatDistort());
+                                    g.sound.playRate("a90Dead", 0.08, night.heatDistort());
                                     animation = 5;
                                     shots++;
                                     g.getNight().getShark().leftBeforeBite++;
 
                                     if (shots == 2) {
-                                        g.jumpscare("a90");
+                                        g.jumpscare("a90", night.getId());
                                     } else {
                                         new Pepitimer(() -> {
                                             animation = 0;
                                             g.everySecond20th.remove("a90anim");
-                                        }, 2300).affectByFreeze();
+                                        }, 2300);
                                     }
                                 }
                             } else {
-                                g.sound.playRate("a90Alive", 0.08, GamePanel.freezeModifier * night.heatDistort());
+                                g.sound.playRate("a90Alive", 0.08, night.heatDistort());
                                 forgive = Math.min(forgive + 0.03F, 1);
 
                                 BingoHandler.completeTask(BingoTask.SURVIVE_A90);
@@ -149,29 +153,40 @@ public class A90 extends Enemy {
                                     if(g.getNight().getMSI().isActive()) {
                                         forgive = Math.min(forgive + 0.1F, 1);
                                     }
-                                }, 100).affectByFreeze();
+                                }, 100);
                             }
 
-                            g.sound.resume();
+                            g.sound.resume(false);
                             dying = false;
                             active = false;
-                            arrivalSeconds = (byte) (((Math.random() * 84 * night.heatDistort() * night.heatDistort() + 9) / (modifier + 0.001) * night.heatDistort()) + 4);
+                            arrivalSeconds = (byte) (((Math.random() * 88 * night.heatDistort() * night.heatDistort() + 10) / (modifier + 0.001) * night.heatDistort()) + 6);
                             g.getNight().getShark().leftBeforeBite++;
                             g.everyFixedUpdate.remove("a90bg");
-                        }, 350).affectByFreeze();
-                    }, 50).affectByFreeze();
-                }, 70).affectByFreeze();
-            }, (byte) (70 * night.heatDistort() / (modifier + 0.001))).affectByFreeze();
-        }, (short) (500 * night.heatDistort() / Math.max(1, modifier / 1.5))).affectByFreeze();
+                        }, 350);
+                    }, 50);
+                }, 70);
+            }, (byte) (80 * night.heatDistort() / (modifier + 0.001)));
+        }, (short) (500 * night.heatDistort() / Math.max(1, modifier / 1.5)));
     }
 
     public String forgiveText = "FORGIVE";
 
-    public void tick() {
+    public void tick(float reconsideration) {
         if(AI <= 0)
             return;
 
         if (arrivalSeconds == 0) {
+            if(reconsideration > 1) {
+                float chance = 0.5F - AI * 5;
+                float progress = 1 + (float) (g.getNight().seconds - g.getNight().secondsAtStart) / g.getNight().getDuration();
+                chance /= progress;
+                
+                if(Math.random() < chance) {
+                    System.out.println(getClass().getName() + " reconsidered! | chance: " + chance);
+                    return;
+                }
+            }
+            
             spawn();
 
             if(!g.getNight().getEvent().isInGame()) {
@@ -185,5 +200,15 @@ public class A90 extends Enemy {
 
     public boolean isDying() {
         return dying;
+    }
+
+    @Override
+    public int getArrival() {
+        return arrivalSeconds;
+    }
+    
+    @Override
+    public void fullReset() {
+        
     }
 }

@@ -11,6 +11,11 @@ public enum Statistics {
     ITEMS_RIFTED(),
     POINTS_TOTAL(),
     POINTS_MAX(),
+    BALLOONS_POPPED(),
+    GOTTEN_BURN_ENDING(),
+    GOTTEN_VOID_ENDING(),
+    GOTTEN_BASEMENT_ENDING(),
+    GOTTEN_CORN_ENDING(),
     DIED_TO_PEPITO(),
     DIED_TO_NOTPEPITO(),
     DIED_TO_UNCANNY(),
@@ -25,6 +30,9 @@ public enum Statistics {
     DIED_TO_RADIATION(),
     DIED_TO_SHADOW_PEPITO(),
     DIED_TO_SHADOW_ASTARTA(),
+    DIED_TO_KIJI(),
+    DIED_TO_SHOCK(),
+    DIED_TO_DEEP_SEA_CREATURE(),
     DIED_TO_DREAD();
     
     private int value = 0;

@@ -1,7 +1,9 @@
 package cutscenes;
 
 import main.GamePanel;
+import utils.composites.AdditiveComposite;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +66,7 @@ public class CutsceneObject {
         if(imageInstructions != null) {
             imageInstructions.run();
         }
+        image = convertToInt(image);
         sourceImage = image;
         loaded = true;
     }
@@ -100,6 +103,16 @@ public class CutsceneObject {
     public CutscenePolygon getPolygon() {
         return polygon;
     }
+    
+    Composite layer = AlphaComposite.SrcOver;
+
+    public Composite getLayeringOption() {
+        return layer;
+    }
+    public CutsceneObject setLayeringOption(Composite layer) {
+        this.layer = layer;
+        return this;
+    }
 
     public int getX() {
         return x;
@@ -119,5 +132,28 @@ public class CutsceneObject {
 
     public CutsceneObjectType getType() {
         return type;
+    }
+    
+
+    public static BufferedImage convertToRGB(BufferedImage sourceImage) {
+        BufferedImage argbImage = new BufferedImage(
+                sourceImage.getWidth(),
+                sourceImage.getHeight(),
+                BufferedImage.TYPE_INT_RGB
+        );
+        
+        Graphics2D graphics2D = (Graphics2D) argbImage.getGraphics();
+
+        graphics2D.drawImage(sourceImage, 0, 0, null);
+
+        graphics2D.dispose();
+        return argbImage;
+    }
+    
+    public BufferedImage convertToInt(BufferedImage sourceImage) {
+        if(layer == AdditiveComposite.Add) {
+            return convertToRGB(sourceImage);
+        }
+        return sourceImage;
     }
 }

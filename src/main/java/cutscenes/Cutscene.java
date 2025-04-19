@@ -12,6 +12,11 @@ public class Cutscene {
     public short scene = 0;
     public long milliseconds = 0;
     String id;
+    
+    public float contrastBrightness = 1;
+    public int contrastOffset = 0;
+    
+    Composite lastComposite = AlphaComposite.SrcOver;
 
 
     BufferedImage lastRenderedScreen;
@@ -32,10 +37,15 @@ public class Cutscene {
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, antiAliasing ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
 
         graphics2D.setColor(Color.BLACK);
-        graphics2D.fillRect(0, 0, 1080, 640);
+        graphics2D.fillRect(0, 0, lastRenderedScreen.getWidth(), lastRenderedScreen.getHeight());
 
         for(CutsceneObject object : unmodifiable) {
             object.recalculate();
+            
+            if(object.getLayeringOption() != lastComposite) {
+                graphics2D.setComposite(object.getLayeringOption());
+                lastComposite = object.getLayeringOption();
+            }
 
             if(object.getType() == CutsceneObjectType.IMAGE) {
                 int x = (int) (object.getX() * quality);

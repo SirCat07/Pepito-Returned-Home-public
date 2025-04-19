@@ -18,6 +18,20 @@ public class EndlessGame {
     public void addCoins(int coins) {
         this.coins += coins;
     }
+    
+    int climate = 2;
+    // 0 - blizzard
+    // 1 - rain
+    // 2 - normal
+    // 3 - hot
+    
+    public int getClimate() {
+        return climate;
+    }
+
+    public void setClimate(int climate) {
+        this.climate = climate;
+    }
 
     byte night = 1;
     int coins = 0;

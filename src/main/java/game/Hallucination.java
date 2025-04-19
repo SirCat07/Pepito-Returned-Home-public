@@ -9,6 +9,7 @@ public class Hallucination {
 
     int x;
     int y;
+    float z;
 
     public Hallucination() {
         int index = (int) (Math.random() * 7 + 1);
@@ -18,6 +19,7 @@ public class Hallucination {
 
         x = (int) (Math.random() * (1480 - requested.getWidth()));
         y = (int) (Math.random() * (640 - requested.getHeight()));
+        z = (float) (1 - (Math.max(0.1F, Math.sqrt(Math.random())) / 6F));
     }
 
     public PepitoImage getImage() {
@@ -30,5 +32,9 @@ public class Hallucination {
 
     public int getY() {
         return y;
+    }
+
+    public float getZ() {
+        return z;
     }
 }

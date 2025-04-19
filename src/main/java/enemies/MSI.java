@@ -1,5 +1,7 @@
 package enemies;
 
+import game.Balloon;
+import game.Level;
 import game.bingo.BingoHandler;
 import game.bingo.BingoTask;
 import main.GamePanel;
@@ -8,25 +10,17 @@ import utils.GameType;
 import utils.Pepitimer;
 import utils.RepeatingPepitimer;
 
-import java.util.Calendar;
 import java.util.Locale;
 
 public class MSI extends Enemy {
     public boolean active = false;
-    public byte arrivalSeconds = (byte) ((Math.random() * 80 + 30) / modifier);
+    public byte arrivalSeconds = (byte) ((Math.random() * 90 + 45) / modifier);
     public boolean left = true;
 
     public MSI(GamePanel panel, boolean isBirthday) {
         super(panel);
 
-        crisscross = isBirthday;
-
-        Calendar calendar = Calendar.getInstance();
-        if(calendar.get(Calendar.MONTH) == Calendar.APRIL) {
-            if(calendar.get(Calendar.DAY_OF_MONTH) <= 7) {
-                crisscross = true;
-            }
-        }
+        crisscross = isBirthday || GamePanel.isAprilFools;
     }
 
     public boolean moved = false;
@@ -54,7 +48,11 @@ public class MSI extends Enemy {
     Rat the_rat_king;
 
     public void resetCounter() {
-        arrivalSeconds = (byte) ((Math.random() * 80 + 30) / modifier);
+        if(g.sensor.isEnabled()) {
+            arrivalSeconds = (byte) ((Math.random() * 80 + 36) / modifier);
+        } else {
+            arrivalSeconds = (byte) ((Math.random() * 135 + 65) / modifier);
+        }
     }
 
     public boolean isActive() {
@@ -64,15 +62,21 @@ public class MSI extends Enemy {
     RepeatingPepitimer timer;
 
     public void spawn() {
-        g.sound.playRate("msiArrival", 0.15, GamePanel.freezeModifier);
+        Level night = g.getNight();
+        
+        if(night.getBoykisser().isActive() && !night.getBoykisser().isAwaitingResponse()) {
+            g.getNight().getBoykisser().leave();
+        }
+        
+        g.sound.play("msiArrival", 0.15);
         additionalTint = 0;
         arriving = true;
         killed = false;
 
-        g.getNight().addEventPercent(0.3F);
+        night.addEventPercent(0.3F);
 
-        new Pepitimer(() -> {
-            if(g.getNight().getEvent() == GameEvent.NONE || g.getNight().getEvent() == GameEvent.ASTARTA) {
+        g.getNight().cancelAfterGame.add(new Pepitimer(() -> {
+            if(night.getEvent() == GameEvent.NONE || night.getEvent() == GameEvent.ASTARTA || night.getEvent() == GameEvent.ENDING_BASEMENT) {
                 additionalTint = 50;
                 shake = 10;
                 new Pepitimer(() -> {
@@ -82,7 +86,7 @@ public class MSI extends Enemy {
                 active = true;
                 firstAction = true;
 
-                if(g.getNight().getEvent() != GameEvent.ASTARTA && !g.getNight().getType().isEndless()) {
+                if(night.getEvent() != GameEvent.ASTARTA && night.getEvent() != GameEvent.ENDING_BASEMENT && !night.getType().isEndless()) {
                     byte hell = (byte) (Math.random() * 153);
                     if (hell == 1) {
                         isHell = true;
@@ -90,13 +94,13 @@ public class MSI extends Enemy {
                 }
 
                 final byte[] leftRight = {0};
-                byte untilStop = (byte) (Math.round(Math.random() * 3 * modifier) + 7 + (AI / 2));
+                byte untilStop = (byte) (Math.round(Math.random() * 3 * modifier) + 6 + (AI / 2));
 
                 if(isShadow) {
                     isHell = false;
 
-                    if(g.getNight().getType() == GameType.SHADOW) {
-                        untilStop = (byte) (Math.round(Math.random() * 3) + 7);
+                    if(night.getType() == GameType.SHADOW) {
+                        untilStop = (byte) (Math.round(Math.random() * 3) + 6);
                     } else {
                         untilStop = 127;
                         leftRight[0] = -128;
@@ -111,9 +115,17 @@ public class MSI extends Enemy {
                 arriving = false;
 
                 if(left) {
-                    g.sound.playButPanWithFreeze(!isShadow ? "left" : "tfel", 0.09, -0.2);
+                    g.sound.playButPan(!isShadow ? "left" : "tfel", 0.09, -0.2);
+
+                    for(Balloon balloon : GamePanel.balloons) {
+                        balloon.goLeft();
+                    }
                 } else {
-                    g.sound.playButPanWithFreeze(!isShadow ? "right" : "thgir", 0.09, 0.2);
+                    g.sound.playButPan(!isShadow ? "right" : "thgir", 0.09, 0.2);
+
+                    for(Balloon balloon : GamePanel.balloons) {
+                        balloon.goRight();
+                    }
                 }
 
                 float d = modifier;
@@ -121,21 +133,21 @@ public class MSI extends Enemy {
                     d += 0.3F;
                 }
 
-                short interval = (short) (1600 / Math.min(d, 2.6));
+                short interval = (short) (1900 / Math.min(d, 2.6));
 
                 byte finalUntilStop = untilStop;
                 timer = new RepeatingPepitimer(() -> {
                     leftRight[0]++;
                     firstAction = false;
 
-                    if(leftRight[0] >= finalUntilStop || !active || !(g.getNight().getEvent() == GameEvent.NONE || g.getNight().getEvent() == GameEvent.ASTARTA)) {
+                    if(leftRight[0] >= finalUntilStop || !active || !(night.getEvent() == GameEvent.NONE || night.getEvent() == GameEvent.ASTARTA || night.getEvent() == GameEvent.ENDING_BASEMENT)) {
                         if(leftRight[0] >= finalUntilStop || g.getNight().getEvent() == GameEvent.WINNING) {
                             BingoHandler.completeTask(BingoTask.SURVIVE_MSI);
                         }
                         timer.cancel(true);
                         left = true;
                         active = false;
-                        g.sound.playRate("msiOut", 0.08, GamePanel.freezeModifier);
+                        g.sound.play("msiOut", 0.08);
                         resetCounter();
 
                         movedWrong = false;
@@ -144,8 +156,8 @@ public class MSI extends Enemy {
                         if(g.adblocker.isEnabled()) {
                             g.randomCharacter = "qwertyuiopfghjzxvbn2345789".split("")[(int) Math.round(Math.random() * 25)];
 
-                            g.console.add("MSI has disabled your adblocker!");
-                            g.console.add("Press " + g.randomCharacter.toUpperCase(Locale.ROOT) + " to restart your adblocker.");
+                            g.console.add(GamePanel.getString("sensorMsiAdblocker1"));
+                            g.console.add(GamePanel.getString("sensorMsiAdblocker2").replace("%d%", g.randomCharacter.toUpperCase(Locale.ROOT)));
                             g.adBlocked = true;
                         }
                     } else {
@@ -169,30 +181,40 @@ public class MSI extends Enemy {
                                 }
                             }
 
-                            g.getNight().getA90().forgive = Math.min(g.getNight().getA90().forgive + 0.01F, 1);
+                            night.getA90().forgive = Math.min(night.getA90().forgive + 0.01F, 1);
 
                             g.keyHandler.mouseHeld = false;
 
                             if (left) {
-                                g.sound.playButPanWithFreeze(!isShadow ? "left" : "tfel", 0.08, -0.4);
+                                g.sound.playButPan(!isShadow ? "left" : "tfel", 0.08, -0.4);
+
+                                for(Balloon balloon : GamePanel.balloons) {
+                                    balloon.goLeft();
+                                }
                             } else {
-                                g.sound.playButPanWithFreeze(!isShadow ? "right" : "thgir", 0.08, 0.4);
+                                g.sound.playButPan(!isShadow ? "right" : "thgir", 0.08, 0.4);
+
+                                for(Balloon balloon : GamePanel.balloons) {
+                                    balloon.goRight();
+                                }
                             }
 
                             if(g.offsetX == 0 || g.offsetX == 400) {
                                 g.offsetX = 200;
                             }
                         } else if(!killed) {
-                            g.jumpscare("msi");
+                            g.jumpscare("msi", g.getNight().getId());
                         }
                     }
                     moved = false;
                     movedWrong = false;
-                }, (short) (Math.max(2000 / d, 800)), interval);
-
-                timer.affectByFreeze();
+                }, (short) (Math.max(2200 / d, 800)), interval);
+                
+                g.getNight().cancelAfterGame.add(timer);
+            } else {
+                arriving = false;
             }
-        }, 1800).affectByFreeze();
+        }, 1800));
     }
 
     public void tick(boolean isShadow) {
@@ -209,7 +231,7 @@ public class MSI extends Enemy {
         }
     }
 
-    boolean killed = false;
+    public boolean killed = false;
 
     public void kill(boolean removeSensor, boolean glitcher) {
         killed = true;
@@ -225,13 +247,13 @@ public class MSI extends Enemy {
         BingoHandler.completeTask(BingoTask.FLASH_MSI);
 
         if(g.sensor.isEnabled()) {
-            g.console.add("oopsies, your program crashed");
+            g.console.add(GamePanel.getString("sensorMsiKill1"));
             g.console.add("=(");
             g.console.add("=(");
             g.console.add("=D");
             g.console.add("=(");
-            g.console.add("disabling SENSOR");
-            g.console.add("disabling MSI");
+            g.console.add(GamePanel.getString("sensorMsiKill2"));
+            g.console.add(GamePanel.getString("sensorMsiKill3"));
         }
 
         timer.cancel(true);
@@ -254,12 +276,16 @@ public class MSI extends Enemy {
         }, 3800);
     }
 
-    public void quickKill() {
-        timer.cancel(true);
-
+    public void quickKill(boolean sound) {
+        if(timer != null) {
+            timer.cancel(true);
+        }
+        
         left = true;
         active = false;
-        g.sound.play("msiOut", 0.08);
+        if(sound) {
+            g.sound.play("msiOut", 0.08);
+        }
         resetCounter();
 
         movedWrong = false;
@@ -299,5 +325,15 @@ public class MSI extends Enemy {
     byte shake = 0;
     public byte getShake() {
         return shake;
+    }
+    
+    @Override
+    public int getArrival() {
+        return arrivalSeconds;
+    }
+
+    @Override
+    public void fullReset() {
+        quickKill(false);
     }
 }

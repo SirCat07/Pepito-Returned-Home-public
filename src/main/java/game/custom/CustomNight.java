@@ -5,6 +5,7 @@ import main.GamePanel;
 import utils.PepitoImage;
 import utils.RepeatingPepitimer;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,6 +24,8 @@ public class CustomNight {
     public static boolean nextSelected = false;
     public static boolean shuffleSelected = false;
     public static int selectedChallenge = 0;
+    public static int holdingEnemyFrames = 0;
+    public static float visualPointsProgress = 0;
 
     public static boolean isCustom() {
         return custom;
@@ -51,7 +54,9 @@ public class CustomNight {
     }
 
     public static RepeatingPepitimer[] limboTimer = new RepeatingPepitimer[1];
-    public static byte limboId = -1;
+    public static int limboId = -1;
+    
+    public static Rectangle enemiesRectangle = new Rectangle(0, 0, 660, 420);
 
     public static void limbo(GamePanel g) {
         final int[] n = {0};
@@ -64,7 +69,7 @@ public class CustomNight {
 
                 enemy.otherX = x;
                 enemy.otherY = y;
-                if (Math.random() > 0.5) {
+                if (Math.random() > 0.3) {
                     enemy.setAI((int) Math.round(Math.random() * 8));
                 } else {
                     enemy.setAI(0);
@@ -85,6 +90,7 @@ public class CustomNight {
 
             n[0]++;
             if (n[0] > 31) {
+                resetEntityPositions();
                 if(limboTimer[0] != null) {
                     limboTimer[0].cancel(false);
                     limboTimer[0] = null;
@@ -93,6 +99,18 @@ public class CustomNight {
                 }
             }
         }, 0, 300);
+    }
+    
+    public static void resetEntityPositions() {
+        List<CustomNightEnemy> oldEnemies = new ArrayList<>(enemies);
+        for (CustomNightEnemy enemy : oldEnemies) {
+            int position = enemy.getId();
+            int x = 105 * (position % 6);
+            int y = 130 * (position / 6);
+            enemy.otherX = (x + enemy.otherX * 6) / 7;
+            enemy.otherY = (y + enemy.otherY * 6) / 7;
+            enemies.set(position, enemy);
+        }
     }
     
     public static HashMap<CustomNightEnemy, Integer> customEnemyAIs = new HashMap<>();
@@ -133,18 +151,27 @@ public class CustomNight {
     }
 
     public static void setEntityAIs() {
-        for (CustomNightEnemy enemy : enemies) {
-            if(customEnemyAIs.isEmpty()) {
-                enemy.setAI(0);
-            } else {
-                enemy.setAI(customEnemyAIs.get(enemy));
+        if(CustomNight.isCustom()) {
+            for (CustomNightEnemy enemy : enemies) {
+                if (customEnemyAIs.isEmpty()) {
+                    enemy.setAI(0);
+                } else {
+                    enemy.setAI(customEnemyAIs.get(enemy));
+                }
             }
-        }
-        for (CustomNightModifier modifier : modifiers) {
-            if(customModifiers.isEmpty()) {
+            for (CustomNightModifier modifier : modifiers) {
+                if (customModifiers.isEmpty()) {
+                    modifier.off();
+                } else {
+                    modifier.set(customModifiers.get(modifier));
+                }
+            }
+        } else {
+            for (CustomNightEnemy enemy : enemies) {
+                enemy.setAI(0);
+            }
+            for (CustomNightModifier modifier : modifiers) {
                 modifier.off();
-            } else {
-                modifier.set(customModifiers.get(modifier));
             }
         }
         
@@ -152,92 +179,91 @@ public class CustomNight {
         if(!CustomNight.isCustom()) {
             switch (selectedChallenge) {
                 case 0 -> {
-                    enemies.get(0).setAI(5);
-                    enemies.get(1).setAI(5);
-                    enemies.get(2).setAI(4);
-                    enemies.get(3).setAI(3);
-                    enemies.get(4).setAI(3);
-                    enemies.get(5).setAI(6);
-                    enemies.get(6).setAI(2);
-                    enemies.get(9).setAI(5);
-                    enemies.get(12).setAI(4);
-                    enemies.get(14).setAI(1);
-                    enemies.get(15).setAI(2);
+                    enemies.get(PEPITO).setAI(4); // pepito
+                    enemies.get(NOTPEPITO).setAI(4); // notpepito
+                    enemies.get(GLITCHER).setAI(4); // glitcher
+                    enemies.get(A90).setAI(3); // a90
+                    enemies.get(MSI).setAI(3); // msi
+                    enemies.get(ASTARTA).setAI(6); // astarta
+                    enemies.get(SHARK).setAI(2); // shark
+                    enemies.get(MIRRORCAT).setAI(3); // mirrorcat
+                    enemies.get(WIRES).setAI(2); // wires
+                    enemies.get(JUMPSCARE_CAT).setAI(1); // jumpscare cat
+                    enemies.get(EL_ASTARTA).setAI(2); // el astarta
                 }
 
                 case 1 -> {
-                    enemies.get(0).setAI(5);
-                    enemies.get(1).setAI(5);
-                    enemies.get(2).setAI(1);
-                    enemies.get(3).setAI(3);
-                    enemies.get(4).setAI(4);
-                    enemies.get(5).setAI(5);
-                    enemies.get(6).setAI(4);
-                    enemies.get(8).setAI(1);
-                    enemies.get(9).setAI(5);
-                    enemies.get(10).setAI(1);
-                    enemies.get(11).setAI(1);
-                    enemies.get(12).setAI(5);
-                    enemies.get(13).setAI(1);
-                    enemies.get(14).setAI(1);
+                    enemies.get(PEPITO).setAI(5); // pepito
+                    enemies.get(NOTPEPITO).setAI(5); // notpepito
+                    enemies.get(GLITCHER).setAI(1); // glitcher
+                    enemies.get(A90).setAI(3); // a90
+                    enemies.get(MSI).setAI(4); // msi
+                    enemies.get(ASTARTA).setAI(5); // astarta
+                    enemies.get(SHARK).setAI(4); // shark
+                    enemies.get(COLACAT).setAI(1); // colacat
+                    enemies.get(MIRRORCAT).setAI(5); // mirrorcat
+                    enemies.get(MAKI).setAI(1); // maki
+                    enemies.get(LEMONADE_CAT).setAI(0); // lemonade
+                    enemies.get(WIRES).setAI(5); // wires
+                    enemies.get(SCARY_CAT).setAI(1); // scary cat
+                    enemies.get(JUMPSCARE_CAT).setAI(1); // jumpscare cat
 
                     modifiers.get(0).on();
                     modifiers.get(1).on();
                 }
 
                 case 2 -> {
-                    enemies.get(0).setAI(6);
-                    enemies.get(1).setAI(6);
-                    enemies.get(2).setAI(7);
-                    enemies.get(3).setAI(3);
-                    enemies.get(4).setAI(4);
-                    enemies.get(5).setAI(6);
-                    enemies.get(6).setAI(5);
-                    enemies.get(7).setAI(4);
-                    enemies.get(9).setAI(8);
-                    enemies.get(11).setAI(1);
-                    enemies.get(12).setAI(3);
-                    enemies.get(13).setAI(4);
-                    enemies.get(14).setAI(1);
+                    enemies.get(PEPITO).setAI(6); // pepito
+                    enemies.get(NOTPEPITO).setAI(6); // notpepito
+                    enemies.get(GLITCHER).setAI(7); // glitcher
+                    enemies.get(A90).setAI(3); // a90
+                    enemies.get(MSI).setAI(4); // msi
+                    enemies.get(ASTARTA).setAI(6); // astarta
+                    enemies.get(SHARK).setAI(5); // shark
+                    enemies.get(BOYKISSER).setAI(4); // boykisser
+                    enemies.get(MIRRORCAT).setAI(8); // mirrorcat
+                    enemies.get(LEMONADE_CAT).setAI(1); // lemonade
+                    enemies.get(WIRES).setAI(3); // wires
+                    enemies.get(SCARY_CAT).setAI(4); // scary cat
+                    enemies.get(JUMPSCARE_CAT).setAI(1); // jumpscare cat
 
                     modifiers.get(2).on();
                 }
 
                 case 3 -> {
-                    enemies.get(0).setAI(7);
-                    enemies.get(1).setAI(7);
-                    enemies.get(3).setAI(6);
-                    enemies.get(4).setAI(4);
-                    enemies.get(5).setAI(6);
-                    enemies.get(6).setAI(8);
-                    enemies.get(7).setAI(2);
-                    enemies.get(8).setAI(1);
-                    enemies.get(9).setAI(5);
-                    enemies.get(11).setAI(3);
-                    enemies.get(12).setAI(3);
-                    enemies.get(13).setAI(1);
-                    enemies.get(14).setAI(1);
+                    enemies.get(PEPITO).setAI(7); // pepito
+                    enemies.get(NOTPEPITO).setAI(7); // notpepito
+                    enemies.get(A90).setAI(6); // a90
+                    enemies.get(MSI).setAI(4); // msi
+                    enemies.get(ASTARTA).setAI(6); // astarta
+                    enemies.get(SHARK).setAI(8); // shark
+                    enemies.get(BOYKISSER).setAI(2); // boykisser
+                    enemies.get(COLACAT).setAI(1); // colacat
+                    enemies.get(MIRRORCAT).setAI(5); // mirrorcat
+                    enemies.get(LEMONADE_CAT).setAI(3); // lemonade
+                    enemies.get(WIRES).setAI(3); // wires
+                    enemies.get(SCARY_CAT).setAI(1); // scary cat
+                    enemies.get(JUMPSCARE_CAT).setAI(1); // jumpscare cat
 
                     modifiers.get(3).on();
                 }
 
                 case 4 -> {
-                    enemies.get(0).setAI(7);
-                    enemies.get(1).setAI(7);
-                    enemies.get(2).setAI(7);
-                    enemies.get(3).setAI(7);
-                    enemies.get(4).setAI(5);
-                    enemies.get(5).setAI(6);
-                    enemies.get(6).setAI(7);
-                    enemies.get(7).setAI(6);
-                    enemies.get(8).setAI(1);
-                    enemies.get(9).setAI(8);
-                    enemies.get(10).setAI(7);
-                    enemies.get(11).setAI(6);
-                    enemies.get(12).setAI(7);
-                    enemies.get(13).setAI(5);
-                    enemies.get(14).setAI(1);
-                    enemies.get(15).setAI(1);
+                    enemies.get(PEPITO).setAI(7); // pepito
+                    enemies.get(NOTPEPITO).setAI(7); // notpepito
+                    enemies.get(GLITCHER).setAI(7); // glitcher
+                    enemies.get(A90).setAI(7); // a90
+                    enemies.get(MSI).setAI(5); // msi
+                    enemies.get(ASTARTA).setAI(6); // astarta
+                    enemies.get(SHARK).setAI(7); // shark
+                    enemies.get(BOYKISSER).setAI(6); // boykisser
+                    enemies.get(COLACAT).setAI(1); // colacat
+                    enemies.get(MIRRORCAT).setAI(8); // mirrorcat
+                    enemies.get(MAKI).setAI(7); // maki
+                    enemies.get(LEMONADE_CAT).setAI(6); // lemonade
+                    enemies.get(WIRES).setAI(7); // wires
+                    enemies.get(SCARY_CAT).setAI(4); // scary cat
+                    enemies.get(JUMPSCARE_CAT).setAI(1); // jumpscare cat
 
                     modifiers.get(4).on();
                 }
@@ -309,6 +335,22 @@ public class CustomNight {
         }
         return result;
     }
+    
+    public static int getPoints() {
+        int points = 0;
+        for (CustomNightEnemy enemy : enemies) {
+            points += 100 * enemy.getAI();
+        }
+        int multiplier = 1;
+        for (CustomNightModifier modifier : modifiers) {
+            if (modifier.isActive()) {
+                multiplier++;
+            }
+        }
+        points *= multiplier;
+        
+        return points;
+    }
 
     public static boolean isStartSelected() {
         return startSelected;
@@ -325,4 +367,25 @@ public class CustomNight {
     public static List<CustomNightModifier> getModifiers() {
         return modifiers;
     }
+
+
+    
+    public static int PEPITO = 0;
+    public static int NOTPEPITO = 1;
+    public static int GLITCHER = 2;
+    public static int A90 = 3;
+    public static int MSI = 4;
+    public static int ASTARTA = 5;
+    public static int SHARK = 6;
+    public static int BOYKISSER = 7;
+    public static int COLACAT = 8;
+    public static int MIRRORCAT = 9;
+    public static int MAKI = 10;
+    public static int LEMONADE_CAT = 11;
+    public static int WIRES = 12;
+    public static int SCARY_CAT = 13;
+    public static int JUMPSCARE_CAT = 14;
+    public static int EL_ASTARTA = 15;
+    public static int DEEP_SEA_CREATURE = 16;
+    public static int SHOCK = 17;
 }

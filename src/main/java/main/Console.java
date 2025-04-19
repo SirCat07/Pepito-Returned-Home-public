@@ -1,19 +1,23 @@
 package main;
 
 import cutscenes.Cutscene;
-import cutscenes.CutsceneObject;
+import cutscenes.Presets;
 import game.Balloon;
-import game.Item;
-import game.Platformer;
+import game.Level;
 import game.achievements.AchievementHandler;
 import game.achievements.Achievements;
 import game.bingo.BingoHandler;
 import game.bingo.BingoTask;
 import game.custom.CustomNight;
+import game.dryCat.DryCatGame;
+import game.enviornments.Basement;
+import game.enviornments.HChamber;
+import game.field.Field;
+import game.items.Item;
 import game.shadownight.Mister;
 import utils.*;
 
-import java.awt.image.BufferedImage;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,14 +26,14 @@ import java.util.Locale;
 public class Console {
     private static boolean isOn = false;
     private static List<String> lines = new ArrayList<>();
-    static String currentlyTyping = "";
+    public static String currentlyTyping = "";
     private static GamePanel g;
 
     static void initialize(GamePanel panel) {
         g = panel;
 
-        normalCommands = List.of("energy", "msi", "pepito", "notPepito", "mirror", "mk", "bloom", "a90", "astarta", "elastarta", "blizzard", "jmpcat", "roulette", "uncannyEventSec", "dvdEventSec", "holeEventSec", "mister", "astartaSpeed", "setABhealth", "lemon", "scarycat", "a120", "wires", "shadow", "shart", "makeballoons", "jumpscare", "bright", "starlight", "nightSeconds", "setEndlessNight", "locker", "sunglasses", "temp", "maki", "lag", "notify", "skipAB", "event", "kys", "win");
-        opCommands = List.of("debug", "itemLimit", "item", "ie", "volume", "timers", "countfps", "limbo", "infinitemoneyglitch", "reset", "state", "freesoda", "invincible", "getAch", "completePepingo", "remAch", "portal", "testCutscene", "plat", "endlessCheck", "eventCheck", "help", "prikol");;
+        normalCommands = List.of("adblockerspawn", "energy", "msi", "pepito", "notPepito", "mirror", "mk", "boykisser", "bloom", "a90", "astarta", "elastarta", "blizzard", "jmpcat", "roulette", "uncannyEventSec", "dvdEventSec", "holeEventSec", "mister", "astartaSpeed", "setABhealth", "lemon", "scarycat", "a120", "wires", "shadow", "shart", "dsc", "makeballoons", "jumpscare", "bright", "starlight", "wait7seconds", "nightSeconds", "setEndlessNight", "locker", "sunglasses", "temp", "maki", "lag", "notify", "skipAB", "event", "kys", "win");
+        opCommands = List.of("investigation", "maze", "end", "sField", "dist", "glass", "corn", "music", "spark", "rrp", "prp", "beast", "overseer", "krunlicMode", "krPhase", "crate", "sigma", "alpha", "beta", "gamma", "delta", "omega", "zeta", "phi", "epsilon", "debug", "itemLimit", "item", "ie", "volume", "timers", "countfps", "limbo", "infinitemoneyglitch", "reset", "state", "freesoda", "invincible", "getAch", "completePepingo", "remAch", "portal", "testCutscene", "plat", "endlessCheck", "eventCheck", "help", "prikol");;
     }
 
     static void type(String sequence) {
@@ -71,7 +75,7 @@ public class Console {
         getPossibleCommand();
     }
 
-    static void enter(boolean isOp) {
+    public static void enter(boolean isOp) {
         ArrayList<String> returnValues = new ArrayList<>();
         String[] args = currentlyTyping.split(" ");
 
@@ -84,6 +88,166 @@ public class Console {
 
         } else if(isOp) {
             switch (args[0]) {
+                case "investigation" -> {
+                    g.startInvestigation();
+                }
+                case "maze" -> {
+                    g.getNight().getMrMaze().spawn();
+                }
+                case "end" -> {
+                    g.fadeOut(200, 0, 1);
+                    g.stopAllSound();
+                    g.fadeOutStatic(0, 0, 0);
+                    
+                    g.music.play("endOfYourJourney", 0.15);
+                    
+                    g.basementHyperOptimization = false;
+                    
+                    Cutscene cutscene = Presets.basementPreset(g);
+                    g.currentCutscene = cutscene;
+                    g.state = GameState.CUTSCENE;
+                    
+                    new Pepitimer(() -> {
+                        g.fadeOut(200, 0, 1);
+                        cutscene.nextScene();
+                    }, 12800);
+
+                    new Pepitimer(() -> {
+                        g.fadeOut(200, 0, 1);
+                        cutscene.nextScene();
+                    }, 25300);
+
+                    new Pepitimer(() -> {
+                        g.fadeOut(200, 0, 1);
+                        cutscene.nextScene();
+                    }, 38400);
+
+                    new Pepitimer(() -> {
+                        g.fadeOut(200, 0, 1);
+                        cutscene.nextScene();
+                    }, 51200);
+
+                    new Pepitimer(() -> {
+                        g.fadeOut(0, 255, 0.3F);
+                    }, 64000);
+
+                    new Pepitimer(() -> {
+                        cutscene.nextScene();
+                        g.fadeOut(0, 0, 0);
+                    }, 76000);
+
+                    new Pepitimer(() -> {
+                        g.state = GameState.GAME;
+                        g.win();
+                    }, 78000);
+                }
+                case "sField" -> {
+                    g.fieldIntro();
+                }
+                case "dist" -> {
+                    Field field = g.field;
+                    field.addDistance(Integer.parseInt(args[1]) - field.getDistance());
+
+                    field.setX((int) -field.getRoadXOffsetArray()[(int) (field.getDistance())]);
+                    field.setY((int) -field.getRoadYOffsetArray()[(int) (field.getDistance())] + 320);
+                }
+                case "glass" -> {
+                    g.getNight().breakClock();
+                }
+                case "corn" -> {
+                    g.startCorn();
+                }
+                case "music" -> {
+                    g.startMusicMenu();
+                }
+                case "spark" -> {
+                    ((Basement) g.getNight().env()).spark();
+                    g.sound.playRate("sparkSound", 0.1, 0.9 + Math.random() / 5F);
+                }
+                case "rrp" -> {
+                    ((HChamber) g.getNight().env()).setPendingRewardRoom(true);
+                }
+                case "prp" -> {
+                    ((HChamber) g.getNight().env()).setPendingPrefieldRoom(true);
+                }
+                case "beast" -> {
+                    g.getNight().getBeast().spawn();
+                }
+                case "overseer" -> {
+                    g.getNight().getOverseer().spawn();
+                }
+                case "crate" -> {
+                    g.createCrate(Integer.parseInt(args[1]));
+                }
+                case "krunlicMode" -> {
+                    if(!GamePanel.krunlicMode) {
+                        g.version += "krunlic";
+                        g.initializeFontMetrics();
+                        g.sound.play("krunlicTrigger", 0.2);
+                        g.fadeOutStatic(1, 0.05F, 0.01F);
+                        g.fadeOut(255, 160, 1);
+                    }
+                    GamePanel.krunlicMode = true;
+                }
+                case "krPhase" -> {
+                    GamePanel.krunlicPhase = Integer.parseInt(args[1]);
+                }
+                case "sigma" -> {
+                    g.type = GameType.BASEMENT;
+                    g.startGame();
+                }
+                case "alpha" -> {
+                    g.getNight().basementMillyArrive();
+                }
+                case "beta" -> {
+                    g.getNight().basementVentOff();
+                }
+                case "gamma" -> {
+                    g.getNight().basementEndingEncounter();
+                }
+                case "delta" -> {
+                    g.getNight().basementDoorBlocks();
+                }
+                case "omega" -> {
+                    g.dryCatGame = new DryCatGame(Boolean.parseBoolean(args[1]));
+
+                    g.state = GameState.DRY_CAT_GAME;
+                    g.music.play("dryCats", 0.1);
+                }
+                case "zeta" -> {
+                    Basement basement = (Basement) g.getNight().env();
+                    
+                    basement.setGeneratorStage((byte) 15);
+                    g.getNight().redrawBasementScreen();
+                }
+                case "phi" -> {
+                    g.getNight().setEvent(GameEvent.ENDING_BASEMENT);
+                    Basement basement = (Basement) g.getNight().env();
+
+                    g.sound.play("explosionSound", 0.2);
+//                    basement.setShake(55);
+                    basement.setStage((byte) 7);
+//                    basement.setWhiteScreen(255);
+                    basement.setRedAlarmY(-100);
+                    g.repaintOffice();
+                    g.getNight().setTemperature(0);
+                    g.getNight().redrawBasementScreen();
+                    g.getNight().doors.clear();
+
+                    g.white200 = Color.WHITE;
+                    g.basementHyperOptimization = true;
+                    g.redrawBHO = true;
+                    g.sound.play("helicopter", 0.2, true);
+                }
+                case "epsilon" -> {
+                    Level oldNight = g.getNight();
+                    
+                    g.type = GameType.HYDROPHOBIA;
+                    g.startGame();
+
+                    HChamber env = (HChamber) g.getNight().env();
+                    env.setOldNight(oldNight);
+                }
                 case "debug" -> {
                     g.debugMode = true;
                 }
@@ -121,6 +285,7 @@ public class Console {
                     if(failed) {
                         returnValues.add("-failed");
                     }
+                    g.repaintOffice();
                 }
                 case "volume" -> {
                     g.volume = Float.parseFloat(args[1]);
@@ -172,7 +337,7 @@ public class Console {
                             if(CustomNight.limboId == newId) {
                                 CustomNight.limbo(g);
                             }
-                        }, 9800);
+                        }, 9700);
                         new Pepitimer(() -> {
                             if(CustomNight.limboId == newId) {
                                 g.music.play("torture", 0.05, true);
@@ -181,7 +346,7 @@ public class Console {
                     }
                 }
                 case "infinitemoneyglitch" -> {
-                    g.keyHandler.infiniteMoneyGlitch = true;
+                    g.keyHandler.infiniteMoneyGlitch = !g.keyHandler.infiniteMoneyGlitch;
                 }
                 case "bloom" -> {
                     g.bloom = !g.bloom;
@@ -251,30 +416,28 @@ public class Console {
                     g.bingoCard.complete();
                 }
                 case "testCutscene" -> {
-                    Cutscene cutscene = new Cutscene("test", 1080, 640, BufferedImage.TYPE_INT_RGB);
-
-                    CutsceneObject sigma = new CutsceneObject(50, 50, 100, 100, "/game/rift/frame.png").addScene(0);
-                    sigma.setRecalculationStrat(() -> {
-                        sigma.x = (int) (Math.cos(cutscene.getMilliseconds() / 320.0) * 450 + 500);
-                        sigma.y = (int) (Math.sin(cutscene.getMilliseconds() / 320.0) * 250 + 280);
-                    });
-                    CutsceneObject alpha = new CutsceneObject(50, 50, 200, 100, "/game/cam/no_signal.png").addScene(0);
-                    alpha.setRecalculationStrat(() -> {
-                        alpha.x = (int) (Math.sin(cutscene.getMilliseconds() / 320.0) * 450 + 500);
-                        alpha.y = (int) (Math.cos(cutscene.getMilliseconds() / 320.0) * 250 + 280);
-                    });
-
-                    cutscene.addObject(sigma);
-                    cutscene.addObject(alpha);
-                    cutscene.recognizeObjects();
-                    g.currentCutscene = cutscene;
-
-                    g.state = GameState.CUTSCENE;
+//                    Cutscene cutscene = new Cutscene("test", 1080, 640, BufferedImage.TYPE_INT_RGB);
+//
+//                    CutsceneObject sigma = new CutsceneObject(50, 50, 100, 100, "/game/rift/frame.png").addScene(0);
+//                    sigma.setRecalculationStrat(() -> {
+//                        sigma.x = (int) (Math.cos(cutscene.getMilliseconds() / 320.0) * 450 + 500);
+//                        sigma.y = (int) (Math.sin(cutscene.getMilliseconds() / 320.0) * 250 + 280);
+//                    });
+//                    CutsceneObject alpha = new CutsceneObject(50, 50, 200, 100, "/game/cam/no_signal.png").addScene(0);
+//                    alpha.setRecalculationStrat(() -> {
+//                        alpha.x = (int) (Math.sin(cutscene.getMilliseconds() / 320.0) * 450 + 500);
+//                        alpha.y = (int) (Math.cos(cutscene.getMilliseconds() / 320.0) * 250 + 280);
+//                    });
+//
+//                    cutscene.addObject(sigma);
+//                    cutscene.addObject(alpha);
+//                    cutscene.recognizeObjects();
+//                    g.currentCutscene = cutscene;
+//
+//                    g.state = GameState.CUTSCENE;
                 }
                 case "plat" -> {
-                    g.platformer = new Platformer(g);
-
-                    g.state = GameState.PLATFORMER;
+                    g.startPlatformer();
                 }
                 case "endlessCheck" -> {
                     returnValues.add("-endless night: " + g.endless.getNight());
@@ -311,13 +474,21 @@ public class Console {
         currentlyTyping = "";
         possibleCommand = "";
 
-        if(lines.size() > 7) {
-            lines = lines.subList(1 + returnValues.size(), lines.size());
+        while(lines.size() > 7) {
+            lines = lines.subList(1, lines.size());
         }
     }
 
     static boolean sendCommand(String command, String[] args) {
         switch (command) {
+            case "adblockerspawn" -> {
+                g.adblockerStatus = 1;
+                g.adblockerTimer = 10;
+
+                g.adblockerPoint.x = (short) (20 + Math.round(Math.random() * 1040));
+                g.adblockerPoint.y = (short) (20 + Math.round(Math.random() * 600));
+                g.adblockerButton = new Rectangle((short) (g.adblockerPoint.x * g.widthModifier + g.centerX), (short) (g.adblockerPoint.y * g.heightModifier + g.centerY), (short) (100 * g.widthModifier), (short) (100 * g.heightModifier));
+            }
             case "energy" -> {
                 g.getNight().setEnergy(Float.valueOf(args[1]));
             }
@@ -335,6 +506,9 @@ public class Console {
             }
             case "mk" -> {
                 g.getNight().getMirrorCat().kill();
+            }
+            case "boykisser" -> {
+                g.getNight().getBoykisser().spawn();
             }
             case "a90" -> {
                 g.getNight().getA90().spawn();
@@ -399,15 +573,21 @@ public class Console {
                 }
                 g.getNight().getShark().floodStartSeconds = 2;
             }
+            case "dsc" -> {
+                if(g.getNight().getDsc().getAILevel() <= 0) {
+                    g.getNight().getDsc().setAILevel(1);
+                }
+                g.getNight().getDsc().floodStartSeconds = 2;
+            }
             case "makeballoons" -> {
                 int balloonAmount = Integer.parseInt(args[1]);
 
                 for(int i = 0; i < balloonAmount; i++){
-                    GamePanel.balloons.add(new Balloon());
+                    GamePanel.balloons.add(new Balloon(0));
                 }
             }
             case "jumpscare" -> {
-                g.jumpscare(args[1]);
+                g.jumpscare(args[1], g.getNight().getId());
             }
             case "bright" -> {
                 int brightness = Integer.parseInt(args[1]);
@@ -415,6 +595,9 @@ public class Console {
             }
             case "starlight" -> {
                 g.starlightMillis = Integer.parseInt(args[1]);
+            }
+            case "wait7seconds" -> {
+                g.wait7Seconds(Integer.parseInt(args[1]));
             }
             case "nightSeconds" -> {
                 g.getNight().seconds = Short.parseShort(args[1]);
@@ -460,7 +643,7 @@ public class Console {
                 g.getNight().setEvent(GameEvent.valueOf(args[1].toUpperCase(Locale.ROOT)));
             }
             case "kys" -> {
-                g.jumpscare("pepito");
+                g.jumpscare("pepito", g.getNight().getId());
             }
             case "win" -> {
                 g.winSequence();

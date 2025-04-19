@@ -1,11 +1,10 @@
 package utils;
 
-import main.GamePanel;
-
 public class Pepitimer {
     Runnable runnable;
-    int miliseconds;
+    float miliseconds;
     boolean paused;
+    boolean gamePaused;
     boolean track;
 
     public Pepitimer(Runnable runnable, int miliseconds) {
@@ -29,17 +28,17 @@ public class Pepitimer {
     public void resume() {
         paused = false;
     }
-    boolean freezeAffected = false;
-    public void affectByFreeze() {
-        freezeAffected = true;
+    public void gamePause() {
+        gamePaused = true;
     }
+    public void gameResume() {
+        gamePaused = false;
+    }
+    
 
-    public void decrease(int delta) {
-        if(paused)
+    public void decrease(float delta) {
+        if(paused || gamePaused)
             return;
-
-        if(freezeAffected)
-            delta = (int) (delta * GamePanel.freezeModifier);
 
         if(miliseconds > delta / 2) {
             miliseconds -= delta;
@@ -49,11 +48,11 @@ public class Pepitimer {
         }
     }
 
-    public void setMiliseconds(int miliseconds) {
+    public void setMiliseconds(float miliseconds) {
         this.miliseconds = miliseconds;
     }
 
-    public int getMiliseconds() {
+    public float getMiliseconds() {
         return miliseconds;
     }
 

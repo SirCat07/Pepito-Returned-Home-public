@@ -4,7 +4,7 @@ import main.GamePanel;
 
 public class Enemy {
     byte AI = 0;
-    float modifier = (float) Math.max(AI / 3.9 + 0.6, 1);
+    public float modifier = (float) Math.max(AI / 3.9 + 0.6, 1);
 
     GamePanel g;
     public Enemy(GamePanel panel) {
@@ -29,5 +29,16 @@ public class Enemy {
 
     public int getAILevel() {
         return AI;
+    }
+    
+    public int getArrival() {
+        System.out.println("NO ARRIVAL OVERRIDE FOR CLASS: " + getClass().getName());
+        System.out.println("THIS FUNCTION NEEDS TO ATLEAST RETURN 0 OR BE CHANGED");
+        return -1;
+    }
+
+    public void fullReset() {
+        System.out.println("NO FULL RESET OVERRIDE FOR CLASS: " + getClass().getName());
+        System.out.println("THIS FUNCTION NEEDS TO RESET THE ENTITY OR DO NOTHING");
     }
 }

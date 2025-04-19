@@ -7,7 +7,7 @@ import utils.GameEvent;
 import utils.RepeatingPepitimer;
 
 public class Shark extends Enemy {
-    public short floodStartSeconds = (short) ((Math.random() * 180 + 90));
+    public short floodStartSeconds = (short) ((Math.random() * 170 + 100));
     public byte arrivalSeconds = (byte) ((Math.random() * 6 + 5) / modifier);
     public byte floodDuration = 0;
     public boolean active = false;
@@ -23,7 +23,9 @@ public class Shark extends Enemy {
     }
 
     public void startFlood() {
-        g.getNight().setEvent(GameEvent.FLOOD);
+        if(g.getNight().getEvent().isInGame()) {
+            g.getNight().setEvent(GameEvent.FLOOD);
+        }
         g.everySecond20th.put("shark", () -> {
             checkForFloodChanges();
             counterFloat++;
@@ -32,7 +34,7 @@ public class Shark extends Enemy {
         g.getNight().addEventPercent(0.2F);
 
         arrivalSeconds = (byte) ((Math.random() * 6 + 5) / modifier);
-        floodDuration = 60;
+        floodDuration = (byte) (55 + Math.random() * 6);
 
         g.sound.play("waterLoop", 0.1, true);
 
@@ -57,13 +59,11 @@ public class Shark extends Enemy {
             if(leftBeforeBite == 0) {
                 arrivalSeconds = (byte) ((Math.random() * 5 + 2) / modifier);
                 biting = true;
-                g.sound.playRate("sogMeow", 0.05, GamePanel.freezeModifier);
+                g.sound.play("sogMeow", 0.05);
 
                 timer[0].cancel(true);
             }
         }, (int) (1500 / modifier), (int) (1100 / modifier));
-
-        timer[0].affectByFreeze();
     }
 
     byte leftBeforeBite;
@@ -102,16 +102,20 @@ public class Shark extends Enemy {
 
     public void checkForFloodChanges() {
         if(floodReceding) {
+            g.getNight().setWetFloor(0.5F);
+            
             if(g.currentWaterLevel < 639) {
                 g.currentWaterLevel++;
             } else {
                 floodReceding = false;
 
-                g.getNight().setEvent(GameEvent.NONE);
+                if(g.getNight().getEvent() == GameEvent.FLOOD) {
+                    g.getNight().setEvent(GameEvent.NONE);
+                }
                 g.everySecond20th.remove("shark");
                 g.sound.stop();
                 g.resetFlood();
-                floodStartSeconds = (short) ((Math.random() * 180 + 60));
+                floodStartSeconds = (short) ((Math.random() * 180 + 70));
 
                 g.getNight().seconds += 10;
                 g.getNight().updateClockString();
@@ -125,10 +129,9 @@ public class Shark extends Enemy {
                 }
             } else {
                 g.currentWaterPos += (short) (g.waterSpeed + (g.fanActive ? 1 : 0) * 4);
-
-                if (g.currentWaterPos > 1480) {
-                    g.currentWaterPos -= 1480;
-                }
+            }
+            if (g.currentWaterPos > 1480) {
+                g.currentWaterPos -= 1480;
             }
         }
     }
@@ -145,7 +148,7 @@ public class Shark extends Enemy {
                 g.getNight().getA90().forgive = Math.min(g.getNight().getA90().forgive + 0.005F, 1);
 
                 if((-g.offsetX + 880) <= (x + 240) && x <= (-g.offsetX + 980)) {
-                    g.jumpscare("shark");
+                    g.jumpscare("shark", g.getNight().getId());
                 }
             }
         }
@@ -163,5 +166,17 @@ public class Shark extends Enemy {
 
     public boolean isActive() {
         return active;
+    }
+
+    @Override
+    public int getArrival() {
+        return floodStartSeconds;
+    }
+
+    @Override
+    public void fullReset() {
+        floodDuration = 0;
+        floodReceding = true;
+        active = false;
     }
 }

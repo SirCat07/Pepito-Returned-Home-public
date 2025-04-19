@@ -3,6 +3,7 @@ package game;
 import enemies.Rat;
 import game.bingo.BingoHandler;
 import game.bingo.BingoTask;
+import main.GamePanel;
 import utils.Pepitimer;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class SensorConsole {
                 int b = (int) Math.round(Math.random());
 
                 if(b == 0) {
-                    list.add("No connection! Please connect to your network.");
+                    list.add(GamePanel.getString("sensorNoConnection"));
                     timer = 2;
                 }
             }
@@ -68,5 +69,9 @@ public class SensorConsole {
                 }, 1000);
             }, 1000);
         }, 1000);
+    }
+    
+    public int getSize() {
+        return list.size();
     }
 }

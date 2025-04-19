@@ -1,5 +1,7 @@
 package game;
 
+import game.items.Item;
+
 import java.awt.image.BufferedImage;
 
 public class MillyItem {

@@ -34,7 +34,7 @@ public class Glitcher extends Enemy {
 
         g.camOut(false);
 
-        g.sound.playRate("glitchArrive", 0.15, GamePanel.freezeModifier);
+        g.sound.play("glitchArrive", 0.15);
 
         short firstGlitch = (short) (Math.random() * 100 + 55);
         g.fadeOut(firstGlitch, firstGlitch, 0);
@@ -51,17 +51,17 @@ public class Glitcher extends Enemy {
         });
 
         if(g.sensor.isEnabled()) {
-            g.console.add("*glitching sounds*");
+            g.console.add(GamePanel.getString("sensorGlitchingSounds"));
         }
         if(g.type == GameType.SHADOW) {
             addShadowGlitch();
         }
 
         new Pepitimer(() -> {
-            g.sound.playRate("glitch1", 0.1, GamePanel.freezeModifier);
+            g.sound.play("glitch1", 0.1);
 
             if(g.sensor.isEnabled()) {
-                g.console.add("*glitching sounds*");
+                g.console.add(GamePanel.getString("sensorGlitchingSounds"));
             }
             if(g.type == GameType.SHADOW) {
                 addShadowGlitch();
@@ -71,7 +71,7 @@ public class Glitcher extends Enemy {
             g.fadeOut(secondGlitch, secondGlitch, 0);
 
             new Pepitimer(() -> {
-                g.sound.playRate("glitch2", 0.08, GamePanel.freezeModifier);
+                g.sound.play("glitch2", 0.08);
 
                 g.getNight().getPepito().notPepitoChance += 1.5F * modifier;
 
@@ -85,10 +85,10 @@ public class Glitcher extends Enemy {
                 new Pepitimer(() -> {
                     isGlitching = false;
                     g.everySecond10th.remove("glitcher");
-                }, (int) (500 * modifier)).affectByFreeze();
+                }, (int) (500 * modifier));
 
                 if(g.sensor.isEnabled()) {
-                    g.console.add("*glitching sounds*");
+                    g.console.add(GamePanel.getString("sensorGlitchingSounds"));
                 }
                 if(g.type == GameType.SHADOW) {
                     addShadowGlitch();
@@ -98,13 +98,13 @@ public class Glitcher extends Enemy {
                 g.fadeOutStatic(0, intensity * 0.5F, 0.01F);
 
                 counter = 3 * modifier - 3;
-            }, (short) (500 * modifier)).affectByFreeze();
-        }, (short) (500 * modifier)).affectByFreeze();
+            }, (short) (500 * modifier));
+        }, (short) (500 * modifier));
     }
 
     public void increaseCounter() {
         if (isEnabled()) {
-            counter += g.getNight().getMaki().isActive() ? 0.2F : 1;
+            counter += g.getNight().getMaki().isActive() ? 0.2F : 0.6F;
 
             int randomGlitch = spawnChance();
             if ((randomGlitch - counter) < -8) {
@@ -122,6 +122,8 @@ public class Glitcher extends Enemy {
             }
         }
     }
+    
+    public int visualFormTicks = 0;
 
 
     List<Point> shadowGlitches = new ArrayList<>();
@@ -137,5 +139,15 @@ public class Glitcher extends Enemy {
     @Override
     public boolean isEnabled() {
         return super.isEnabled() && (!g.adblocker.isEnabled() && !g.adBlocked);
+    }
+
+    @Override
+    public int getArrival() {
+        return -1;
+    }
+
+    @Override
+    public void fullReset() {
+        g.pixelation = 1;
     }
 }

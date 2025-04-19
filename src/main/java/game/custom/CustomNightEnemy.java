@@ -5,8 +5,9 @@ import utils.PepitoImage;
 public class CustomNightEnemy extends CustomNightPrevieweable {
     PepitoImage icon;
     int AI = 0;
+    byte loops = 0;
     float wobbleIntensity = 0;
-    byte id = 0;
+    byte id;
 
     public float otherX = -1;
     public float otherY = -1;
@@ -18,7 +19,7 @@ public class CustomNightEnemy extends CustomNightPrevieweable {
         this.previewPath = "/menu/challenge/enemyPreviews/" + fileName + ".png";
     }
 
-    public void click() {
+    public void click(boolean hold) {
         if(AI == 0) {
             wobbleIntensity = 12;
         } else {
@@ -27,7 +28,13 @@ public class CustomNightEnemy extends CustomNightPrevieweable {
 
         AI++;
         if(AI > 8) {
+            if(!hold && (id == 13 || id == 11) && AI < 10 && (Math.random() < 0.09 || loops >= 4)) {
+                // nine....
+                return;
+            }
+            
             AI = 0;
+            loops++;
         }
     }
 

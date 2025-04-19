@@ -22,7 +22,7 @@ public class Maki extends Enemy {
     RepeatingPepitimer timer;
 
     void spawn() {
-        g.sound.playRate("makiSound", 0.1, GamePanel.freezeModifier);
+        g.sound.play("makiSound", 0.1);
         List<Integer> list = new ArrayList<>(g.getNight().getDoors().keySet());
         Collections.shuffle(list);
         door = (byte) (int) (list.get(0));
@@ -32,7 +32,7 @@ public class Maki extends Enemy {
         if(g.sensor.isEnabled()) {
             int random = (int) Math.round(Math.random() * 2);
             if (random == 0) {
-                g.console.add("INTRUSION AT DOOR N" + (door + 1));
+                g.console.add(GamePanel.getString("sensorMaki") + (door + 1));
             }
         }
 
@@ -50,15 +50,15 @@ public class Maki extends Enemy {
         timer = new RepeatingPepitimer(() -> {
             if(makiStepsLeft > 0) {
                 makiStepsLeft--;
-                g.sound.playRate("makiWalk", 0.05, GamePanel.freezeModifier);
+                g.sound.play("makiWalk", 0.05);
             } else if(makiKnocksLeft >= 0) {
-                if (!(g.getNight().getDoors().get((int) door).isClosed() || g.getNight().getDoors().get((int) door).getBlockade() > 0)) {
-                    g.jumpscare("maki");
+                if (!(g.getNight().getDoors().get((int) door).isLocked())) {
+                    g.jumpscare("maki", g.getNight().getId());
                 } else {
                     makiKnocksLeft--;
 
                     if (g.getNight().getDoors().get((int) door).getBlockade() > 0) {
-                        g.sound.playRate("blockadeHit", 0.1, GamePanel.freezeModifier);
+                        g.sound.play("blockadeHit", 0.1);
                         g.getNight().getDoors().get((int) door).addBlockade(-1);
 
                         if (g.getNight().getDoors().get((int) door).getBlockade() == 0) {
@@ -67,7 +67,7 @@ public class Maki extends Enemy {
                         }
                     }
                     if(g.getNight().getDoors().get((int) door).isClosed()) {
-                        g.sound.playRate("knock", 0.05, GamePanel.freezeModifier);
+                        g.sound.play("knock", 0.05);
                         g.getNight().addEnergy(-0.5F);
                     }
                 }
@@ -77,8 +77,6 @@ public class Maki extends Enemy {
                 }
             }
         }, 2500 + (short) (Math.random() * 600), 1100);
-
-        timer.affectByFreeze();
     }
 
     public byte makiStepsLeft = 6;
@@ -116,7 +114,7 @@ public class Maki extends Enemy {
                 byte random = (byte) Math.round(Math.random() * 5);
                 if (random != 0) {
                     String timeStamp = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
-                    g.console.add("That was not Pepito! (" + timeStamp + ")");
+                    g.console.add(GamePanel.getString("sensorMakiLeave").replace("%d%", timeStamp));
                 }
             }
 
@@ -131,5 +129,15 @@ public class Maki extends Enemy {
 
     public byte getDoor() {
         return door;
+    }
+
+    @Override
+    public int getArrival() {
+        return secondsUntilMaki;
+    }
+
+    @Override
+    public void fullReset() {
+        stopService();
     }
 }

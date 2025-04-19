@@ -32,6 +32,7 @@ challenge:Challenge
 volume:volume
 fixedRatio:fixed ratio
 headphones:headphones
+deafMode:(deaf mode) ^
 resetNight:reset night
 showDisclaimer:show disclaimer
 showManual:show manual
@@ -40,13 +41,15 @@ rtx:RTX super cool bloom
 fpsCounter:fps counter
 fpsCap:fps cap:
 jumpscareShake:jumpscares shake:
+screenShake:screen shake
+disableFlickering:disable flicker
 UNLIMITED:UNLIMITED
 windowAndScreen:window + screen
 screen:screen
 noShake:no shake
 languageSelect:language:
 language:English
-keybindSettingsGuide:Shift+Z - Screenshot | Escape - Pause | -+ - Quick volume change
+keybindSettingsGuide:Shift+Z - Screenshot | Esc - Pause | -+ - Change volume | F11 - Fullscreen
 price:Price
 pressAnyKey:[press any key]
 time:Time: 
@@ -59,6 +62,7 @@ timeSpent:Time spent:
 sillyGame:Silly little game where
 completeAll:you need to complete all
 tasksTimeLimit:tasks with a time limit!
+currentlyPlaying:Currently playing:
 firstNightWarning:Warning: your night will be set to the FIRST night
 left:left
 right:right
@@ -66,6 +70,7 @@ loading:loading...
 halfwayPoint:Halfway Point
 halfwayPointCaps:HALFWAY POINT
 astartaTime:ASTARTA TIME
+waitForStart:Wait 7 seconds to start at 8 PM
 click:[click]
 door:Door
 transporting:transporting...
@@ -75,12 +80,20 @@ maxwellTheCat:Maxwell the Cat
 button:button
 transportInto:Transport into
 shadownight:Shadownight
+selectTwo:Select two.
+riftArrowsToChange:Arrows - Change item
+riftSpaceToSelect:Space - Select item
+riftEnabled:RIFT ENABLED RIFT ENABLED RIFT ENABLED
 floodedAgain:uh oh! looks like the office got flooded again!
 bewareOfSharks:beware of sharks!
 moveThe:move the
 fishAway:fish away!
 lemonadeCatAppears:uh oh! the lemonade cat appears!
 giveHimLemons:right click to give him some lemons!
+dscSplash1:SHOOT THE CREATURE.
+dscSplash2:RIGHT-CLICK
+dscWarning1:IT'S GETTING CLOSE
+dscWarning2:MOVE AWAY
 tries:Tries: 
 somethingChangedInCamera:Something changed in your camera...
 hide:hide
@@ -104,15 +117,16 @@ luck:luck
 gotAdblocker:You got the adblocker!
 foundAdblocker:You found an adblocker! Secure it until 4 AM to get it.
 keptMaxwell:YOU KEPT YOUR MAXWELL!!!
+infiniteBirthdayHats:Infinite birthday hats at 6 AM!
 score:Score
 best:Best
 ggWonned:gg you wonned
-6amClock:6 am :clock:
 pressAnyKeyButAwesome:press any key!!!!
 beat4Nights:You beat the entire 4 nights!!!
 beatPreparations:You beat Pépito's Party Preparations!
 beatNight666:You beat Night 666 - Pépito's Party!!!
 rewardMaxwell:reward: x1 party maxwell
+playBasementAgain:NOW GO INTO THE BASEMENT AGAIN
 points:points
 night:night
 one:one
@@ -128,23 +142,60 @@ night666:night 666
 customNightSmall:custom night
 challengeSmall:challenge
 day:day
+perfectStorm:perfect storm
+returnFromHydro:back into the gauntlet
 newChallenger:A NEW CHALLENGER HAS APPEARED!
 peace:PEACE!
 newChallengers:NEW CHALLENGERS APPEAR!
+basementAnnouncement:BASEMENT
+basementPartyAnnouncement:REAL DEAL
+hydrophobiaChamber:hydrophobia chamber
+neonSogSkipsLeft:Neon Sog skips left: 
+neonSogText:Get Night 1 skips?
+neonSogFull:Full!
+soggyTime:Soggy Time!
+intermission:INTERMISSION
+dryCatPressE:Press [E] to enter.
+hcCamGuideline:[C] for Camera.
+hcLockerGuideline:[W] to Exit Locker.
+hcConditionerOff:It's off.
+hcConditionerOn:Running.
+fieldObjective: Objective: Get inside the car
+red40NeedWater:Needs water to activate.
+imHere:I'm Here.
+sodaExpired:Your Soda was expired
+miniSodaExpired:Your Mini Soda was expired
+megaSodaWithheld:Mega Soda withheld
+monitorForgot:uhh i forgot
+monitorDay:Day 
+monitorOutage:Next Outage:
+monitorPowerBack:Power Back In:
+blueHour:blue:hour
+hydroRespawn:Respawn
+hydroGoToMenu:Go to Menu
+selectNightGuide:[SHIFT+A/D]
+endlessDisclaimer1:- NOTE FROM DEVELOPERS -
+endlessDisclaimer2:The Classic Mode is mostly a tutorial
+endlessDisclaimer3:Most of the game's content is unlocked through the
+endlessDisclaimer4:Endless Mode, it's really worth checking that out,
+endlessDisclaimer5:i promise!
+endlessDisclaimer6:[PRESS ANY KEY]
+krunlic:krunlic
 //://
 unlockedPepingo:+ unlocked Pepingo!
 maxwellGenerated:Your Maxwell generated %d% dabloons!
 cornGrew:Your Corn fully grew!
 millyParty:Milly is hosting a party at the shop!
+larrySweepAnnouncement:Milly is having a sale!
 //://
 sodaName:SODAA
 sodaDesc:very tasty refreshing%n[S]: gives +40% energy
 flashlightName:flashlight
-flashlightDesc:too dark cant see%n[RMB]: flashes a light%nscares Astarta%ncooldown: 28s
+flashlightDesc:too dark cant see%n[RMB]: flashes a light%nscares Astarta%ncooldown: 28s%n[HOLD]: lights up
 fanName:fan
 fanDesc:is it that hot%n[F]: lowers NotPepito%nchance;%nclears flood faster
 metalPipeName:METAL PIPE
-metalPipeDesc:METAL PIPE%n[M]: scares Pépito%ncooldown: 22s
+metalPipeDesc:METAL PIPE%n[M]: scares Pépito%ncooldown: 25s
 sensorName:SENSOR
 sensorDesc:can detect movement.%nside effects may%ninclude: MSI
 adblockerName:adblocker
@@ -152,7 +203,7 @@ adblockerDesc:game on easy mode!%n- removes uncanny%n- removes glitcher
 maxwellName:maxwell
 maxwellDesc:this is a maxwell%nendless: generates%ndabloons
 freezeName:ice potion
-freezeDesc:makes enemies slower%n[I]: freeze everything%nfor 30s
+freezeDesc:slows down the game%n[I]: freeze everything%nfor 30s
 planksName:planks
 planksDesc:blockades doors%nlasts 12 knocks%n[B+1]: door 1 %n[B+2] door 2
 miniSodaName:MINNESOTA
@@ -173,7 +224,39 @@ subscriptionName:subscription
 subscriptionDesc:ever wanted a%nwormhole through time%ninside a ballpit?%nThis is your answer!%nSubscribe now!
 cornName:corn
 cornDesc:corn!%ngrows 3 nights%ndecreases enemy%nAI by 1%nwhen grown
+styroPipeName:styrofoam pipe
+styroPipeDesc:mix with gasoline%n[P]: drop it
+hisPictureName:his photo
+hisPictureDesc:Looking great as%nalways, Mr. Zhou
+hisPaintingName:his painting
+hisPaintingDesc:Looking great as%nalways, Mr. Zhou
+basementKeyName:larry's keys
+basementKeyDesc:gives you a try at%nthe BASEMENT%n1 item rifts into ∞
+sunglassesName:sunglasses
+sunglassesDesc:What a steal!%n(from larry)%n[G]: toggles glasses
+manualName:manual
+manualDesc:Your best,%nEndless friend
+riftGlitchName:rift glitch
+riftGlitchDesc:x7uy5aspxd%n0uo1b20nbr%ni7fmv6u4z1%ne6c52nyz1x%neu9x7pzw4s%nm7kkcosp84
+pishPishName:water sprayer
+pishPishDesc:sogs cats!%nstarts a few encounters
+weatherStationName:weather station
+weatherStationDesc:shows current%nweather
+soggyPenName:soggy pen
+soggyPenDesc:soggy pen%n[SHIFT+CLICK]: draw
+iceBucketName:ice bucket
+iceBucketDesc:[T]: press to decrease%nheat immediately
+red40Name:red 40
+red40Desc:[R]: dyes all nearby%nwater to red
+shadowblockerName:SHADOWBLOCKER
+shadowblockerDesc:game on EAASY mode!%n- erases ANYONE
+megaSodaName:MEGASODAA
+megaSodaDesc:[O]: regain 20% energy%nhas 4 uses%n%ncan turn power back on%nwhen it's out
 //://
+achievementCategory_normal:- Normal -
+achievementCategory_special:- Special -
+achievementCategory_statistics:- Statistics -
+achievementCategory_challenge:- Challenge -
 beginnerName:Beginner
 beginnerDesc:Beat Night 1
 advancerName:Advancer
@@ -183,9 +266,9 @@ conquerorDesc:Beat Night 3
 all_nighterName:All-nighter with Pépito
 all_nighterDesc:Beat Night 4
 millyName:Ding
-millyDesc:Buy an item from Milly's Shop
+millyDesc:Buy an item from Milly's Shop in Endless
 shopping_spreeName:Shopping Spree
-shopping_spreeDesc:Buy every item in Milly's Shop
+shopping_spreeDesc:Buy every item in Milly's Shop in Endless
 dabloonsName:Dabloons
 dabloonsDesc:Get 1000 Dabloons in endless
 survivorName:Survivor
@@ -199,11 +282,15 @@ skullcrackerDesc:Die 10 times
 darwin_awardName:Darwin Award
 darwin_awardDesc:Die 100 times
 kamikazeName:Kamikaze
-kamikazeDesc:Die 1000 times
+kamikazeDesc:Die 500 times
+how_did_we_get_hereName:How Did We Get Here?
+how_did_we_get_hereDesc:Start a Challenge with every modifier
 whole_lotta_pointsName:Whole Lotta Points
 whole_lotta_pointsDesc:Get 100000 total custom night points
 brokeName:Broke
 brokeDesc:Complete Night 4 with no items
+visit_partyName:Milly's Party
+visit_partyDesc:Visit Milly's Party in Endless
 prepartyName:Pépito Pre-Partygoer
 prepartyDesc:Beat Pépito's Pre-Party
 partyName:Pépito Partygoer
@@ -218,6 +305,18 @@ halfwayName:Shadowlurker
 halfwayDesc:thginwodahS fo tnioP yawflaH eht hcaeR
 shadownightName:Was it all a dream?
 shadownightDesc:thginwodahS taeB
+basementName:BASEMENT
+basementDesc:Beat the Basement
+basement_partyName:REAL DEAL
+basement_partyDesc:Beat Larry's Basement: REAL DEAL
+basement_100Name:Basement 100%
+basement_100Desc:Beat Basement: REAL DEAL, with a full Hydrophobia Chamber detour
+shadowbasementName:SHADOWBASEMENT
+shadowbasementDesc:thginwodahS tnemesaB taeB
+hydrophobiaName:A New Place
+hydrophobiaDesc:Find the Hydrophobia Chamber
+exitName:Lost & Found
+exitDesc:Exit the Hydrophobia Chamber
 el_astartaName:El Astarta
 el_astartaDesc:Beat Challenge 1: El Astarta
 blizzardName:Blizzard
@@ -229,7 +328,9 @@ the_fog_is_comingDesc:Beat Challenge 4: The Fog is Coming
 gruggenheimedName:Gruggenheimed
 gruggenheimedDesc:Beat Challenge 5: Gruggenheimed
 perfect_stormName:Perfect Storm
-perfect_stormDesc:Beat a night with Blizzard, Fog and Rain
+perfect_stormDesc:Start a night with Blizzard, Fog, Rain and get to 3 AM
+krunlicName:YOU SHOULDN'T
+krunlicDesc:HAVE DO THAT
 //://
 msiIsWatchingL:MSI is watching
 elAstartaL:El Astarta
@@ -250,6 +351,7 @@ items_boughtSt:Items bought from Milly
 items_riftedSt:Items rifted
 points_totalSt:Total points gotten
 points_maxSt:Highest points night
+balloons_poppedSt:Balloons popped
 died_to_pepitoSt:Killed by Pépito
 died_to_notpepitoSt:Killed by NotPepito
 died_to_uncannySt:Killed by Uncanny Cat
@@ -264,7 +366,14 @@ died_to_el_astartaSt:Killed by El Astarta
 died_to_radiationSt:Killed by Radiation
 died_to_shadow_pepitoSt:Killed by Shadow Pépito
 died_to_shadow_astartaSt:Killed by Shadow Astarta
+died_to_kijiSt:Killed by Kiji
+died_to_shockSt:Killed by Shock
+died_to_deep_sea_creatureSt:Killed by Deep Sea Creature
 died_to_dreadSt:Killed by dread
+gotten_burn_endingSt:Gotten Burn ending
+gotten_void_endingSt:Gotten Void ending
+gotten_basement_endingSt:Gotten Basement ending
+gotten_corn_endingSt:Gotten Corn ending
 //://
 pmChallenge:Challenge
 pmNormal:Normal
@@ -280,7 +389,7 @@ uncannyCatCn:Uncanny Cat
 msiCn:MSI
 astartaCn:Astarta
 sharkCn:Shark
-boykisserCn:Boykisser
+boykisserCn:Glungus
 colaCatCn:Cola Cat
 mirrorCatCn:Zazu
 makiCn:Maki
@@ -289,6 +398,12 @@ wiresCn:Wires
 scaryCatCn:Scary Cat
 jumpscareCatCn:Jumpscare Cat
 elAstartaCn:El Astarta
+deepSeaCreatureCn:Deep Sea Creature
+shockCn:Shock
+hydrophobiaCn:Hydrophobia
+beastCn:Beast
+overseerCn:Overseer
+a120Cn:A!@0
 powerOutageCn:Power Outage
 blizzardCn:Blizzard
 timersCn:Timers
@@ -298,7 +413,7 @@ rainCn:Rain
 //://
 manualMSIAstarta:Close doors where you see eyes. MSI tells you where to move your camera.
 manualShark:Shark indicators appear. Move your camera.
-manualBoykisser:Answer Boykisser's question (be honest)
+manualBoykisser:Answer Glungus's question (be honest)
 manualMakiLemonade:Check your camera for Maki; Throw lemons at Lemonade Cat.
 manualZazu:Right-Click Zazu to close his door.
 //://
@@ -309,7 +424,7 @@ survive_astartaB:survive Astarta
 survive_pepitoB:survive Pépito
 survive_makiB:survive Maki
 survive_a90B:survive a90
-survive_boykisserB:survive boykisser
+survive_boykisserB:survive glungus
 encounter_ratB:encounter Rat
 survive_cola_catB:survive cola cat
 beat_night_1B:beat night 1
@@ -330,6 +445,15 @@ survive_a90_with_msiB:survive a90 with MSI
 beat_with_less_less_itemsB:beat night 1+ with <2 item
 beat_with_less_less_less_itemsB:beat night 1+ with no items
 //://
+pepitoDiscName:Pépito
+pepitoDiscDesc:Unlocked by default%nFirst and main song of the game!
+pepitoButCoolerDiscName:Pépito but Cooler
+pepitoButCoolerDiscDesc:Unlocked after beating%nPépito's Party
+megaSecretSongDiscName:zhou. think
+megaSecretSongDiscDesc:schmungus%namong us
+spookersDiscName:Spookers
+spookersDiscDesc:Unlocked after beating%nThe Basement (REAL DEAL)
+//://
 kbPepito:killed by pépito
 kbNotPepito:killed by NotPepito
 kbUncanny:killed by uncanny cat
@@ -345,41 +469,94 @@ kbDread:killed by dread
 kbShadowAstarta:killed by Shadow Astarta
 kbShadowPepito:killed by Shadow Pépito
 kbElAstarta:killed by El Astarta
+kbKiji:killed by kiji
+kbShock:killed by shock
+kbDsc:killed by Deep Sea Creature
 kbRadiation:died from radiation
 kbGameDesign:killed by intentional game design
+kbKrunlic:oh well
+kbHydrophobia:Killed by Hydrophobia
+kbBeast:Killed by Beast
+kbOverseer:Killed by Overseer
+kbObstacles:Died to Obstacles
+kbLandmine:Died to Landmine
+kbBlimp:Died to Blimp
 //://
-pepitoDT1:Pépito... Main enemy of the game. You'll hear his footsteps from left or right, close the respective door. Sound is directional.
-pepitoDT2:Pépito again? Use the Metal Pipe to scare him away immediately. Enable headphones in settings if you're struggling with the direction.
-pepitoDT3:Pépito. Footsteps. Close door. Figure it out, I believe in you.
-notPepitoDT1:NotPepito... He's kinda like Pépito. Just faster. Way faster. React immediately. Lights will flicker.
-notPepitoDT2:NotPepito again.. gonna be a tough one. Lights flicker and you hear his footsteps. Just need to react faster.
-notPepitoDT3:Eventually you'll get used to it.
-uncannyDT1:Uncanny Cat... when you see him appear stop moving or pressing keys IMMEDIATELY. He will give you two strikes until you die.
-uncannyDT2:Uncanny Cat again.. do. not. MOVE.                                    You can use the adblocker to suppress him for one night. Adblockers appear in the camera.
-uncannyDT3:Chill, stop moving so much already.
-msiDT1:MSI... Scary one. Move left or right at his command. Left, then right, then left, then right, then left...
-msiDT2:MSI again, huh. If you're really struggling use the flashlight on him, but that will summon Glitcher. Move LEFT and RIGHT.
-msiDT3:LEFT, RIGHT, LEFT, RIGHT, LEFT, RIGHT, LEFT, RIGHT. You'll learn it eventually.
-astartaDT1:Astarta... Her eyes will appear in the door frames. After some time they will flicker, and then she will attack. Close the door.
-astartaDT2:Astarta again. Close the doors earlier if you want to, or just use the Flashlight in the door frame to scare her away.
-astartaDT3:Astarta. You'll meet this one a lot.
-colaDT1:ColaCat... Your soda will start corrupting and become red after some time, and if you don't drink it you will die.
-colaDT2:ColaCat again. In Classic he appears only when Soda is  used with Metal Pipe or Flashlight. Mini Soda does not get affected by ColaCat.
-colaDT3:Soda go red -> Drink Soda.
+sensorNoConnection:No connection! Please connect to your network.
+sensorAstartaMovement:movement detected at door N
+sensorSusSoda1:idk man your soda has been seeming real
+sensorSusSoda2:real SUSPICIOUS lately
+sensorGlitchingSounds:*glitching sounds*
+sensorMsiAdblocker1:MSI has disabled your adblocker!
+sensorMsiAdblocker2:Press %d% to restart your adblocker.
+sensorMsiKill1:oopsies, your program crashed
+sensorMsiKill2:disabling SENSOR
+sensorMsiKill3:disabling MSI
+sensorPepito:pépito appeared!
+sensorPepitoLeave:Pepito is out (%d%)
+sensorMaki:INTRUSION AT DOOR N
+sensorMakiLeave:That was not Pepito! (%d%)
+sensorA90:uncanny appearing soon
+sensorSubRenewed:Your subscription has been renewed.
+sensorBoop:boop
+sensorNotPepito:NOT PEPITO ALERT ! ! !
+//://
+invstgButtonName:Investigation Board
+invstgButtonDesc:Your journey to investigate [########]
+invstgRequiresNight4:[REQUIRES NIGHT 4]
+invstgOngoing:Investigation ongoing...
+invstgUnknown:Unknown...
+invstgDone:Branch done
+invstgParty1:Party Hat required
+invstgParty2:Visit Pépito's Party
+invstgParty3:Party Maxwell needed
+invstgShadow1:Portal required
+invstgShadow2:Find Shadow Astarta
+invstgBasement1:Get the keys
+invstgBasement2:Visit Basement
+invstgBasement3:Cut power
+invstgHydrophobia1:Get access
+invstgHydrophobia2:Get to the end
+invstgStorm1:Turn up the weather
+//://
+pepitoDT1:Pépito... Main enemy of the game. You hear his footsteps, be aware of him.
+pepitoDT2:Pépito... You'll hear his footsteps from left or right, close the respective door. Sound is directional.
+pepitoDT3:Pépito again? He appears on the cameras. You can use the Metal Pipe to scare him away immediately. <<<Enable headphones in settings if you can't hear direction.>>>
+notPepitoDT1:NotPepito... He's kinda like Pépito. Be ready for anything, react immediately.
+notPepitoDT2:NotPepito again.. gonna be a tough one. Lights flicker and you hear his running.
+notPepitoDT3:NotPepito yet again. Running sounds, flickering lights, very fast. Otherwise similar to Pépito.
+uncannyDT1:Uncanny Cat... When he's present, take your hands off.
+uncannyDT2:Uncanny Cat again. Don't move, don't press keys. Be aware and react quickly.
+uncannyDT3:Uncanny Cat. Don't make unnecessary movements. You can use the adblocker to suppress him for one night. Adblockers appear in the camera, click them and follow further instructions to obtain.
+msiDT1:MSI... Scary one. Listen to his commands. LEFT. RIGHT. LEFT. RIGHT.
+msiDT2:MSI. Move in the directions he mentions. Moving in the wrong direction results in: DEATH.
+msiDT3:MSI again, huh. Move LEFT and RIGHT. If you're really struggling use the flashlight on him, but Glitcher appears. At high difficulty consecutive similar commands may appear.
+astartaDT1:Astarta... You see her eyes in doorframes. That's your cue.
+astartaDT2:Astarta again. Her eyes will appear in the door frames. After some time they will flicker, and then she will attack. Close the door.
+astartaDT3:Astarta. You don't have to wait for her eyes to flicker. Flash the Flashlight in the door frame to scare her away.
+colaDT1:ColaCat... Your soda will start corrupting and become red after some time. Once you notice it, use it before it's too late.
+colaDT2:ColaCat again. In Classic, he appears only when Soda is used with Metal Pipe or Flashlight. Mini Sodas does not get affected by ColaCat.
+colaDT3:ColaCat. It's quite simple. Soda go red -> Drink Soda. Only appears with certain item combos, or in Challenge mode. Mini and Mega Sodas does not get affected by ColaCat.
 makiDT1:Maki... Maki's footsteps are not directional. You will need to look in the camera to see what direction she will go to.
 makiDT2:Maki again? Maki will indicate her direction with a red exclamation mark too. Your last resort will be using the Metal Pipe.
 makiDT3:How.
-sharkDT1:Shark... The Flood is an entire 1 minute sequence. You can make the Flood go 2x faster using the Fan. Green squares will appear, make the fish avoid them at all cost.
-sharkDT2:Shark again? You can make the Flood go 2x faster using the Fan. Green squares will appear, make the fish avoid them at all cost.
-sharkDT3:Avoid green squares.
-lemonDT1:Lemonade Cat... Right-Click to throw lemons at him. Lemons take a bit to reach him, so go a bit ahead.
-lemonDT2:Lemonade Cat again. Aim BETTER. THROW THOSE LEMONS. DONT RUN OUT.
-lemonDT3:Aim better PLEASE.
-scaryCatDT1:Scary Cat... he will try to go in the center of your view. Move and don't let him reach you. After some time he will disappear.
-scaryCatDT2:Scary Cat is very forgiving, i don't know how you are dying. But move your camera away from him.
-scaryCatDT3:Move your camera.
-elAstartaDT1:El Astarta... Sequence that lasts 40 seconds. El Astarta's eyes will appear in door frames and strike very fast. New doors will appear. Survive.
-elAstartaDT2:El Astarta again... Close doors with eyes. Do not get confused. Survive.
-elAstartaDT3:Survive.
+sharkDT1:Shark... Avoid green squares. Do not let him touch the fish.
+sharkDT2:Shark again? The Flood is an entire 1 minute sequence. Avoid green squares!
+sharkDT3:Shark. The Flood is an entire 1 minute sequence. You can make the Flood go by 2x faster using the Fan. Green squares will appear, make the fish avoid them at all cost.
+lemonDT1:Lemonade Cat... Right-Click to throw lemons at him.
+lemonDT2:Lemonade Cat again. Throw him some lemons. They take a bit to reach him. If you run out -
+lemonDT3:Lemonade Cat. Throw lemons a bit ahead. Landing a successful hit gives you 1 back. Don't rush as to not run out and die.
+scaryCatDT1:Scary Cat... he will try to get in your view. Move away.
+scaryCatDT2:Scary Cat is very forgiving. Move away. He will go away in a bit of time.
+scaryCatDT3:Scary Cat is very forgiving. Move away from him constantly. The encounter lasts some time, but he's not necessarily your main priority if move away at the right time.
+elAstartaDT1:El Astarta... Close doors with eyes. Do not get confused. Survive.
+elAstartaDT2:El Astarta again... It's a sequence that lasts 40 seconds. El Astarta's eyes will appear in door frames and strike very fast. New doors will appear. Survive.
+elAstartaDT3:El Astarta. Sequence lasts 40 seconds. Eyes appear in door frames and strike very fast. New doors begin to appear. Flashlight WON'T work.
+shockDT1:Shock... He hacks the computer before attacking you. It's evident which door he's gonna use.
+shockDT2:Shock again... He's gonna appear on your monitor with a respective sound cue before rushing you. The door he's gonna use lights up.
+shockDT3:Shock. He appears on the monitor, plays a sound. Then starts his DOOM phase and runs through one of the doors.
+dscDT1:Deep Sea Creature... It's almost like the flood. You get a gun to shoot him though!
+dscDT2:Deep Sea Creature again. He floods your entire room. However, you get a harpoon. Shoot him. Moving around slows him down!!!
+dscDT3:Deep Sea Creature. After the flood you have to shoot him continuously. The harpoon needs some time to cool off inbetween. Don't miss. Moving around means he needs more time to reach you!!!
 radiationDT:Avoid your cursor from entering green circles, they indicate radiation. If you reach too much radiation you WILL die.
 afterTheFirstNuclearStrike:After the first nuclear strike, you must IMMEDIATELY travel to the Indonesian island of Sumatra, where Lake Toba is located. On this Lake Toba there is the island of Samosir. On the island of Samosir there is a Lutheran church "GEREJA HKBP BOLON PANGURURAN". Opposite this church there is a hill where my tent will be located!!! - Larry Zhou

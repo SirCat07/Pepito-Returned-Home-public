@@ -18,5 +18,16 @@ public enum GameState {
     PLATFORMER,
     DISCLAIMER,
     BATTERY_SAVER,
+    DRY_CAT_GAME,
+    UH_OH,
+    CRATE,
+    KRUNLIC,
+    SKIBIDIDDY,
+    CORNFIELD,
+    FIELD,
+    MUSIC_MENU,
+    ENDLESS_DISCLAIMER,
+    INVESTIGATION,
+    BLENDER,
     SOUNDTEST;
 }
